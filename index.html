@@ -59,6 +59,14 @@
   #appTitle:focus { border-style: solid; border-color: var(--accent); background: var(--accent-soft); }
   .title-hint { font-size: var(--t-micro); color: var(--faint); margin-top: 7px; letter-spacing: 0; }
 
+  /* 저장 실패 경고 */
+  .db-warn {
+    background: var(--danger-soft); color: var(--danger);
+    border: 1px solid rgba(180,80,63,.22); border-radius: var(--radius-sm);
+    padding: 13px 14px; font-size: var(--t-caption); line-height: 1.65; margin-bottom: 14px;
+  }
+  .db-warn b { font-weight: 600; display: block; margin-bottom: 3px; font-size: var(--t-small); }
+
   /* 요약 카드 — 숫자가 주인공 */
   .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
   .card {
@@ -289,6 +297,10 @@
     font-size: var(--t-small); line-height: 1.8; margin-top: 14px; color: var(--sub);
   }
   .r-flow b { color: var(--ink); font-weight: 600; }
+  .r-flow-note {
+    margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line);
+    font-size: var(--t-caption); color: var(--faint); line-height: 1.6;
+  }
   .result-actions { display: flex; gap: 8px; margin-top: 22px; }
   .result-actions .submit { margin-top: 0; flex: 1 1 auto; white-space: nowrap; }
   .result-actions .cancel-btn { margin-top: 0; flex: 0 0 auto; white-space: nowrap; width: auto; padding: 12px 16px; }
@@ -300,6 +312,8 @@
     <h1 id="appTitle" contenteditable="true" spellcheck="false"></h1>
     <p class="title-hint">제목을 눌러 바꿀 수 있어요</p>
   </header>
+
+  <div id="dbWarn" class="db-warn" hidden></div>
 
   <div class="cards">
     <div class="card"><div class="label">모인 돈</div><div class="value" id="fundTotal"></div></div>
@@ -567,38 +581,66 @@ function ensureCcyFromExpenses() {
 }
 
 // ---------- IndexedDB ----------
-let db;
+let db = null;
+let dbError = null; // 저장소를 못 열었을 때 사용자에게 알릴 메시지
+
+// 저장소를 못 열어도 앱은 계속 쓸 수 있게 한다 (기록은 화면에만 남고, 새로고침하면 사라짐)
 function openDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open("moa-db", 1);
-    req.onupgradeneeded = () => {
-      req.result.createObjectStore("expenses", { keyPath: "id" });
+  return new Promise(resolve => {
+    let settled = false;
+    const finish = msg => {
+      if (settled) return;
+      settled = true;
+      dbError = msg || null;
+      resolve();
     };
-    req.onsuccess = () => { db = req.result; resolve(); };
-    req.onerror = () => reject(req.error);
+    let req;
+    try { req = indexedDB.open("moa-db", 1); }
+    catch (e) { return finish("이 브라우저에서는 저장 기능을 쓸 수 없어요"); }
+
+    req.onupgradeneeded = () => { req.result.createObjectStore("expenses", { keyPath: "id" }); };
+    req.onsuccess = () => {
+      db = req.result;
+      // 다른 탭이 버전을 올리면 연결을 비켜준다 (서로 막지 않도록)
+      db.onversionchange = () => { try { db.close(); } catch (e) {} db = null; };
+      finish(null);
+    };
+    req.onerror = () => finish("저장소를 여는 중 문제가 생겼어요");
+    req.onblocked = () => finish("다른 탭에서 이 앱이 열려 있어 저장소가 잠겼어요");
+    // 응답이 없으면 기다리지 말고 앱을 띄운다
+    setTimeout(() => finish("저장소가 응답하지 않아요"), 2500);
   });
 }
 function dbAll() {
-  return new Promise((resolve, reject) => {
-    const req = db.transaction("expenses").objectStore("expenses").getAll();
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+  if (!db) return Promise.resolve([]);
+  return new Promise(resolve => {
+    try {
+      const req = db.transaction("expenses").objectStore("expenses").getAll();
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => resolve([]);
+    } catch (e) { resolve([]); }
   });
 }
 function dbPut(item) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction("expenses", "readwrite");
-    tx.objectStore("expenses").put(item);
-    tx.oncomplete = resolve;
-    tx.onerror = () => reject(tx.error);
+  if (!db) return Promise.resolve();
+  return new Promise(resolve => {
+    try {
+      const tx = db.transaction("expenses", "readwrite");
+      tx.objectStore("expenses").put(item);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    } catch (e) { resolve(); }
   });
 }
 function dbDelete(id) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction("expenses", "readwrite");
-    tx.objectStore("expenses").delete(id);
-    tx.oncomplete = resolve;
-    tx.onerror = () => reject(tx.error);
+  if (!db) return Promise.resolve();
+  return new Promise(resolve => {
+    try {
+      const tx = db.transaction("expenses", "readwrite");
+      tx.objectStore("expenses").delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    } catch (e) { resolve(); }
   });
 }
 
@@ -1297,20 +1339,35 @@ function computeSettlement() {
   return { spent, donated, feeTotal, FUND, fund: FUND + feeTotal + donated, balance: FUND + feeTotal + donated - fundSpent, rows };
 }
 
-// 최소 송금 매칭 (그리디)
-function settleFlow(rows) {
+// 최소 송금 매칭 (그리디) — 공동 회비도 하나의 상대로 넣어 모든 돈의 행선지를 보여준다
+const FUND_LABEL = "공동 회비";
+function settleFlow(rows, balance) {
   const debt = rows.filter(r => r.settle < -0.5).map(r => ({ m: r.m, amt: -r.settle }));
   const credit = rows.filter(r => r.settle > 0.5).map(r => ({ m: r.m, amt: r.settle }));
+  // 회비가 모자랐으면 그만큼 공동 회비로 채워야 하고, 남았으면 공동 회비에서 나눠준다
+  if (balance < -0.5) credit.push({ m: FUND_LABEL, amt: -balance, fund: true });
+  else if (balance > 0.5) debt.push({ m: FUND_LABEL, amt: balance, fund: true });
+
   const lines = [];
   let i = 0, j = 0;
   while (i < debt.length && j < credit.length) {
     const pay = Math.min(debt[i].amt, credit[j].amt);
-    lines.push(debt[i].m + "님 → " + credit[j].m + "님 " + fmt(pay));
+    if (pay > 0.5) {
+      const from = debt[i].fund ? FUND_LABEL + "에서" : debt[i].m + "님이";
+      const to = credit[j].fund ? FUND_LABEL + "로" : credit[j].m + "님에게";
+      lines.push(from + " " + to + " " + fmt(pay));
+    }
     debt[i].amt -= pay; credit[j].amt -= pay;
     if (debt[i].amt < 1) i++;
     if (credit[j].amt < 1) j++;
   }
   return lines;
+}
+// 공동 회비 과부족 안내 문구
+function fundNote(balance) {
+  if (balance < -0.5) return "공동 회비가 " + fmt(-balance) + " 모자랐어요. 공동 회비로 보내는 돈은 회비를 맡은 사람에게 주세요.";
+  if (balance > 0.5) return "공동 회비가 " + fmt(balance) + " 남아서 그만큼 돌려드려요.";
+  return "";
 }
 
 const near0 = v => Math.abs(v) < 0.5;
@@ -1331,8 +1388,13 @@ function renderResult() {
     const cls = near0(r.settle) ? "r-even" : r.settle > 0 ? "r-get" : "r-owe";
     h += '<div class="r-row"><span class="rn">' + escapeHtml(r.m) + '</span><span class="' + cls + '">' + settleLabel(r.settle) + "</span></div>";
   });
-  const flow = settleFlow(s.rows);
-  if (flow.length) h += '<div class="r-flow"><b>💸 송금 방법</b><br>' + flow.map(escapeHtml).join("<br>") + "</div>";
+  const flow = settleFlow(s.rows, s.balance);
+  if (flow.length) {
+    h += '<div class="r-flow"><b>주고받을 돈</b>' + flow.map(l => "<br>" + escapeHtml(l)).join("");
+    const note = fundNote(s.balance);
+    if (note) h += '<div class="r-flow-note">' + escapeHtml(note) + "</div>";
+    h += "</div>";
+  }
   document.getElementById("resultBody").innerHTML = h;
 }
 
@@ -1341,8 +1403,12 @@ function shareText() {
   let t = "[" + getTitle() + "]\n\n";
   t += "모인 돈 " + fmt(s.fund) + "\n쓴 돈 " + fmt(s.spent) + "\n남은 돈 " + fmt(s.balance) + "\n\n정산\n";
   s.rows.forEach(r => { t += "· " + r.m + " : " + settleLabel(r.settle) + "\n"; });
-  const flow = settleFlow(s.rows);
-  if (flow.length) t += "\n송금 방법\n" + flow.map(l => "· " + l).join("\n");
+  const flow = settleFlow(s.rows, s.balance);
+  if (flow.length) {
+    t += "\n주고받을 돈\n" + flow.map(l => "· " + l).join("\n");
+    const note = fundNote(s.balance);
+    if (note) t += "\n\n※ " + note;
+  }
   return t;
 }
 
@@ -1391,6 +1457,14 @@ titleEl.onkeydown = ev => { if (ev.key === "Enter") { ev.preventDefault(); title
   refreshMemberUI();          // 결제자·참여자·회비 UI
   renderCcyChips();
   render();
+
+  if (dbError) {
+    const w = document.getElementById("dbWarn");
+    w.innerHTML = "<b>기록이 저장되지 않아요</b>" +
+      dbError + ". 다른 탭에 열린 이 앱을 닫고 새로고침해 주세요.<br>" +
+      "지금 입력하는 내용은 화면에만 남고, 새로고침하면 사라져요.";
+    w.hidden = false;
+  }
 })();
 </script>
 </body>

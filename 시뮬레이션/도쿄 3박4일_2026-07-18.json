@@ -1,0 +1,24 @@
+{
+  "app": "moa",
+  "title": "도쿄 3박4일",
+  "exportedAt": "2026-07-18T23:35:47.933Z",
+  "members": ["다현", "지은", "서준", "하윤"],
+  "fees": { "다현": 0, "지은": 0, "서준": 0, "하윤": 0 },
+  "extra": {},
+  "currencies": [{ "sym": "¥", "name": "엔", "rate": 9.2 }],
+  "expenses": [
+    { "id": "mrr061am", "type": "fee", "category": null, "payer": "다현", "date": "2026-07-01", "desc": "회비", "amount": 300000, "fxAmt": null, "fxSym": null, "fxName": null, "rate": null, "participants": ["다현"], "photo": null },
+    { "id": "mrr06221", "type": "fee", "category": null, "payer": "지은", "date": "2026-07-01", "desc": "회비", "amount": 300000, "fxAmt": null, "fxSym": null, "fxName": null, "rate": null, "participants": ["지은"], "photo": null },
+    { "id": "mrr062tz", "type": "fee", "category": null, "payer": "서준", "date": "2026-07-01", "desc": "회비", "amount": 300000, "fxAmt": null, "fxSym": null, "fxName": null, "rate": null, "participants": ["서준"], "photo": null },
+    { "id": "mrr063ls", "type": "fee", "category": null, "payer": "하윤", "date": "2026-07-01", "desc": "회비", "amount": 300000, "fxAmt": null, "fxSym": null, "fxName": null, "rate": null, "participants": ["하윤"], "photo": null },
+    { "id": "mrr06qjm", "type": "expense", "category": "숙소", "payer": "회비", "date": "2026-07-05", "desc": "호텔 3박", "amount": 640000, "fxAmt": null, "fxSym": null, "fxName": null, "rate": null, "participants": ["다현", "지은", "서준", "하윤"], "photo": null },
+    { "id": "mrr06qr1", "type": "expense", "category": "교통", "payer": "회비", "date": "2026-07-10", "desc": "나리타 익스프레스", "amount": 110400, "fxAmt": 12000, "fxSym": "¥", "fxName": "엔", "rate": 9.2, "participants": ["다현", "지은", "서준", "하윤"], "photo": null },
+    { "id": "mrr06rio", "type": "expense", "category": "식당", "payer": "회비", "date": "2026-07-10", "desc": "첫날 이자카야", "amount": 169280, "fxAmt": 18400, "fxSym": "¥", "fxName": "엔", "rate": 9.2, "participants": ["다현", "지은", "서준", "하윤"], "photo": null },
+    { "id": "mrr06sbn", "type": "expense", "category": "카페", "payer": "회비", "date": "2026-07-11", "desc": "긴자 카페", "amount": 23920, "fxAmt": 2600, "fxSym": "¥", "fxName": "엔", "rate": 9.2, "participants": ["지은", "서준"], "photo": null },
+    { "id": "mrr06t29", "type": "expense", "category": "관광", "payer": "회비", "date": "2026-07-11", "desc": "디즈니랜드 입장", "amount": 345920, "fxAmt": 37600, "fxSym": "¥", "fxName": "엔", "rate": 9.2, "participants": ["다현", "지은", "서준", "하윤"], "photo": null },
+    { "id": "mrr06tu2", "type": "expense", "category": "마트", "payer": "회비", "date": "2026-07-12", "desc": "돈키호테 장보기", "amount": 81880, "fxAmt": 8900, "fxSym": "¥", "fxName": "엔", "rate": 9.2, "participants": ["다현", "지은", "서준", "하윤"], "photo": null },
+    { "id": "mrr06ult", "type": "expense", "category": "기념품", "payer": "하윤", "date": "2026-07-12", "desc": "선물 세트", "amount": 133400, "fxAmt": 14500, "fxSym": "¥", "fxName": "엔", "rate": 9.2, "participants": ["다현", "지은", "서준", "하윤"], "photo": null },
+    { "id": "mrr074n0", "type": "expense", "category": "식당", "payer": "회비", "date": "2026-07-13", "desc": "마지막 스시", "amount": 202400, "fxAmt": 22000, "fxSym": "¥", "fxName": "엔", "rate": 9.2, "participants": ["다현", "지은", "서준", "하윤"], "photo": null },
+    { "id": "mrr07uj2", "type": "income", "category": null, "payer": null, "date": "2026-07-09", "desc": "엄마 여행비 보태주심", "amount": 200000, "fxAmt": null, "fxSym": null, "fxName": null, "rate": null, "participants": ["다현", "지은", "서준", "하윤"], "photo": null }
+  ]
+}
