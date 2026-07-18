@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>모임 정산</title>
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --card: #ffffff;
+    --ink: #2f2a25;
+    --sub: #8a8177;
+    --accent: #4a7c59;
+    --accent-soft: #e8f0ea;
+    --danger: #c0564a;
+    --line: #e7e2d9;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    padding: 20px 14px 60px;
+    overflow-x: hidden;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 18px; }
+  header h1 { font-size: 22px; letter-spacing: -0.5px; }
+  header p { color: var(--sub); font-size: 13px; margin-top: 4px; }
+
+  .cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 12px 10px; text-align: center;
+  }
+  .card .label { font-size: 11px; color: var(--sub); margin-bottom: 5px; }
+  .card .value { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+  .card.balance .value { color: var(--accent); font-size: 16px; }
+  .card.balance.negative .value { color: var(--danger); }
+  .card .sub { font-size: 10px; color: var(--danger); margin-top: 3px; }
+
+  section {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 16px; margin-bottom: 14px;
+  }
+  section h2 { font-size: 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 12px; color: var(--sub); margin-bottom: 4px; }
+  .field input[type="date"], .field input[type="text"], .field input[type="number"] {
+    width: 100%; max-width: 100%; min-width: 0;
+    padding: 10px 12px; border: 1px solid var(--line);
+    border-radius: 10px; font-size: 16px; background: #fdfcfa; color: var(--ink);
+    -webkit-appearance: none; appearance: none;
+  }
+  .field input[type="date"] {
+    display: block; min-height: 48px; text-align: left;
+    -webkit-min-logical-width: calc(100% - 24px);
+  }
+  .field input:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+
+  .members { display: flex; gap: 6px; flex-wrap: wrap; }
+  .members label {
+    display: flex; align-items: center; gap: 5px;
+    border: 1px solid var(--line); border-radius: 20px;
+    padding: 7px 12px; font-size: 13px; cursor: pointer; user-select: none;
+    background: #fdfcfa;
+  }
+  .members label:has(input:checked) {
+    background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600;
+  }
+  .members input { accent-color: var(--accent); }
+
+  .ccy-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    border: 1px solid var(--line); border-radius: 20px;
+    padding: 7px 12px; font-size: 13px; cursor: pointer; user-select: none;
+    background: #fdfcfa; color: var(--ink);
+  }
+  .ccy-chip.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .ccy-chip.add { border-style: dashed; color: var(--sub); }
+  .ccy-form {
+    margin-top: 8px; padding: 12px; border: 1px solid var(--line);
+    border-radius: 10px; background: #fdfcfa; display: flex; flex-direction: column; gap: 8px;
+  }
+  .ccy-form-row { display: flex; align-items: center; gap: 8px; }
+  .ccy-form-row input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 16px; background: #fff; color: var(--ink); }
+  .ccy-form-row input#ncRate { flex: 0 1 110px; }
+  .ccy-form-label { font-size: 13px; color: var(--sub); white-space: nowrap; }
+  .ccy-form-btns { display: flex; gap: 8px; justify-content: flex-end; }
+  .ccy-mini { padding: 8px 16px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; background: var(--accent); color: #fff; }
+  .ccy-mini.ghost { background: #fff; color: var(--sub); border: 1px solid var(--line); }
+
+  .photo-field { display: flex; align-items: center; gap: 10px; }
+  .photo-btn {
+    border: 1px dashed var(--line); background: #fdfcfa; border-radius: 10px;
+    padding: 10px 14px; font-size: 13px; color: var(--sub); cursor: pointer;
+  }
+  .photo-preview { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; display: none; border: 1px solid var(--line); }
+
+  .submit {
+    width: 100%; padding: 13px; margin-top: 4px;
+    background: var(--accent); color: #fff; border: none;
+    border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer;
+  }
+  .submit:active { transform: scale(0.99); }
+
+  .expense {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px 0; border-bottom: 1px solid var(--line);
+  }
+  .expense:last-child { border-bottom: none; padding-bottom: 0; }
+  .expense .thumb {
+    width: 52px; height: 52px; border-radius: 10px; object-fit: cover;
+    border: 1px solid var(--line); cursor: pointer; flex-shrink: 0;
+  }
+  .expense .thumb.empty {
+    display: flex; align-items: center; justify-content: center;
+    background: #f3f0ea; color: var(--sub); font-size: 18px; cursor: default;
+  }
+  .expense .info { flex: 1; min-width: 0; }
+  .expense .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .expense .desc { font-size: 14px; font-weight: 600; }
+  .expense .amount { font-size: 15px; font-weight: 700; white-space: nowrap; }
+  .expense .meta { font-size: 12px; color: var(--sub); margin-top: 3px; }
+  .expense .del, .expense .edit {
+    background: none; border: none; color: var(--sub); font-size: 12px;
+    cursor: pointer; padding: 2px 4px; margin-top: 4px;
+  }
+  .expense .del:hover { color: var(--danger); }
+  .expense .edit { margin-right: 8px; }
+  .expense .edit:hover { color: var(--accent); }
+  .cancel-btn {
+    width: 100%; padding: 12px; margin-top: 8px;
+    background: #fff; color: var(--sub); border: 1px solid var(--line);
+    border-radius: 10px; font-size: 14px; cursor: pointer;
+  }
+  .empty-msg { text-align: center; color: var(--sub); font-size: 13px; padding: 16px 0; }
+
+  .feerow { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
+  .feerow .fname { width: 52px; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+  .feerow .fcol { flex: 1; font-size: 11px; color: var(--sub); text-align: center; }
+  .feerow input {
+    flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--line);
+    border-radius: 8px; font-size: 16px; background: #fdfcfa; color: var(--ink);
+    -webkit-appearance: none; appearance: none;
+  }
+
+  .catrow { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 13px; }
+  .catrow .cname { width: 60px; font-weight: 600; flex-shrink: 0; }
+  .catrow .cbar { flex: 1; height: 8px; background: #f0ece4; border-radius: 4px; overflow: hidden; }
+  .catrow .cbar > div { height: 100%; background: var(--accent); border-radius: 4px; }
+  .catrow .camt { min-width: 120px; text-align: right; white-space: nowrap; }
+  .catrow .camt .pct { color: var(--sub); font-size: 11px; margin-left: 4px; }
+
+  table.settle { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.settle th, table.settle td { padding: 8px 6px; text-align: right; border-bottom: 1px solid var(--line); }
+  table.settle th:first-child, table.settle td:first-child { text-align: left; }
+  table.settle th { color: var(--sub); font-weight: 500; font-size: 12px; }
+  table.settle td.plus { color: var(--accent); font-weight: 700; }
+  table.settle td.minus { color: var(--danger); font-weight: 700; }
+  .note { font-size: 12px; color: var(--sub); margin-top: 10px; line-height: 1.6; }
+  .note strong { color: var(--ink); }
+
+  #lightbox {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    z-index: 100; align-items: center; justify-content: center; cursor: zoom-out;
+  }
+  #lightbox img { max-width: 94vw; max-height: 92vh; border-radius: 8px; }
+
+  /* 제목 편집 */
+  #appTitle {
+    font-size: 22px; font-weight: 700; text-align: center; margin: 0;
+    outline: none; border-radius: 8px; padding: 3px 10px; min-height: 1.3em;
+    color: var(--ink); border: 1px dashed transparent;
+  }
+  #appTitle:hover { border-color: var(--line); }
+  #appTitle:focus { border-style: solid; border-color: var(--accent); background: var(--accent-soft); }
+  .title-hint { text-align: center; font-size: 11px; color: var(--sub); margin: 5px 0 0; }
+
+  /* 멤버 · 회비 관리 */
+  .feerow-head { padding-bottom: 2px; }
+  .feerow .fname-btn {
+    flex: 0 0 auto; min-width: 48px; max-width: 88px; text-align: left;
+    font-size: 14px; font-weight: 600; color: var(--ink); cursor: pointer;
+    background: none; border: none; padding: 4px 2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .feerow .fname-btn:hover { color: var(--accent); text-decoration: underline; }
+  .feerow-head .fname-h { flex: 0 0 auto; min-width: 48px; max-width: 88px; font-size: 11px; color: var(--sub); }
+  .feerow-head .fdel-h { flex: 0 0 auto; width: 28px; }
+  .feerow .fdel {
+    flex: 0 0 auto; width: 28px; background: none; border: none;
+    color: var(--sub); font-size: 15px; cursor: pointer; padding: 4px;
+  }
+  .feerow .fdel:hover { color: var(--danger); }
+  .feerow.add-row { margin-top: 8px; gap: 8px; }
+  .add-member-input {
+    flex: 1; min-width: 0; padding: 9px 11px; border: 1px solid var(--line);
+    border-radius: 8px; font-size: 16px; background: #fdfcfa; color: var(--ink);
+  }
+  .add-inline {
+    width: 66px; padding: 0; border: none; background: transparent;
+    font: inherit; color: var(--accent); outline: none;
+  }
+
+  /* 정산 결과 오버레이 */
+  #resultOverlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(24,33,28,.5); overflow-y: auto; padding: 24px 12px 40px;
+  }
+  #resultOverlay.on { display: block; }
+  .result-sheet {
+    max-width: 480px; margin: 0 auto; background: var(--card);
+    border-radius: 16px; padding: 24px 18px 18px; position: relative;
+    box-shadow: 0 12px 40px rgba(0,0,0,.25);
+  }
+  .result-close {
+    position: absolute; top: 12px; right: 12px; width: 32px; height: 32px;
+    border: none; background: var(--bg); border-radius: 50%; font-size: 14px;
+    color: var(--sub); cursor: pointer;
+  }
+  .r-title { font-size: 19px; font-weight: 800; text-align: center; margin: 0 0 4px; }
+  .r-sub { text-align: center; font-size: 12px; color: var(--sub); margin: 0 0 18px; }
+  .r-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .r-card { background: var(--bg); border-radius: 10px; padding: 12px 6px; text-align: center; }
+  .r-card .l { font-size: 11px; color: var(--sub); margin-bottom: 4px; }
+  .r-card .v { font-size: 14px; font-weight: 700; }
+  .r-h { font-size: 13px; font-weight: 700; margin: 20px 0 6px; }
+  .r-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .r-row:last-child { border-bottom: none; }
+  .r-row .rn { font-weight: 600; }
+  .r-get { color: var(--accent); font-weight: 700; }
+  .r-owe { color: var(--danger); font-weight: 700; }
+  .r-even { color: var(--sub); }
+  .r-flow { background: var(--bg); border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.7; margin-top: 12px; }
+  .result-actions { display: flex; gap: 8px; margin-top: 20px; }
+  .result-actions .submit { margin-top: 0; flex: 1 1 auto; white-space: nowrap; }
+  .result-actions .cancel-btn { margin-top: 0; flex: 0 0 auto; white-space: nowrap; width: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="appTitle" contenteditable="true" spellcheck="false"></h1>
+    <p class="title-hint">제목을 눌러서 바꿀 수 있어요 ✎</p>
+  </header>
+
+  <div class="cards">
+    <div class="card"><div class="label">모인 돈 (회비+찬조)</div><div class="value" id="fundTotal"></div></div>
+    <div class="card"><div class="label">지출 합계</div><div class="value" id="spentTotal"></div></div>
+    <div class="card balance" id="balanceCard"><div class="label">남은 돈</div><div class="value" id="balance"></div><div class="sub" id="balanceNote"></div></div>
+  </div>
+
+  <section>
+    <h2>✏️ 기록 추가</h2>
+    <form id="expenseForm">
+      <div class="field">
+        <label>구분</label>
+        <div class="members">
+          <label><input type="radio" name="etype" value="expense" checked>💸 지출</label>
+          <label><input type="radio" name="etype" value="fee">💰 회비 (걷은 돈)</label>
+          <label><input type="radio" name="etype" value="income">💝 찬조 (받은 돈)</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>날짜</label>
+        <input type="date" id="fDate" required>
+      </div>
+      <div class="field" id="catField">
+        <label>항목</label>
+        <div class="members" id="fCats"></div>
+        <input type="text" id="fCatCustom" placeholder="항목 이름을 입력하세요 (예: 마사지)"
+          style="display: none; margin-top: 8px;">
+      </div>
+      <div class="field">
+        <label>내용</label>
+        <input type="text" id="fDesc" placeholder="예: 저녁 갈비">
+      </div>
+      <div class="field">
+        <label>금액</label>
+        <div class="members" id="fCcy" style="margin-bottom: 6px;"></div>
+        <input type="number" id="fAmount" placeholder="예: 84000" min="0.01" step="any" required>
+        <div id="rateRow" style="display: none; margin-top: 6px; font-size: 13px; color: var(--sub);">
+          환율 1<span id="rateSym">$</span> =
+          <input type="number" id="fRate" step="any" min="0"
+            style="width: 90px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 16px;">
+          원 <span id="rateHint"></span>
+        </div>
+        <div id="newCcyForm" class="ccy-form" style="display: none;">
+          <div class="ccy-form-row">
+            <input type="text" id="ncSym" maxlength="4" placeholder="기호 ₫" autocomplete="off">
+            <input type="text" id="ncName" maxlength="12" placeholder="이름 (동)" autocomplete="off">
+          </div>
+          <div class="ccy-form-row">
+            <span class="ccy-form-label">1<span id="ncSymEcho">₫</span> =</span>
+            <input type="number" id="ncRate" step="any" min="0" placeholder="환율" autocomplete="off">
+            <span>원</span>
+          </div>
+          <div class="ccy-form-btns">
+            <button type="button" id="ncCancel" class="ccy-mini ghost">취소</button>
+            <button type="button" id="ncSave" class="ccy-mini">추가</button>
+          </div>
+        </div>
+      </div>
+      <div class="field" id="payerField">
+        <label id="payerLabel">누가 결제했나요?</label>
+        <div class="members" id="fPayers"></div>
+      </div>
+      <div class="field" id="participantField">
+        <label id="pLabel">참여자 (함께 나눠 낼 사람)</label>
+        <div class="members" id="fMembers"></div>
+      </div>
+      <div class="field">
+        <label>영수증 사진 (선택)</label>
+        <div class="photo-field">
+          <button type="button" class="photo-btn" id="photoBtn">📷 사진 붙이기</button>
+          <input type="file" id="fPhoto" accept="image/*" hidden>
+          <img class="photo-preview" id="photoPreview" alt="">
+        </div>
+      </div>
+      <button type="submit" class="submit" id="submitBtn">지출 기록하기</button>
+      <button type="button" class="cancel-btn" id="cancelEdit" style="display: none;">수정 취소</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>🧾 지출 내역</h2>
+    <div id="expenseList"></div>
+  </section>
+
+  <section>
+    <h2>📊 항목별 합계</h2>
+    <div id="catSummary"></div>
+  </section>
+
+  <section>
+    <h2>💰 최종 정산 (실시간)</h2>
+    <table class="settle">
+      <thead><tr><th>이름</th><th>낸 회비</th><th>따로 결제</th><th>부담액</th><th>돌려받을 돈</th></tr></thead>
+      <tbody id="settleBody"></tbody>
+    </table>
+    <button type="button" class="submit" id="resultBtn" style="margin-top: 14px;">📊 정산 결과 보기 · 공유</button>
+    <p class="note">
+      · 부담액 = 각 지출을 참여자 수로 나눈 몫의 합<br>
+      · 찬조는 모인 돈에 더해지고, 혜택 나눈 사람들의 부담액을 줄여줘요<br>
+      · 따로 결제 = 공동 회비가 아니라 개인 돈으로 낸 금액 — 돌려받을 돈에 자동으로 더해져요<br>
+      · 지출을 추가할 때마다 자동으로 다시 계산됩니다
+    </p>
+  </section>
+
+  <section>
+    <h2>👥 멤버 · 회비</h2>
+    <div class="feerow feerow-head">
+      <span class="fname-h">이름</span>
+      <span class="fcol">회비</span>
+      <span class="fcol">추가 납입</span>
+      <span class="fdel-h"></span>
+    </div>
+    <div id="feeRows"></div>
+    <p class="note">
+      · 이름을 누르면 수정, ✕로 삭제할 수 있어요<br>
+      · 회비를 안 걷는 모임이면 0으로 두고, 지출·정산만 써도 돼요<br>
+      · 추가 납입 = 회비 외에 더 냈고 <strong>그대로 돌려받을</strong> 돈 (보태는 돈이면 <strong>💝 찬조</strong>로)
+    </p>
+  </section>
+
+  <section>
+    <h2>💾 데이터 백업</h2>
+    <div style="display: flex; gap: 8px;">
+      <button type="button" class="submit" id="exportBtn" style="background: #5a7a8c; margin-top: 0;">📤 내보내기</button>
+      <button type="button" class="submit" id="importBtn" style="background: #8c7a5a; margin-top: 0;">📥 가져오기</button>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
+    </div>
+    <p class="note">
+      내보내기 = 모든 기록(사진 포함)을 파일 하나로 저장해요.<br>
+      카톡 "나에게 보내기" 등으로 다른 기기에 옮긴 뒤 가져오기 하면 기록이 그대로 복원돼요.
+    </p>
+  </section>
+</div>
+
+<div id="lightbox"><img id="lightboxImg" alt=""></div>
+
+<div id="resultOverlay">
+  <div class="result-sheet">
+    <button type="button" id="resultClose" class="result-close" aria-label="닫기">✕</button>
+    <div id="resultBody"></div>
+    <div class="result-actions">
+      <button type="button" id="resultShare" class="submit">📤 카톡 등으로 공유</button>
+      <button type="button" id="resultCopy" class="cancel-btn">📋 텍스트 복사</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// 멤버는 동적 — 사용자가 추가/수정/삭제
+let MEMBERS = [];
+let FEES = {};        // 이름 → 회비
+let EXTRA_PAID = {};  // 이름 → 추가 납입(그대로 반환할 몫)
+
+function loadFees() {
+  try {
+    const s = JSON.parse(localStorage.getItem("split-members"));
+    if (s && Array.isArray(s.members)) {
+      MEMBERS = s.members.slice();
+      FEES = s.fees || {};
+      EXTRA_PAID = s.extra || {};
+    }
+  } catch (e) {}
+  MEMBERS.forEach(m => { if (!(m in FEES)) FEES[m] = 0; });
+}
+function saveFees() {
+  localStorage.setItem("split-members", JSON.stringify({ members: MEMBERS, fees: FEES, extra: EXTRA_PAID }));
+}
+
+// 데이터(회비/지출)에서 멤버 목록을 유추해 병합 (가져오기·복원용)
+function syncMembersFromData() {
+  const found = new Set(MEMBERS);
+  Object.keys(FEES || {}).forEach(m => found.add(m));
+  expenses.forEach(e => {
+    (e.participants || []).forEach(p => found.add(p));
+    if (e.payer && e.payer !== "회비") found.add(e.payer);
+  });
+  MEMBERS = [...found];
+  MEMBERS.forEach(m => { if (!(m in FEES)) FEES[m] = 0; });
+}
+
+// 멤버 추가/이름수정/삭제
+function addMember(name) {
+  name = (name || "").trim();
+  if (!name) return null;
+  if (MEMBERS.includes(name)) return name;
+  MEMBERS.push(name);
+  FEES[name] = 0;
+  saveFees();
+  refreshMemberUI();
+  render();
+  return name;
+}
+function renameMember(oldName, newName) {
+  newName = (newName || "").trim();
+  if (!newName || newName === oldName) return;
+  if (MEMBERS.includes(newName)) { alert("이미 있는 이름이에요"); return; }
+  MEMBERS = MEMBERS.map(m => m === oldName ? newName : m);
+  FEES[newName] = FEES[oldName] || 0; delete FEES[oldName];
+  if (oldName in EXTRA_PAID) { EXTRA_PAID[newName] = EXTRA_PAID[oldName]; delete EXTRA_PAID[oldName]; }
+  expenses.forEach(e => {
+    if (e.payer === oldName) e.payer = newName;
+    if (Array.isArray(e.participants)) e.participants = e.participants.map(p => p === oldName ? newName : p);
+  });
+  expenses.forEach(e => dbPut(e));
+  saveFees();
+  refreshMemberUI();
+  render();
+}
+function deleteMember(name) {
+  const used = expenses.some(e => e.payer === name || (e.participants || []).includes(name));
+  if (used && !confirm('"' + name + '"님이 포함된 기록이 있어요. 그래도 멤버에서 지울까요?\n(기록은 남지만 정산에서 제외돼요)')) return;
+  MEMBERS = MEMBERS.filter(m => m !== name);
+  delete FEES[name]; delete EXTRA_PAID[name];
+  saveFees();
+  refreshMemberUI();
+  render();
+}
+// 멤버가 바뀌면 결제자·참여자·회비 UI를 모두 다시 그림
+function refreshMemberUI() {
+  buildPayerChips();
+  buildParticipantChips();
+  buildFeeRows();
+}
+
+const fmt = n => Math.round(n).toLocaleString("ko-KR") + "원";
+const numFmt = n => Number.isInteger(n) ? n.toLocaleString("en-US") : Number(n.toFixed(2)).toLocaleString("en-US");
+
+// ---------- 통화 (원화 기준 + 외화 여러 개) ----------
+const PRESET_CCY = [
+  { sym: "$",  name: "미국 달러" },
+  { sym: "€",  name: "유로" },
+  { sym: "¥",  name: "엔" },
+  { sym: "元", name: "위안" },
+  { sym: "₫",  name: "동" },
+  { sym: "฿",  name: "바트" },
+  { sym: "₱",  name: "페소" },
+  { sym: "Rp", name: "루피아" }
+];
+// 활성 외화 목록: { sym, name, rate }
+let CCY = [];
+let selectedCcy = null; // null = 원화, 아니면 CCY의 객체
+
+function loadCcy() {
+  try {
+    const s = JSON.parse(localStorage.getItem("trip-currencies"));
+    if (Array.isArray(s)) CCY = s.filter(c => c && c.sym);
+  } catch (e) {}
+}
+function saveCcy() { localStorage.setItem("trip-currencies", JSON.stringify(CCY)); }
+
+// 기존 데이터(usd 필드)를 표준 형태로: 외화 표시 라벨
+function fxLabelOf(e) {
+  if (e.fxAmt != null) return (e.fxSym || "") + numFmt(e.fxAmt);
+  if (e.usd != null) return "$" + numFmt(e.usd);
+  return "";
+}
+// 기존 usd 지출도 통화 목록에 자동 등록 (수정 가능하도록)
+function ensureCcyFromExpenses() {
+  const needUsd = expenses.some(e => e.usd != null && e.fxAmt == null);
+  if (needUsd && !CCY.some(c => c.sym === "$")) {
+    const sample = expenses.find(e => e.usd != null);
+    CCY.push({ sym: "$", name: "미국 달러", rate: (sample && sample.rate) || 1500 });
+    saveCcy();
+  }
+}
+
+// ---------- IndexedDB ----------
+let db;
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open("trip-2607", 1);
+    req.onupgradeneeded = () => {
+      req.result.createObjectStore("expenses", { keyPath: "id" });
+    };
+    req.onsuccess = () => { db = req.result; resolve(); };
+    req.onerror = () => reject(req.error);
+  });
+}
+function dbAll() {
+  return new Promise((resolve, reject) => {
+    const req = db.transaction("expenses").objectStore("expenses").getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+function dbPut(item) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("expenses", "readwrite");
+    tx.objectStore("expenses").put(item);
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+}
+function dbDelete(id) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("expenses", "readwrite");
+    tx.objectStore("expenses").delete(id);
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// ---------- 사진 압축 ----------
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const MAX = 1280;
+      let { width: w, height: h } = img;
+      if (Math.max(w, h) > MAX) {
+        const r = MAX / Math.max(w, h);
+        w = Math.round(w * r); h = Math.round(h * r);
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", 0.72));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("이미지를 읽지 못했어요")); };
+    img.src = url;
+  });
+}
+
+// ---------- 상태 ----------
+let expenses = [];
+let pendingPhoto = null;
+let editingId = null;
+
+// ---------- 렌더링 ----------
+function render() {
+  const isExp = e => e.type !== "income" && e.type !== "fee"; // 실제 지출
+  const FUND = Object.values(FEES).reduce((a, b) => a + b, 0);
+  const spent = expenses.filter(isExp).reduce((a, e) => a + e.amount, 0);
+  const donated = expenses.filter(e => e.type === "income").reduce((a, e) => a + e.amount, 0);
+  // 회비 기록 (멤버가 낸 종잣돈) — 멤버별 합
+  const feePaid = Object.fromEntries(MEMBERS.map(m => [m, 0]));
+  expenses.filter(e => e.type === "fee").forEach(e => { if (e.payer in feePaid) feePaid[e.payer] += e.amount; });
+  const feeTotal = Object.values(feePaid).reduce((a, b) => a + b, 0);
+  // 회비에서 나간 지출만 잔액에서 차감 (개인 결제는 정산 때 돌려줌)
+  const fundSpent = expenses
+    .filter(e => isExp(e) && (!e.payer || e.payer === "회비"))
+    .reduce((a, e) => a + e.amount, 0);
+  document.getElementById("fundTotal").textContent = fmt(FUND + feeTotal + donated);
+  document.getElementById("spentTotal").textContent = fmt(spent);
+  const balance = FUND + feeTotal + donated - fundSpent;
+  document.getElementById("balance").textContent = fmt(balance);
+  document.getElementById("balanceCard").classList.toggle("negative", balance < 0);
+  document.getElementById("balanceNote").textContent = balance < 0 ? "⚠ 총무가 대신 내는 중" : "";
+
+  // 지출 목록 (최신순)
+  const list = document.getElementById("expenseList");
+  list.innerHTML = "";
+  if (expenses.length === 0) {
+    list.innerHTML = '<p class="empty-msg">아직 지출이 없어요</p>';
+  } else {
+    [...expenses].sort((a, b) => (b.date + b.id).localeCompare(a.date + a.id)).forEach(e => {
+      const row = document.createElement("div");
+      row.className = "expense";
+
+      let thumb;
+      if (e.photo) {
+        thumb = document.createElement("img");
+        thumb.className = "thumb";
+        thumb.src = e.photo;
+        thumb.onclick = () => showLightbox(e.photo);
+      } else {
+        thumb = document.createElement("div");
+        thumb.className = "thumb empty";
+        thumb.textContent = e.type === "income" ? "💝" : e.type === "fee" ? "💰" : "🧾";
+      }
+
+      const info = document.createElement("div");
+      info.className = "info";
+      const dateStr = e.date ? e.date.slice(5).replace("-", "/") : "";
+      info.innerHTML =
+        '<div class="top"><span class="desc"></span><span class="amount"></span></div>' +
+        '<div class="meta"></div>';
+      const isIncome = e.type === "income";
+      const isFee = e.type === "fee";
+      info.querySelector(".desc").textContent = e.desc;
+      info.querySelector(".amount").textContent = (isIncome || isFee ? "+" : "") + fmt(e.amount);
+      if (isIncome || isFee) info.querySelector(".amount").style.color = "var(--accent)";
+      const fxLabel = fxLabelOf(e);
+      info.querySelector(".meta").textContent =
+        (isIncome ? "찬조 · " : "") + (isFee ? "회비 · " : "") + (e.category ? e.category + " · " : "") +
+        (isFee && e.payer ? e.payer + "님 냄 · " : "") +
+        (!isFee && e.payer && e.payer !== "회비" ? e.payer + " 결제 · " : "") +
+        (fxLabel ? fxLabel + " · " : "") +
+        dateStr + " · " + e.participants.join(", ");
+
+      const edit = document.createElement("button");
+      edit.className = "edit";
+      edit.textContent = "수정";
+      edit.onclick = () => startEdit(e);
+      info.appendChild(edit);
+
+      const del = document.createElement("button");
+      del.className = "del";
+      del.textContent = "삭제";
+      del.onclick = async () => {
+        if (!confirm('"' + e.desc + '" 지출을 삭제할까요?')) return;
+        await dbDelete(e.id);
+        expenses = expenses.filter(x => x.id !== e.id);
+        if (editingId === e.id) cancelEditMode();
+        render();
+      };
+      info.appendChild(del);
+
+      row.appendChild(thumb);
+      row.appendChild(info);
+      list.appendChild(row);
+    });
+  }
+
+  // 항목별 합계
+  const catTotals = {};
+  expenses.filter(isExp).forEach(e => {
+    const c = e.category || "미분류";
+    catTotals[c] = (catTotals[c] || 0) + e.amount;
+  });
+  const catBox = document.getElementById("catSummary");
+  catBox.innerHTML = "";
+  const catEntries = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+  if (catEntries.length === 0) {
+    catBox.innerHTML = '<p class="empty-msg">아직 지출이 없어요</p>';
+  } else {
+    const maxAmt = catEntries[0][1];
+    catEntries.forEach(([c, amt]) => {
+      const row = document.createElement("div");
+      row.className = "catrow";
+      row.innerHTML = '<span class="cname"></span><div class="cbar"><div></div></div>' +
+        '<span class="camt"><span class="val"></span><span class="pct"></span></span>';
+      row.querySelector(".cname").textContent = c;
+      row.querySelector(".cbar > div").style.width = Math.max(4, amt / maxAmt * 100) + "%";
+      row.querySelector(".val").textContent = fmt(amt);
+      row.querySelector(".pct").textContent = "(" + Math.round(amt / spent * 100) + "%)";
+      catBox.appendChild(row);
+    });
+  }
+
+  // 정산표
+  const shares = Object.fromEntries(MEMBERS.map(m => [m, 0]));
+  expenses.forEach(e => {
+    if (e.type === "fee") return; // 회비는 분담 계산에서 제외
+    if (!e.participants || e.participants.length === 0) return;
+    const sign = e.type === "income" ? -1 : 1;
+    const per = e.amount / e.participants.length * sign;
+    e.participants.forEach(p => { if (p in shares) shares[p] += per; });
+  });
+  // 개인 돈으로 결제한 지출 (정산 때 돌려줌)
+  const personalPaid = Object.fromEntries(MEMBERS.map(m => [m, 0]));
+  expenses.forEach(e => {
+    if (isExp(e) && e.payer && e.payer in personalPaid) personalPaid[e.payer] += e.amount;
+  });
+  const body = document.getElementById("settleBody");
+  body.innerHTML = "";
+  MEMBERS.forEach(m => {
+    const paid = FEES[m] + (EXTRA_PAID[m] || 0) + feePaid[m];
+    const refund = paid + personalPaid[m] - shares[m];
+    const tr = document.createElement("tr");
+    const cls = refund >= 0 ? "plus" : "minus";
+    tr.innerHTML = "<td>" + m + "</td><td>" + fmt(paid) + "</td><td>" +
+      (personalPaid[m] ? fmt(personalPaid[m]) : "-") + "</td><td>" + fmt(shares[m]) +
+      '</td><td class="' + cls + '">' + (refund >= 0 ? fmt(refund) : "-" + fmt(-refund)) + "</td>";
+    body.appendChild(tr);
+  });
+}
+
+function showLightbox(src) {
+  document.getElementById("lightboxImg").src = src;
+  document.getElementById("lightbox").style.display = "flex";
+}
+document.getElementById("lightbox").onclick = () => {
+  document.getElementById("lightbox").style.display = "none";
+};
+
+// ---------- 폼 ----------
+const membersBox = document.getElementById("fMembers");
+const payersBox = document.getElementById("fPayers");
+
+// "＋ 사람" 칩: 누르면 이름 입력칸으로 변신, 엔터로 추가
+function makeAddChip(onAdd) {
+  const wrap = document.createElement("span");
+  wrap.className = "ccy-chip add";
+  wrap.textContent = "＋ 사람";
+  wrap.onclick = () => {
+    if (wrap.querySelector("input")) return;
+    wrap.textContent = "";
+    const inp = document.createElement("input");
+    inp.type = "text"; inp.placeholder = "이름"; inp.className = "add-inline";
+    wrap.appendChild(inp);
+    inp.focus();
+    let done = false;
+    const commit = () => { if (done) return; done = true; const v = inp.value.trim(); if (v) onAdd(v); else refreshMemberUI(); };
+    inp.onkeydown = ev => {
+      if (ev.key === "Enter") { ev.preventDefault(); commit(); }
+      if (ev.key === "Escape") { done = true; refreshMemberUI(); }
+    };
+    inp.onblur = commit;
+  };
+  return wrap;
+}
+
+function buildParticipantChips() {
+  const checked = new Set([...membersBox.querySelectorAll("input:checked")].map(c => c.value));
+  const firstBuild = membersBox.dataset.built !== "1";
+  membersBox.innerHTML = "";
+  MEMBERS.forEach(m => {
+    const label = document.createElement("label");
+    const cb = document.createElement("input");
+    cb.type = "checkbox"; cb.value = m;
+    cb.checked = firstBuild ? true : checked.has(m);
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(m));
+    membersBox.appendChild(label);
+  });
+  membersBox.dataset.built = "1";
+  membersBox.appendChild(makeAddChip(name => {
+    const added = addMember(name);
+    if (added) { const cb = [...membersBox.querySelectorAll("input")].find(x => x.value === added); if (cb) cb.checked = true; }
+  }));
+}
+
+function buildPayerChips() {
+  const cur = (document.querySelector('input[name="payer"]:checked') || {}).value || "회비";
+  payersBox.innerHTML = "";
+  const fund = document.createElement("label");
+  const fundRb = document.createElement("input");
+  fundRb.type = "radio"; fundRb.name = "payer"; fundRb.value = "회비";
+  fundRb.checked = cur === "회비";
+  fund.appendChild(fundRb);
+  fund.appendChild(document.createTextNode("💰 공동 회비"));
+  payersBox.appendChild(fund);
+  MEMBERS.forEach(m => {
+    const label = document.createElement("label");
+    const rb = document.createElement("input");
+    rb.type = "radio"; rb.name = "payer"; rb.value = m; rb.checked = cur === m;
+    label.appendChild(rb);
+    label.appendChild(document.createTextNode(m));
+    payersBox.appendChild(label);
+  });
+  payersBox.appendChild(makeAddChip(name => addMember(name)));
+}
+function resetPayer() {
+  const fund = document.querySelector('input[name="payer"][value="회비"]');
+  if (fund) fund.checked = true;
+}
+
+// 항목 선택 (프리셋 + 직접 입력)
+const CATEGORIES = ["식당", "카페", "마트", "교통", "관광", "기념품", "숙소", "기타"];
+const catsBox = document.getElementById("fCats");
+[...CATEGORIES, "✏️ 직접 입력"].forEach((c, i) => {
+  const label = document.createElement("label");
+  const rb = document.createElement("input");
+  rb.type = "radio"; rb.name = "cat";
+  rb.value = c === "✏️ 직접 입력" ? "__custom" : c;
+  rb.checked = i === 0;
+  label.appendChild(rb);
+  label.appendChild(document.createTextNode(c));
+  catsBox.appendChild(label);
+});
+catsBox.onchange = () => {
+  const custom = document.querySelector('input[name="cat"]:checked').value === "__custom";
+  const input = document.getElementById("fCatCustom");
+  input.style.display = custom ? "block" : "none";
+  if (custom) input.focus();
+};
+
+// 통화 선택 (원화 기준 + 외화 여러 개)
+const ccyBox = document.getElementById("fCcy");
+function isForeignMode() { return selectedCcy !== null; }
+
+function renderCcyChips() {
+  ccyBox.innerHTML = "";
+  const krw = document.createElement("button");
+  krw.type = "button";
+  krw.className = "ccy-chip" + (selectedCcy === null ? " on" : "");
+  krw.textContent = "₩ 원화";
+  krw.onclick = () => selectCcy(null);
+  ccyBox.appendChild(krw);
+
+  CCY.forEach(c => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "ccy-chip" + (selectedCcy === c ? " on" : "");
+    chip.textContent = c.sym + " " + c.name;
+    chip.onclick = () => selectCcy(c);
+    ccyBox.appendChild(chip);
+  });
+
+  const add = document.createElement("button");
+  add.type = "button";
+  add.className = "ccy-chip add";
+  add.textContent = "＋ 통화";
+  add.onclick = openNewCcyForm;
+  ccyBox.appendChild(add);
+}
+
+function selectCcy(c) {
+  selectedCcy = c;
+  closeNewCcyForm();
+  const foreign = c !== null;
+  document.getElementById("rateRow").style.display = foreign ? "block" : "none";
+  document.getElementById("fAmount").placeholder = foreign ? "예: 25" : "예: 84000";
+  if (foreign) {
+    document.getElementById("rateSym").textContent = c.sym;
+    document.getElementById("fRate").value = c.rate || "";
+  }
+  renderCcyChips();
+  updateRateHint();
+}
+
+function updateRateHint() {
+  if (selectedCcy === null) { document.getElementById("rateHint").textContent = ""; return; }
+  const amt = Number(document.getElementById("fAmount").value);
+  const rate = Number(document.getElementById("fRate").value) || 0;
+  document.getElementById("rateHint").textContent =
+    amt > 0 && rate > 0 ? "→ 약 " + fmt(amt * rate) : "";
+}
+document.getElementById("fAmount").oninput = () => { if (isForeignMode()) updateRateHint(); };
+document.getElementById("fRate").oninput = () => {
+  if (selectedCcy) { selectedCcy.rate = Number(document.getElementById("fRate").value) || 0; saveCcy(); }
+  updateRateHint();
+};
+
+// 통화 추가 폼
+const ncForm = document.getElementById("newCcyForm");
+function openNewCcyForm() {
+  ncForm.style.display = "flex";
+  renderPresetPicks();
+  document.getElementById("ncSym").value = "";
+  document.getElementById("ncName").value = "";
+  document.getElementById("ncRate").value = "";
+  document.getElementById("ncSymEcho").textContent = "?";
+  document.getElementById("ncSym").focus();
+}
+function closeNewCcyForm() { ncForm.style.display = "none"; }
+function renderPresetPicks() {
+  let row = document.getElementById("ncPresets");
+  if (!row) {
+    row = document.createElement("div");
+    row.id = "ncPresets";
+    row.className = "members";
+    ncForm.insertBefore(row, ncForm.firstChild);
+  }
+  row.innerHTML = "";
+  const avail = PRESET_CCY.filter(p => !CCY.some(c => c.sym === p.sym && c.name === p.name));
+  if (avail.length === 0) { row.style.display = "none"; return; }
+  row.style.display = "flex";
+  avail.forEach(p => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "ccy-chip";
+    b.textContent = p.sym + " " + p.name;
+    b.onclick = () => {
+      document.getElementById("ncSym").value = p.sym;
+      document.getElementById("ncName").value = p.name;
+      document.getElementById("ncSymEcho").textContent = p.sym;
+      document.getElementById("ncRate").focus();
+    };
+    row.appendChild(b);
+  });
+}
+document.getElementById("ncSym").oninput = e => {
+  document.getElementById("ncSymEcho").textContent = e.target.value.trim() || "?";
+};
+document.getElementById("ncCancel").onclick = closeNewCcyForm;
+document.getElementById("ncSave").onclick = () => {
+  const sym = document.getElementById("ncSym").value.trim();
+  const name = document.getElementById("ncName").value.trim() || sym;
+  const rate = Number(document.getElementById("ncRate").value) || 0;
+  if (!sym) { alert("통화 기호를 입력해 주세요 (예: $, ₫)"); return; }
+  if (rate <= 0) { alert("환율을 입력해 주세요 (1" + sym + " 가 몇 원인지)"); return; }
+  let c = CCY.find(x => x.sym === sym && x.name === name);
+  if (!c) { c = { sym, name, rate }; CCY.push(c); }
+  else c.rate = rate;
+  saveCcy();
+  selectCcy(c);
+};
+
+document.querySelectorAll('input[name="etype"]').forEach(r => {
+  r.onchange = () => {
+    if (!r.checked) return;
+    const isIncome = r.value === "income";
+    const isFee = r.value === "fee";
+    document.getElementById("fDesc").placeholder =
+      isFee ? "예: 1차 회비 (비워도 돼요)" : isIncome ? "예: 스윗워러님 찬조" : "예: 저녁 갈비";
+    document.getElementById("pLabel").textContent = isIncome
+      ? "혜택을 나눌 사람 (보통 전원 체크)"
+      : "참여자 (함께 나눠 낼 사람)";
+    document.getElementById("submitBtn").textContent =
+      editingId ? "✏️ 수정 저장" : isFee ? "회비 기록하기" : isIncome ? "찬조 기록하기" : "지출 기록하기";
+    document.getElementById("catField").style.display = (isIncome || isFee) ? "none" : "block";
+    document.getElementById("participantField").style.display = isFee ? "none" : "block";
+    document.getElementById("payerField").style.display = isIncome ? "none" : "block";
+    document.getElementById("payerLabel").textContent = isFee ? "누가 낸 회비인가요?" : "누가 결제했나요?";
+    // 회비 모드에서는 '회비(다현)' 결제자 옵션을 숨기고 멤버만 고르게
+    const fundLabel = [...document.querySelectorAll('#fPayers label')].find(l => l.querySelector("input").value === "회비");
+    if (fundLabel) {
+      fundLabel.style.display = isFee ? "none" : "";
+      const fundRadio = fundLabel.querySelector("input");
+      if (isFee && fundRadio.checked && MEMBERS.length) {
+        const first = document.querySelector('#fPayers input[value="' + MEMBERS[0] + '"]');
+        if (first) first.checked = true;
+      }
+    }
+  };
+});
+
+document.getElementById("photoBtn").onclick = () => document.getElementById("fPhoto").click();
+document.getElementById("fPhoto").onchange = async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    pendingPhoto = await compressImage(file);
+    const pv = document.getElementById("photoPreview");
+    pv.src = pendingPhoto;
+    pv.style.display = "block";
+    document.getElementById("photoBtn").textContent = "📷 사진 바꾸기";
+  } catch (err) {
+    alert(err.message);
+  }
+};
+
+// 수정 모드
+function startEdit(e) {
+  editingId = e.id;
+  const etype = e.type === "income" ? "income" : e.type === "fee" ? "fee" : "expense";
+  document.querySelector('input[name="etype"][value="' + etype + '"]').click();
+  document.getElementById("fDate").value = e.date;
+  document.getElementById("fDesc").value = e.desc;
+
+  if (e.type === "expense") {
+    let catVal;
+    if (!e.category) catVal = "기타";
+    else if (CATEGORIES.includes(e.category)) catVal = e.category;
+    else catVal = "__custom";
+    document.querySelector('input[name="cat"][value="' + catVal + '"]').checked = true;
+    const custom = document.getElementById("fCatCustom");
+    custom.style.display = catVal === "__custom" ? "block" : "none";
+    custom.value = catVal === "__custom" ? e.category : "";
+  }
+  if (e.type === "expense" || e.type === "fee") {
+    const payerRadio = document.querySelector('input[name="payer"][value="' + (e.payer || "회비") + '"]');
+    (payerRadio || document.querySelector('input[name="payer"][value="회비"]')).checked = true;
+  }
+
+  const fxAmt = e.fxAmt != null ? e.fxAmt : e.usd;
+  const fxSym = e.fxSym != null ? e.fxSym : (e.usd != null ? "$" : null);
+  if (fxAmt != null && fxSym != null) {
+    let c = CCY.find(x => x.sym === fxSym);
+    if (!c) { c = { sym: fxSym, name: e.fxName || fxSym, rate: e.rate || 0 }; CCY.push(c); saveCcy(); }
+    selectCcy(c);
+    document.getElementById("fAmount").value = fxAmt;
+    document.getElementById("fRate").value = e.rate || c.rate || "";
+    updateRateHint();
+  } else {
+    selectCcy(null);
+    document.getElementById("fAmount").value = e.amount;
+  }
+
+  membersBox.querySelectorAll("input").forEach(cb => { cb.checked = e.participants.includes(cb.value); });
+
+  pendingPhoto = e.photo || null;
+  const pv = document.getElementById("photoPreview");
+  pv.style.display = pendingPhoto ? "block" : "none";
+  if (pendingPhoto) pv.src = pendingPhoto;
+  document.getElementById("photoBtn").textContent = pendingPhoto ? "📷 사진 바꾸기" : "📷 사진 붙이기";
+
+  document.getElementById("submitBtn").textContent = "✏️ 수정 저장";
+  document.getElementById("cancelEdit").style.display = "block";
+  document.getElementById("expenseForm").scrollIntoView({ behavior: "smooth" });
+}
+
+function cancelEditMode() {
+  editingId = null;
+  document.getElementById("cancelEdit").style.display = "none";
+  const isIncome = document.querySelector('input[name="etype"]:checked').value === "income";
+  document.getElementById("submitBtn").textContent = isIncome ? "찬조 기록하기" : "지출 기록하기";
+}
+
+document.getElementById("cancelEdit").onclick = () => {
+  document.getElementById("fDesc").value = "";
+  document.getElementById("fAmount").value = "";
+  document.getElementById("rateHint").textContent = "";
+  pendingPhoto = null;
+  document.getElementById("fPhoto").value = "";
+  document.getElementById("photoPreview").style.display = "none";
+  document.getElementById("photoBtn").textContent = "📷 사진 붙이기";
+  membersBox.querySelectorAll("input").forEach(cb => { cb.checked = true; });
+  resetPayer();
+  cancelEditMode();
+};
+
+document.getElementById("expenseForm").onsubmit = async e => {
+  e.preventDefault();
+  const etype = document.querySelector('input[name="etype"]:checked').value;
+  const isFee = etype === "fee";
+
+  let participants = [...membersBox.querySelectorAll("input:checked")].map(c => c.value);
+  if (!isFee && participants.length === 0) { alert("참여자를 한 명 이상 선택해 주세요"); return; }
+
+  const descVal = document.getElementById("fDesc").value.trim();
+  if (!isFee && !descVal) { alert("내용을 입력해 주세요"); return; }
+
+  let category = null;
+  if (etype === "expense") {
+    const catVal = document.querySelector('input[name="cat"]:checked').value;
+    category = catVal === "__custom" ? document.getElementById("fCatCustom").value.trim() : catVal;
+    if (!category) { alert("항목 이름을 입력해 주세요"); return; }
+  }
+
+  // 회비: 낸 사람을 payer로, 참여자는 계산에 안 쓰이므로 낸 사람 1명으로 기록
+  let payer = null;
+  if (isFee) {
+    payer = document.querySelector('input[name="payer"]:checked').value;
+    if (payer === "회비") { alert("회비를 낸 사람을 선택해 주세요"); return; }
+    participants = [payer];
+  } else if (etype !== "income") {
+    payer = document.querySelector('input[name="payer"]:checked').value;
+  }
+
+  const raw = Number(document.getElementById("fAmount").value);
+  let amount = raw, fxAmt = null, fxSym = null, fxName = null, rate = null;
+  if (isForeignMode()) {
+    rate = Number(document.getElementById("fRate").value) || selectedCcy.rate || 0;
+    if (rate <= 0) { alert("환율을 입력해 주세요"); return; }
+    fxAmt = raw;
+    fxSym = selectedCcy.sym;
+    fxName = selectedCcy.name;
+    amount = Math.round(raw * rate);
+    selectedCcy.rate = rate;
+    saveCcy();
+  }
+
+  const item = {
+    id: editingId || Date.now().toString(36),
+    type: etype,
+    category,
+    payer,
+    date: document.getElementById("fDate").value,
+    desc: document.getElementById("fDesc").value.trim() || (isFee ? "회비" : ""),
+    amount, fxAmt, fxSym, fxName, rate,
+    participants,
+    photo: pendingPhoto
+  };
+  await dbPut(item);
+  if (editingId) {
+    expenses = expenses.map(x => x.id === editingId ? item : x);
+  } else {
+    expenses.push(item);
+  }
+
+  // 폼 리셋 (날짜·참여자는 유지)
+  document.getElementById("fDesc").value = "";
+  document.getElementById("fAmount").value = "";
+  document.getElementById("rateHint").textContent = "";
+  pendingPhoto = null;
+  document.getElementById("fPhoto").value = "";
+  document.getElementById("photoPreview").style.display = "none";
+  document.getElementById("photoBtn").textContent = "📷 사진 붙이기";
+  resetPayer();
+  cancelEditMode();
+  render();
+};
+
+// ---------- 회비 설정 ----------
+function buildFeeRows() {
+  const box = document.getElementById("feeRows");
+  box.innerHTML = "";
+  if (MEMBERS.length === 0) {
+    const p = document.createElement("p");
+    p.className = "empty-msg";
+    p.textContent = "아직 멤버가 없어요. 아래에서 추가하세요.";
+    box.appendChild(p);
+  }
+  MEMBERS.forEach(m => {
+    const row = document.createElement("div");
+    row.className = "feerow";
+    const name = document.createElement("button");
+    name.type = "button"; name.className = "fname-btn"; name.textContent = m; name.title = "이름 수정";
+    name.onclick = () => { const nn = prompt("이름 수정", m); if (nn !== null) renameMember(m, nn); };
+    const fee = document.createElement("input");
+    fee.type = "number"; fee.min = "0"; fee.step = "any"; fee.value = FEES[m] || 0;
+    fee.oninput = () => { FEES[m] = Number(fee.value) || 0; saveFees(); render(); };
+    const extra = document.createElement("input");
+    extra.type = "number"; extra.min = "0"; extra.step = "any"; extra.value = EXTRA_PAID[m] || 0;
+    extra.oninput = () => { EXTRA_PAID[m] = Number(extra.value) || 0; saveFees(); render(); };
+    const del = document.createElement("button");
+    del.type = "button"; del.className = "fdel"; del.textContent = "✕"; del.title = "멤버 삭제";
+    del.onclick = () => deleteMember(m);
+    row.appendChild(name); row.appendChild(fee); row.appendChild(extra); row.appendChild(del);
+    box.appendChild(row);
+  });
+  const addRow = document.createElement("div");
+  addRow.className = "feerow add-row";
+  const inp = document.createElement("input");
+  inp.type = "text"; inp.placeholder = "새 멤버 이름"; inp.className = "add-member-input";
+  const btn = document.createElement("button");
+  btn.type = "button"; btn.className = "ccy-mini"; btn.textContent = "추가";
+  const doAdd = () => { const v = inp.value.trim(); if (v) { inp.value = ""; addMember(v); } };
+  btn.onclick = doAdd;
+  inp.onkeydown = ev => { if (ev.key === "Enter") { ev.preventDefault(); doAdd(); } };
+  addRow.appendChild(inp); addRow.appendChild(btn);
+  box.appendChild(addRow);
+}
+
+// ---------- 데이터 내보내기 / 가져오기 ----------
+document.getElementById("exportBtn").onclick = async () => {
+  const title = getTitle();
+  const data = { app: "split-app", title, exportedAt: new Date().toISOString(), members: MEMBERS, fees: FEES, extra: EXTRA_PAID, currencies: CCY, expenses };
+  const json = JSON.stringify(data);
+  const safe = title.replace(/[\\/:*?"<>|]/g, "").trim() || "정산";
+  const fileName = safe + "_" + new Date().toISOString().slice(0, 10) + ".json";
+
+  // 아이폰 등: 공유 시트로 카톡에 바로 보내기
+  try {
+    const file = new File([json], fileName, { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: title + " 데이터" });
+      return;
+    }
+  } catch (err) {
+    if (err && err.name === "AbortError") return; // 사용자가 취소함
+  }
+
+  // 그 외: 파일로 저장
+  const blob = new Blob([json], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+document.getElementById("importBtn").onclick = () => document.getElementById("importFile").click();
+document.getElementById("importFile").onchange = async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    const list = Array.isArray(data) ? data : data.expenses;
+    if (!Array.isArray(list)) throw new Error("정산 앱에서 내보낸 파일이 아니에요");
+    if (!confirm("기록 " + list.length + "건을 불러올까요?\n(같은 기록은 덮어쓰고, 나머지는 추가돼요)")) {
+      e.target.value = "";
+      return;
+    }
+    for (const item of list) { if (item && item.id) await dbPut(item); }
+    expenses = await dbAll();
+    if (data.fees) { FEES = Object.assign({}, data.fees); EXTRA_PAID = Object.assign({}, data.extra || {}); }
+    if (Array.isArray(data.members)) MEMBERS = data.members.slice();
+    if (data.title) setTitle(data.title);
+    if (Array.isArray(data.currencies)) { CCY = data.currencies.filter(c => c && c.sym); saveCcy(); }
+    syncMembersFromData();
+    saveFees();
+    refreshMemberUI();
+    ensureCcyFromExpenses();
+    renderCcyChips();
+    render();
+    alert("가져오기 완료! (" + list.length + "건)");
+  } catch (err) {
+    alert("가져오기 실패: " + err.message);
+  }
+  e.target.value = "";
+};
+
+// ---------- 정산 결과 계산·보기·공유 ----------
+function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+function computeSettlement() {
+  const isExp = e => e.type !== "income" && e.type !== "fee";
+  const spent = expenses.filter(isExp).reduce((a, e) => a + e.amount, 0);
+  const donated = expenses.filter(e => e.type === "income").reduce((a, e) => a + e.amount, 0);
+  const FUND = Object.values(FEES).reduce((a, b) => a + b, 0);
+  const feePaid = Object.fromEntries(MEMBERS.map(m => [m, 0]));
+  expenses.filter(e => e.type === "fee").forEach(e => { if (e.payer in feePaid) feePaid[e.payer] += e.amount; });
+  const feeTotal = Object.values(feePaid).reduce((a, b) => a + b, 0);
+  const shares = Object.fromEntries(MEMBERS.map(m => [m, 0]));
+  expenses.forEach(e => {
+    if (e.type === "fee") return;
+    if (!e.participants || !e.participants.length) return;
+    const sign = e.type === "income" ? -1 : 1;
+    const per = e.amount / e.participants.length * sign;
+    e.participants.forEach(p => { if (p in shares) shares[p] += per; });
+  });
+  const personalPaid = Object.fromEntries(MEMBERS.map(m => [m, 0]));
+  expenses.forEach(e => { if (isExp(e) && e.payer && e.payer in personalPaid) personalPaid[e.payer] += e.amount; });
+  const fundSpent = expenses.filter(e => isExp(e) && (!e.payer || e.payer === "회비")).reduce((a, e) => a + e.amount, 0);
+  const rows = MEMBERS.map(m => {
+    const paid = FEES[m] + (EXTRA_PAID[m] || 0) + feePaid[m];
+    return { m, paid, personalPaid: personalPaid[m], share: shares[m], settle: paid + personalPaid[m] - shares[m] };
+  });
+  return { spent, donated, feeTotal, FUND, fund: FUND + feeTotal + donated, balance: FUND + feeTotal + donated - fundSpent, rows };
+}
+
+// 최소 송금 매칭 (그리디)
+function settleFlow(rows) {
+  const debt = rows.filter(r => r.settle < -0.5).map(r => ({ m: r.m, amt: -r.settle }));
+  const credit = rows.filter(r => r.settle > 0.5).map(r => ({ m: r.m, amt: r.settle }));
+  const lines = [];
+  let i = 0, j = 0;
+  while (i < debt.length && j < credit.length) {
+    const pay = Math.min(debt[i].amt, credit[j].amt);
+    lines.push(debt[i].m + "님 → " + credit[j].m + "님 " + fmt(pay));
+    debt[i].amt -= pay; credit[j].amt -= pay;
+    if (debt[i].amt < 1) i++;
+    if (credit[j].amt < 1) j++;
+  }
+  return lines;
+}
+
+const near0 = v => Math.abs(v) < 0.5;
+function settleLabel(v) { return near0(v) ? "정산 완료" : v > 0 ? "+" + fmt(v) + " 받기" : fmt(-v) + " 내기"; }
+
+function renderResult() {
+  const s = computeSettlement();
+  let h = "";
+  h += '<div class="r-title">' + escapeHtml(getTitle()) + "</div>";
+  h += '<div class="r-sub">' + MEMBERS.map(escapeHtml).join(" · ") + "</div>";
+  h += '<div class="r-cards">'
+    + '<div class="r-card"><div class="l">모인 돈</div><div class="v">' + fmt(s.fund) + "</div></div>"
+    + '<div class="r-card"><div class="l">쓴 돈</div><div class="v">' + fmt(s.spent) + "</div></div>"
+    + '<div class="r-card"><div class="l">남은 돈</div><div class="v" style="color:var(--accent)">' + fmt(s.balance) + "</div></div>"
+    + "</div>";
+  h += '<div class="r-h">정산</div>';
+  s.rows.forEach(r => {
+    const cls = near0(r.settle) ? "r-even" : r.settle > 0 ? "r-get" : "r-owe";
+    h += '<div class="r-row"><span class="rn">' + escapeHtml(r.m) + '</span><span class="' + cls + '">' + settleLabel(r.settle) + "</span></div>";
+  });
+  const flow = settleFlow(s.rows);
+  if (flow.length) h += '<div class="r-flow"><b>💸 송금 방법</b><br>' + flow.map(escapeHtml).join("<br>") + "</div>";
+  document.getElementById("resultBody").innerHTML = h;
+}
+
+function shareText() {
+  const s = computeSettlement();
+  let t = "[" + getTitle() + "]\n\n";
+  t += "모인 돈 " + fmt(s.fund) + "\n쓴 돈 " + fmt(s.spent) + "\n남은 돈 " + fmt(s.balance) + "\n\n정산\n";
+  s.rows.forEach(r => { t += "· " + r.m + " : " + settleLabel(r.settle) + "\n"; });
+  const flow = settleFlow(s.rows);
+  if (flow.length) t += "\n송금 방법\n" + flow.map(l => "· " + l).join("\n");
+  return t;
+}
+
+const resultOverlay = document.getElementById("resultOverlay");
+document.getElementById("resultBtn").onclick = () => {
+  if (MEMBERS.length === 0) { alert("먼저 멤버를 추가해 주세요"); return; }
+  renderResult();
+  resultOverlay.classList.add("on");
+};
+document.getElementById("resultClose").onclick = () => resultOverlay.classList.remove("on");
+resultOverlay.onclick = e => { if (e.target === resultOverlay) resultOverlay.classList.remove("on"); };
+document.getElementById("resultShare").onclick = async () => {
+  const text = shareText();
+  try { if (navigator.share) { await navigator.share({ title: getTitle(), text }); return; } }
+  catch (err) { if (err && err.name === "AbortError") return; }
+  try { await navigator.clipboard.writeText(text); alert("정산 내용을 복사했어요. 붙여넣기 하세요."); }
+  catch (e) { alert("이 환경에서는 공유가 어려워요. 텍스트 복사를 눌러보세요."); }
+};
+document.getElementById("resultCopy").onclick = async () => {
+  try { await navigator.clipboard.writeText(shareText()); alert("복사했어요!"); }
+  catch (e) { alert("복사를 지원하지 않는 환경이에요."); }
+};
+
+// ---------- 제목 (편집 가능) ----------
+const titleEl = document.getElementById("appTitle");
+function getTitle() { return (titleEl.textContent || "").trim() || "모임 정산"; }
+function setTitle(t) {
+  t = (t || "").trim() || "모임 정산";
+  titleEl.textContent = t;
+  document.title = t;
+  localStorage.setItem("split-title", t);
+}
+titleEl.onblur = () => setTitle(titleEl.textContent);
+titleEl.onkeydown = ev => { if (ev.key === "Enter") { ev.preventDefault(); titleEl.blur(); } };
+
+// ---------- 시작 ----------
+(async function init() {
+  document.getElementById("fDate").value = new Date().toISOString().slice(0, 10);
+  setTitle(localStorage.getItem("split-title") || "모임 정산");
+  loadFees();
+  loadCcy();
+  await openDB();
+  expenses = await dbAll();
+  syncMembersFromData();     // 저장된 기록에서 멤버 복원
+  ensureCcyFromExpenses();
+  refreshMemberUI();          // 결제자·참여자·회비 UI
+  renderCcyChips();
+  render();
+})();
+</script>
+</body>
+</html>
