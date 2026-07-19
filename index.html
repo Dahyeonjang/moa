@@ -219,6 +219,10 @@
     color: var(--faint); font-size: 14px; cursor: pointer; padding: 4px;
   }
   .feerow .fdel:hover { color: var(--danger); }
+  .fee-rec {
+    font-size: var(--t-micro); color: var(--accent); letter-spacing: 0;
+    padding: 0 0 7px 2px; line-height: 1.5;
+  }
   .feerow.add-row { margin-top: 10px; gap: 8px; }
   .add-member-input {
     flex: 1; min-width: 0; padding: 10px 11px; border: 1px solid var(--line);
@@ -428,6 +432,7 @@
     </div>
     <div id="feeRows"></div>
     <p class="note">
+      · 여기 숫자는 <strong>한 번에 정하는 회비</strong>예요. 기록 추가에서 건별로 넣은 회비는 이름 아래에 따로 표시되고, 둘은 합쳐서 정산돼요<br>
       · 이름을 누르면 수정, ✕로 삭제할 수 있어요<br>
       · 회비를 안 걷는 모임이면 0으로 두고, 지출·정산만 써도 돼요<br>
       · 추가 납입 = 회비 외에 더 냈고 <strong>그대로 돌려받을</strong> 돈 (보태는 돈이면 <strong>💝 찬조</strong>로)
@@ -810,6 +815,9 @@ function render() {
       '</td><td class="' + cls + '">' + (refund >= 0 ? fmt(refund) : "-" + fmt(-refund)) + "</td>";
     body.appendChild(tr);
   });
+
+  // 회비 기록이 바뀌면 멤버·회비 섹션의 안내도 따라 갱신
+  safeRebuildFeeRows();
 }
 
 function showLightbox(src) {
@@ -1211,6 +1219,18 @@ document.getElementById("expenseForm").onsubmit = async e => {
 };
 
 // ---------- 회비 설정 ----------
+// 기록 추가로 들어온 회비 합계 (멤버별)
+function feeRecordOf(m) {
+  return expenses.filter(e => e.type === "fee" && e.payer === m).reduce((a, e) => a + e.amount, 0);
+}
+// 회비칸을 편집하는 중에는 다시 그리지 않는다 (포커스가 튀지 않게)
+function safeRebuildFeeRows() {
+  const box = document.getElementById("feeRows");
+  if (!box) return;
+  if (document.activeElement && box.contains(document.activeElement)) return;
+  buildFeeRows();
+}
+
 function buildFeeRows() {
   const box = document.getElementById("feeRows");
   box.innerHTML = "";
@@ -1237,6 +1257,15 @@ function buildFeeRows() {
     del.onclick = () => deleteMember(m);
     row.appendChild(name); row.appendChild(fee); row.appendChild(extra); row.appendChild(del);
     box.appendChild(row);
+
+    // 기록 추가로 넣은 회비가 있으면 여기에 이어서 보여준다
+    const rec = feeRecordOf(m);
+    if (rec > 0) {
+      const hint = document.createElement("div");
+      hint.className = "fee-rec";
+      hint.textContent = "↳ 기록으로 낸 회비 " + fmt(rec) + " · 합계 " + fmt((FEES[m] || 0) + rec);
+      box.appendChild(hint);
+    }
   });
   const addRow = document.createElement("div");
   addRow.className = "feerow add-row";
