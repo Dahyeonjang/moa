@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>모임 정산</title>
+<title>세상에서 제일 간단한 여행 가계부</title>
 <style>
   :root {
     /* 색 — 3단계 위계 */
@@ -311,8 +311,8 @@
 
   /* 홈 — 모임 목록 */
   .home-head { text-align: center; margin-bottom: 24px; }
-  .home-head h1 { font-size: var(--t-title); font-weight: 700; letter-spacing: -0.035em; }
-  .home-head p { font-size: var(--t-caption); color: var(--faint); margin-top: 7px; }
+  .home-head h1 { font-size: 23px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.32; text-wrap: balance; }
+  .home-head p { font-size: var(--t-caption); color: var(--faint); margin-top: 9px; }
   .group-card {
     display: flex; align-items: stretch; gap: 8px; margin-bottom: 10px;
   }
@@ -353,7 +353,7 @@
 
 <div id="homeView" class="wrap" hidden>
   <div class="home-head">
-    <h1>모임 정산</h1>
+    <h1>🧳 세상에서 제일 간단한<br>여행 가계부</h1>
     <p>여행·모임마다 따로 정산하고, 끝나면 삭제해요</p>
   </div>
   <div id="groupList"></div>
@@ -1560,7 +1560,7 @@ function showHome() {
   localStorage.removeItem("moa-current");
   document.getElementById("groupView").hidden = true;
   document.getElementById("homeView").hidden = false;
-  document.title = "모임 정산";
+  document.title = "세상에서 제일 간단한 여행 가계부";
   renderHome();
 }
 async function openGroup(id) {
