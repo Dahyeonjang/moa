@@ -308,10 +308,63 @@
   .result-actions { display: flex; gap: 8px; margin-top: 22px; }
   .result-actions .submit { margin-top: 0; flex: 1 1 auto; white-space: nowrap; }
   .result-actions .cancel-btn { margin-top: 0; flex: 0 0 auto; white-space: nowrap; width: auto; padding: 12px 16px; }
+
+  /* 홈 — 모임 목록 */
+  .home-head { text-align: center; margin-bottom: 24px; }
+  .home-head h1 { font-size: var(--t-title); font-weight: 700; letter-spacing: -0.035em; }
+  .home-head p { font-size: var(--t-caption); color: var(--faint); margin-top: 7px; }
+  .group-card {
+    display: flex; align-items: stretch; gap: 8px; margin-bottom: 10px;
+  }
+  .group-open {
+    flex: 1; min-width: 0; text-align: left; cursor: pointer;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px 16px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .group-open:hover { border-color: var(--accent); }
+  .group-open .g-title { font-size: var(--t-body); font-weight: 600; letter-spacing: -0.02em; color: var(--ink); }
+  .group-open .g-meta { font-size: var(--t-caption); color: var(--faint); font-variant-numeric: tabular-nums; }
+  .group-del {
+    flex: 0 0 auto; width: 46px; border: 1px solid var(--line); border-radius: var(--radius);
+    background: var(--card); color: var(--faint); font-size: 15px; cursor: pointer;
+  }
+  .group-del:hover { color: var(--danger); border-color: var(--danger); }
+  .new-group {
+    display: flex; gap: 8px; margin-top: 18px;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px;
+  }
+  .new-group input {
+    flex: 1; min-width: 0; padding: 11px 12px; border: 1px solid var(--line);
+    border-radius: var(--radius-sm); font-size: var(--t-input); background: var(--field); color: var(--ink);
+  }
+  .new-group input::placeholder { color: var(--faint); }
+  .new-group button {
+    flex: 0 0 auto; padding: 0 20px; border: none; border-radius: var(--radius-sm);
+    background: var(--accent); color: #fff; font-size: var(--t-body); font-weight: 600; cursor: pointer;
+  }
+  .back-home {
+    display: inline-flex; align-items: center; gap: 4px; background: none; border: none;
+    color: var(--sub); font-size: var(--t-small); cursor: pointer; padding: 4px 2px; margin-bottom: 6px;
+  }
+  .back-home:hover { color: var(--accent); }
 </style>
 </head>
 <body>
-<div class="wrap">
+
+<div id="homeView" class="wrap" hidden>
+  <div class="home-head">
+    <h1>모임 정산</h1>
+    <p>여행·모임마다 따로 정산하고, 끝나면 삭제해요</p>
+  </div>
+  <div id="groupList"></div>
+  <div class="new-group">
+    <input type="text" id="newGroupInput" placeholder="새 모임 이름 (예: 제주 여행)">
+    <button type="button" id="newGroupBtn">만들기</button>
+  </div>
+</div>
+
+<div id="groupView" class="wrap" hidden>
+  <button type="button" class="back-home" id="backHome">← 모임 목록</button>
   <header>
     <h1 id="appTitle" contenteditable="true" spellcheck="false"></h1>
     <p class="title-hint">제목을 눌러 바꿀 수 있어요</p>
@@ -472,20 +525,45 @@ let MEMBERS = [];
 let FEES = {};        // 이름 → 회비
 let EXTRA_PAID = {};  // 이름 → 추가 납입(그대로 반환할 몫)
 
-function loadFees() {
-  try {
-    const s = JSON.parse(localStorage.getItem("moa-members"));
-    if (s && Array.isArray(s.members)) {
-      MEMBERS = s.members.slice();
-      FEES = s.fees || {};
-      EXTRA_PAID = s.extra || {};
-    }
-  } catch (e) {}
+// ---------- 모임(여러 개) 관리 ----------
+let CURRENT_GID = null; // 지금 열려 있는 모임 id (null = 홈 화면)
+const groupKey = id => "moa-g-" + id;
+function newGid() { return "g" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+function loadGroupList() { try { return JSON.parse(localStorage.getItem("moa-groups")) || []; } catch (e) { return []; } }
+function saveGroupList(list) { localStorage.setItem("moa-groups", JSON.stringify(list)); }
+function touchGroup(id, title) {
+  const list = loadGroupList();
+  const g = list.find(x => x.id === id);
+  const now = Date.now();
+  if (g) { g.updatedAt = now; if (title != null) g.title = title; }
+  else list.push({ id, title: title || "모임 정산", updatedAt: now });
+  saveGroupList(list);
+}
+
+// 현재 모임의 설정(제목·멤버·회비·통화)을 저장
+function saveGroup() {
+  if (!CURRENT_GID) return;
+  const title = getTitle();
+  localStorage.setItem(groupKey(CURRENT_GID), JSON.stringify({
+    title, members: MEMBERS, fees: FEES, extra: EXTRA_PAID, currencies: CCY
+  }));
+  touchGroup(CURRENT_GID, title);
+}
+// 모임 설정을 불러와 전역 상태에 채운다 (제목 반환)
+function loadGroupSettings(id) {
+  let s = {};
+  try { s = JSON.parse(localStorage.getItem(groupKey(id))) || {}; } catch (e) {}
+  MEMBERS = Array.isArray(s.members) ? s.members.slice() : [];
+  FEES = s.fees || {};
+  EXTRA_PAID = s.extra || {};
+  CCY = Array.isArray(s.currencies) ? s.currencies.filter(c => c && c.sym) : [];
   MEMBERS.forEach(m => { if (!(m in FEES)) FEES[m] = 0; });
+  return s.title || "모임 정산";
 }
-function saveFees() {
-  localStorage.setItem("moa-members", JSON.stringify({ members: MEMBERS, fees: FEES, extra: EXTRA_PAID }));
-}
+
+// 기존 저장/불러오기 함수는 현재 모임에 대한 저장으로 연결
+function saveFees() { saveGroup(); }
 
 // 데이터(회비/지출)에서 멤버 목록을 유추해 병합 (가져오기·복원용)
 function syncMembersFromData() {
@@ -561,13 +639,7 @@ const PRESET_CCY = [
 let CCY = [];
 let selectedCcy = null; // null = 원화, 아니면 CCY의 객체
 
-function loadCcy() {
-  try {
-    const s = JSON.parse(localStorage.getItem("moa-currencies"));
-    if (Array.isArray(s)) CCY = s.filter(c => c && c.sym);
-  } catch (e) {}
-}
-function saveCcy() { localStorage.setItem("moa-currencies", JSON.stringify(CCY)); }
+function saveCcy() { saveGroup(); }
 
 // 기존 데이터(usd 필드)를 표준 형태로: 외화 표시 라벨
 function fxLabelOf(e) {
@@ -616,7 +688,8 @@ function openDB() {
     setTimeout(() => finish("저장소가 응답하지 않아요"), 2500);
   });
 }
-function dbAll() {
+// 저장된 모든 기록 (모임 구분 없이 원본)
+function dbAllRaw() {
   if (!db) return Promise.resolve([]);
   return new Promise(resolve => {
     try {
@@ -626,8 +699,14 @@ function dbAll() {
     } catch (e) { resolve([]); }
   });
 }
+// 현재 열린 모임의 기록만
+async function dbAll() {
+  const all = await dbAllRaw();
+  return all.filter(e => e.gid === CURRENT_GID);
+}
 function dbPut(item) {
   if (!db) return Promise.resolve();
+  if (item && item.gid == null) item.gid = CURRENT_GID; // 어느 모임 기록인지 표시
   return new Promise(resolve => {
     try {
       const tx = db.transaction("expenses", "readwrite");
@@ -1189,6 +1268,7 @@ document.getElementById("expenseForm").onsubmit = async e => {
 
   const item = {
     id: editingId || Date.now().toString(36),
+    gid: CURRENT_GID,
     type: etype,
     category,
     payer,
@@ -1320,7 +1400,7 @@ document.getElementById("importFile").onchange = async e => {
       e.target.value = "";
       return;
     }
-    for (const item of list) { if (item && item.id) await dbPut(item); }
+    for (const item of list) { if (item && item.id) { item.gid = CURRENT_GID; await dbPut(item); } }
     expenses = await dbAll();
     if (data.fees) { FEES = Object.assign({}, data.fees); EXTRA_PAID = Object.assign({}, data.extra || {}); }
     if (Array.isArray(data.members)) MEMBERS = data.members.slice();
@@ -1468,24 +1548,132 @@ function setTitle(t) {
   t = (t || "").trim() || "모임 정산";
   titleEl.textContent = t;
   document.title = t;
-  localStorage.setItem("moa-title", t);
+  if (CURRENT_GID) saveGroup();
 }
 titleEl.onblur = () => setTitle(titleEl.textContent);
 titleEl.onkeydown = ev => { if (ev.key === "Enter") { ev.preventDefault(); titleEl.blur(); } };
 
+// ---------- 화면 전환: 홈(모임 목록) ↔ 모임 ----------
+function showHome() {
+  if (CURRENT_GID) saveGroup();
+  CURRENT_GID = null;
+  localStorage.removeItem("moa-current");
+  document.getElementById("groupView").hidden = true;
+  document.getElementById("homeView").hidden = false;
+  document.title = "모임 정산";
+  renderHome();
+}
+async function openGroup(id) {
+  CURRENT_GID = id;
+  localStorage.setItem("moa-current", id);
+  const title = loadGroupSettings(id);
+  setTitle(title);
+  expenses = await dbAll();
+  syncMembersFromData();
+  ensureCcyFromExpenses();
+  refreshMemberUI();
+  renderCcyChips();
+  selectCcy(null);
+  render();
+  document.getElementById("homeView").hidden = true;
+  document.getElementById("groupView").hidden = false;
+  window.scrollTo(0, 0);
+}
+async function createGroup(name) {
+  name = (name || "").trim();
+  if (!name) return;
+  const id = newGid();
+  CURRENT_GID = id;
+  MEMBERS = []; FEES = {}; EXTRA_PAID = {}; CCY = [];
+  titleEl.textContent = name;
+  touchGroup(id, name);
+  saveGroup();
+  await openGroup(id);
+}
+async function removeGroup(id, title) {
+  const go = confirm('"' + title + '" 모임을 삭제할까요?\n\n삭제하면 이 모임의 기록은 되살릴 수 없어요.\n먼저 열어서 내보내기(백업)를 해두시길 권해요.');
+  if (!go) return;
+  const raw = await dbAllRaw();
+  for (const e of raw.filter(e => e.gid === id)) await dbDelete(e.id);
+  localStorage.removeItem(groupKey(id));
+  saveGroupList(loadGroupList().filter(g => g.id !== id));
+  renderHome();
+}
+
+function fmtWhen(ts) {
+  if (!ts) return "";
+  const d = new Date(ts), now = new Date();
+  const days = Math.floor((now.setHours(0,0,0,0) - new Date(ts).setHours(0,0,0,0)) / 86400000);
+  if (days === 0) return "오늘";
+  if (days === 1) return "어제";
+  if (days < 7) return days + "일 전";
+  return (d.getMonth() + 1) + "월 " + d.getDate() + "일";
+}
+
+async function renderHome() {
+  const list = loadGroupList().slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const box = document.getElementById("groupList");
+  box.innerHTML = "";
+  if (list.length === 0) {
+    box.innerHTML = '<p class="empty-msg">아직 모임이 없어요.<br>아래에서 새 모임을 만들어 보세요.</p>';
+    return;
+  }
+  const raw = await dbAllRaw();
+  const countByGid = {};
+  raw.forEach(e => { countByGid[e.gid] = (countByGid[e.gid] || 0) + 1; });
+  list.forEach(g => {
+    const card = document.createElement("div");
+    card.className = "group-card";
+    const main = document.createElement("button");
+    main.type = "button"; main.className = "group-open";
+    main.innerHTML = '<span class="g-title"></span><span class="g-meta"></span>';
+    main.querySelector(".g-title").textContent = g.title || "이름 없는 모임";
+    const n = countByGid[g.id] || 0;
+    main.querySelector(".g-meta").textContent = (n ? n + "건" : "비어 있음") + (g.updatedAt ? " · " + fmtWhen(g.updatedAt) : "");
+    main.onclick = () => openGroup(g.id);
+    const del = document.createElement("button");
+    del.type = "button"; del.className = "group-del"; del.textContent = "✕"; del.title = "모임 삭제";
+    del.onclick = () => removeGroup(g.id, g.title || "이름 없는 모임");
+    card.appendChild(main); card.appendChild(del);
+    box.appendChild(card);
+  });
+}
+
+document.getElementById("backHome").onclick = showHome;
+document.getElementById("newGroupBtn").onclick = () => {
+  const input = document.getElementById("newGroupInput");
+  createGroup(input.value); input.value = "";
+};
+document.getElementById("newGroupInput").onkeydown = ev => {
+  if (ev.key === "Enter") { ev.preventDefault(); document.getElementById("newGroupBtn").click(); }
+};
+
+// 예전 단일 모임 데이터를 첫 모임으로 옮긴다 (한 번만)
+async function migrateLegacy() {
+  if (localStorage.getItem("moa-migrated")) return;
+  const legacy = localStorage.getItem("moa-members") || localStorage.getItem("moa-title");
+  const raw = await dbAllRaw();
+  const legacyExpenses = raw.filter(e => e.gid == null);
+  if (legacy || legacyExpenses.length) {
+    const id = newGid();
+    let mem = [], fees = {}, extra = {};
+    try { const s = JSON.parse(localStorage.getItem("moa-members")); if (s) { mem = s.members || []; fees = s.fees || {}; extra = s.extra || {}; } } catch (e) {}
+    let cur = [];
+    try { const c = JSON.parse(localStorage.getItem("moa-currencies")); if (Array.isArray(c)) cur = c; } catch (e) {}
+    const title = localStorage.getItem("moa-title") || "내 모임";
+    localStorage.setItem(groupKey(id), JSON.stringify({ title, members: mem, fees, extra, currencies: cur }));
+    touchGroup(id, title);
+    for (const e of legacyExpenses) { e.gid = id; await dbPut(e); }
+    ["moa-members", "moa-title", "moa-currencies"].forEach(k => localStorage.removeItem(k));
+  }
+  localStorage.setItem("moa-migrated", "1");
+}
+
 // ---------- 시작 ----------
 (async function init() {
   document.getElementById("fDate").value = new Date().toISOString().slice(0, 10);
-  setTitle(localStorage.getItem("moa-title") || "모임 정산");
-  loadFees();
-  loadCcy();
   await openDB();
-  expenses = await dbAll();
-  syncMembersFromData();     // 저장된 기록에서 멤버 복원
-  ensureCcyFromExpenses();
-  refreshMemberUI();          // 결제자·참여자·회비 UI
-  renderCcyChips();
-  render();
+  await migrateLegacy();
 
   if (dbError) {
     const w = document.getElementById("dbWarn");
@@ -1494,6 +1682,11 @@ titleEl.onkeydown = ev => { if (ev.key === "Enter") { ev.preventDefault(); title
       "지금 입력하는 내용은 화면에만 남고, 새로고침하면 사라져요.";
     w.hidden = false;
   }
+
+  const last = localStorage.getItem("moa-current");
+  const exists = last && loadGroupList().some(g => g.id === last);
+  if (exists) await openGroup(last);
+  else showHome();
 })();
 </script>
 </body>
