@@ -201,35 +201,27 @@
   .expense .del:hover { color: var(--danger); }
   .empty-msg { text-align: center; color: var(--faint); font-size: var(--t-small); padding: 20px 0; }
 
-  /* 멤버 · 회비 */
+  /* 멤버 */
   .feerow { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
-  .feerow .fname { width: 52px; font-size: var(--t-small); font-weight: 600; flex-shrink: 0; }
-  .feerow .fcol { flex: 1; font-size: var(--t-micro); color: var(--faint); text-align: center; }
-  .feerow input {
-    flex: 1; min-width: 0; padding: 9px 10px; border: 1px solid var(--line);
-    border-radius: 8px; font-size: var(--t-input); background: var(--field); color: var(--ink);
-    -webkit-appearance: none; appearance: none;
-  }
-  .feerow-head { padding-bottom: 3px; }
+  .feerow.member-row { border-bottom: 1px solid var(--line-soft); }
+  .feerow.member-row:last-of-type { border-bottom: none; }
   .feerow .fname-btn {
-    flex: 0 0 auto; min-width: 48px; max-width: 88px; text-align: left;
+    flex: 0 1 auto; text-align: left; max-width: 60%;
     font-size: var(--t-body); font-weight: 600; color: var(--ink); cursor: pointer;
-    background: none; border: none; padding: 4px 2px; letter-spacing: -0.02em;
+    background: none; border: none; padding: 6px 2px; letter-spacing: -0.02em;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .feerow .fname-btn:hover { color: var(--accent); }
-  .feerow-head .fname-h { flex: 0 0 auto; min-width: 48px; max-width: 88px; font-size: var(--t-micro); color: var(--faint); }
-  .feerow-head .fdel-h { flex: 0 0 auto; width: 28px; }
+  .fee-rec-inline {
+    flex: 1; text-align: right; font-size: var(--t-caption); color: var(--accent);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
   .feerow .fdel {
     flex: 0 0 auto; width: 28px; background: none; border: none;
     color: var(--faint); font-size: 14px; cursor: pointer; padding: 4px;
   }
   .feerow .fdel:hover { color: var(--danger); }
-  .fee-rec {
-    font-size: var(--t-micro); color: var(--accent); letter-spacing: 0;
-    padding: 0 0 7px 2px; line-height: 1.5;
-  }
-  .feerow.add-row { margin-top: 10px; gap: 8px; }
+  .feerow.add-row { margin-top: 12px; gap: 8px; }
   .add-member-input {
     flex: 1; min-width: 0; padding: 10px 11px; border: 1px solid var(--line);
     border-radius: 8px; font-size: var(--t-input); background: var(--field); color: var(--ink);
@@ -482,19 +474,11 @@
   </section>
 
   <section>
-    <h2>멤버 · 회비</h2>
-    <div class="feerow feerow-head">
-      <span class="fname-h">이름</span>
-      <span class="fcol">회비</span>
-      <span class="fcol">추가 납입</span>
-      <span class="fdel-h"></span>
-    </div>
+    <h2>멤버</h2>
     <div id="feeRows"></div>
     <p class="note">
-      · 여기 숫자는 <strong>한 번에 정하는 회비</strong>예요. 기록 추가에서 건별로 넣은 회비는 이름 아래에 따로 표시되고, 둘은 합쳐서 정산돼요<br>
       · 이름을 누르면 수정, ✕로 삭제할 수 있어요<br>
-      · 회비를 안 걷는 모임이면 0으로 두고, 지출·정산만 써도 돼요<br>
-      · 추가 납입 = 회비 외에 더 냈고 <strong>그대로 돌려받을</strong> 돈 (보태는 돈이면 <strong>💝 찬조</strong>로)
+      · 회비를 걷는 모임이면 기록 추가에서 <strong>💰 회비</strong>로 각자 낸 금액을 넣으세요 (이름 옆에 표시돼요)
     </p>
   </section>
 
@@ -1338,30 +1322,20 @@ function buildFeeRows() {
   }
   MEMBERS.forEach(m => {
     const row = document.createElement("div");
-    row.className = "feerow";
+    row.className = "feerow member-row";
     const name = document.createElement("button");
     name.type = "button"; name.className = "fname-btn"; name.textContent = m; name.title = "이름 수정";
     name.onclick = () => { const nn = prompt("이름 수정", m); if (nn !== null) renameMember(m, nn); };
-    const fee = document.createElement("input");
-    fee.type = "number"; fee.min = "0"; fee.step = "any"; fee.value = FEES[m] || 0;
-    fee.oninput = () => { FEES[m] = Number(fee.value) || 0; saveFees(); render(); };
-    const extra = document.createElement("input");
-    extra.type = "number"; extra.min = "0"; extra.step = "any"; extra.value = EXTRA_PAID[m] || 0;
-    extra.oninput = () => { EXTRA_PAID[m] = Number(extra.value) || 0; saveFees(); render(); };
+    // 낸 회비(기록)가 있으면 이름 옆에 조용히 표시
+    const rec = feeRecordOf(m);
+    const recSpan = document.createElement("span");
+    recSpan.className = "fee-rec-inline";
+    recSpan.textContent = rec > 0 ? "회비 " + fmt(rec) : "";
     const del = document.createElement("button");
     del.type = "button"; del.className = "fdel"; del.textContent = "✕"; del.title = "멤버 삭제";
     del.onclick = () => deleteMember(m);
-    row.appendChild(name); row.appendChild(fee); row.appendChild(extra); row.appendChild(del);
+    row.appendChild(name); row.appendChild(recSpan); row.appendChild(del);
     box.appendChild(row);
-
-    // 기록 추가로 넣은 회비가 있으면 여기에 이어서 보여준다
-    const rec = feeRecordOf(m);
-    if (rec > 0) {
-      const hint = document.createElement("div");
-      hint.className = "fee-rec";
-      hint.textContent = "↳ 기록으로 낸 회비 " + fmt(rec) + " · 합계 " + fmt((FEES[m] || 0) + rec);
-      box.appendChild(hint);
-    }
   });
   const addRow = document.createElement("div");
   addRow.className = "feerow add-row";
