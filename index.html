@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>모여셈 · 세상에서 제일 간단한 여행 가계부</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#3f6b4d">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="모여셈">
 <style>
   :root {
     /* 색 — 3단계 위계 */
@@ -353,7 +359,7 @@
 
 <div id="homeView" class="wrap" hidden>
   <div class="home-head">
-    <h1>🧳 모여셈</h1>
+    <h1>🧳 모여셈 👥</h1>
     <p>세상에서 제일 간단한 여행 가계부</p>
   </div>
   <div id="groupList"></div>
@@ -523,6 +529,13 @@
 </div>
 
 <script>
+// PWA: 오프라인 지원 (서비스워커 등록)
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+
 // 멤버는 동적 — 사용자가 추가/수정/삭제
 let MEMBERS = [];
 let FEES = {};        // 이름 → 회비

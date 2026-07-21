@@ -1,0 +1,17 @@
+{
+  "name": "모여셈 · 세상에서 제일 간단한 여행 가계부",
+  "short_name": "모여셈",
+  "description": "여행·모임 회비와 지출을 기록하고 정산하는 가장 간단한 가계부",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f3ee",
+  "theme_color": "#3f6b4d",
+  "lang": "ko",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
