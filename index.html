@@ -514,7 +514,10 @@
     <div id="resultBody"></div>
     <div class="result-actions">
       <button type="button" id="resultShare" class="submit">공유하기</button>
-      <button type="button" id="resultCopy" class="cancel-btn">텍스트 복사</button>
+    </div>
+    <div class="result-actions" style="margin-top: 8px;">
+      <button type="button" id="resultCopy" class="cancel-btn" style="flex: 1;">텍스트 복사</button>
+      <button type="button" id="resultCsv" class="cancel-btn" style="flex: 1;">엑셀(CSV) 저장</button>
     </div>
   </div>
 </div>
@@ -1539,6 +1542,51 @@ document.getElementById("resultShare").onclick = async () => {
 document.getElementById("resultCopy").onclick = async () => {
   try { await navigator.clipboard.writeText(shareText()); alert("복사했어요!"); }
   catch (e) { alert("복사를 지원하지 않는 환경이에요."); }
+};
+
+// ---------- 엑셀(CSV) 내보내기 ----------
+function csvCell(v) {
+  v = v == null ? "" : String(v);
+  return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+}
+function buildCsv() {
+  const s = computeSettlement();
+  const TYPE_KR = { expense: "지출", fee: "회비", income: "찬조" };
+  const rows = [];
+  rows.push([getTitle()]);
+  rows.push([]);
+  rows.push(["요약"]);
+  rows.push(["모인 돈", s.fund]);
+  rows.push(["쓴 돈", s.spent]);
+  rows.push(["남은 돈", s.balance]);
+  rows.push([]);
+  rows.push(["정산"]);
+  rows.push(["이름", "낸 회비", "개인 결제", "부담액", "정산(받을+ / 낼-)"]);
+  s.rows.forEach(r => rows.push([r.m, r.paid, r.personalPaid, Math.round(r.share), Math.round(r.settle)]));
+  rows.push([]);
+  rows.push(["내역"]);
+  rows.push(["날짜", "구분", "항목", "내용", "외화", "금액(원)", "결제자", "참여자"]);
+  [...expenses].sort((a, b) => (a.date || "").localeCompare(b.date || "")).forEach(e => {
+    rows.push([
+      e.date || "", TYPE_KR[e.type] || e.type, e.category || "", e.desc || "",
+      fxLabelOf(e), e.amount, (e.payer === "회비" ? "공동" : (e.payer || "")),
+      (e.participants || []).join(" ")
+    ]);
+  });
+  return rows.map(r => r.map(csvCell).join(",")).join("\r\n");
+}
+document.getElementById("resultCsv").onclick = async () => {
+  if (!MEMBERS.length) { alert("먼저 멤버와 지출을 추가해 주세요"); return; }
+  const csv = "﻿" + buildCsv(); // BOM: 엑셀에서 한글 안 깨지게
+  const name = (getTitle().replace(/[\\/:*?"<>|]/g, "").trim() || "정산") + "_" + new Date().toISOString().slice(0, 10) + ".csv";
+  try {
+    const file = new File([csv], name, { type: "text/csv" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: getTitle() }); return; }
+  } catch (err) { if (err && err.name === "AbortError") return; }
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  URL.revokeObjectURL(a.href);
 };
 
 // ---------- 제목 (편집 가능) ----------
