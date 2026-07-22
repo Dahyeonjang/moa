@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>모여셈 사용법 · 세상에서 제일 간단한 여행 가계부</title>
+<meta name="description" content="여행·모임 회비와 지출을 기록하고 정산하는 가장 간단한 방법. 모여셈 사용 설명서.">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #f5f3ee; --card: #ffffff; --field: #faf9f6;
+    --ink: #26221e; --sub: #7d746a; --faint: #a9a196;
+    --accent: #3f6b4d; --accent-soft: #e9f0eb; --brand-ink: #2c4c38;
+    --line: #e6e1d8; --line-soft: #f0ece5;
+    --sans: "Pretendard", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans); background: var(--bg); color: var(--ink);
+    line-height: 1.65; letter-spacing: -0.01em; -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 0 18px; }
+  section { padding: 46px 0; border-bottom: 1px solid var(--line-soft); }
+  section:last-of-type { border-bottom: none; }
+  h2 { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: 0.08em; margin-bottom: 20px; }
+  h3 { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; }
+  p { color: var(--sub); font-size: 15px; }
+  strong { color: var(--ink); font-weight: 600; }
+
+  /* 히어로 */
+  .hero { text-align: center; padding: 56px 18px 46px; background: linear-gradient(180deg, var(--accent-soft), var(--bg)); }
+  .hero .logo { font-size: 46px; font-weight: 800; letter-spacing: -0.045em; line-height: 1; }
+  .hero .tag { font-size: 16px; color: var(--brand-ink); margin-top: 14px; font-weight: 500; }
+  .hero .desc { font-size: 14px; color: var(--sub); margin-top: 18px; max-width: 460px; margin-left: auto; margin-right: auto; text-wrap: balance; }
+  .cta {
+    display: inline-block; margin-top: 26px; background: var(--accent); color: #fff;
+    font-size: 15px; font-weight: 600; text-decoration: none; padding: 13px 26px; border-radius: 12px;
+  }
+  .cta:active { transform: scale(0.98); }
+
+  /* 3단계 */
+  .step { display: flex; gap: 16px; padding: 18px 0; }
+  .step:not(:last-child) { border-bottom: 1px solid var(--line-soft); }
+  .step .n {
+    flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-weight: 700; font-size: 17px;
+    display: flex; align-items: center; justify-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .step .body { flex: 1; }
+  .step .body p { margin-top: 3px; font-size: 14px; }
+  .step .body .hi { color: var(--accent); font-weight: 600; }
+
+  /* 기능 카드 */
+  .feat { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 460px) { .feat { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px;
+  }
+  .card .ic { font-size: 22px; }
+  .card h4 { font-size: 15px; font-weight: 700; margin: 9px 0 4px; letter-spacing: -0.02em; }
+  .card p { font-size: 13px; line-height: 1.6; }
+
+  /* 설치 */
+  .install { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
+  .install ol { margin: 12px 0 0; padding-left: 20px; }
+  .install li { font-size: 14px; color: var(--sub); margin-bottom: 9px; }
+  .install li strong { color: var(--ink); }
+
+  /* FAQ */
+  details { border-bottom: 1px solid var(--line-soft); padding: 15px 2px; }
+  details:first-of-type { border-top: 1px solid var(--line-soft); }
+  summary { font-size: 15px; font-weight: 600; cursor: pointer; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; color: var(--faint); font-weight: 400; }
+  details[open] summary::after { content: "–"; }
+  details p { margin-top: 10px; font-size: 14px; line-height: 1.7; }
+
+  footer { text-align: center; padding: 34px 18px 48px; color: var(--faint); font-size: 12px; }
+  .lead { font-size: 15px; color: var(--sub); margin-bottom: 22px; text-wrap: balance; }
+</style>
+</head>
+<body>
+  <div class="hero">
+    <div class="logo">🧳 모여셈 👥</div>
+    <div class="tag">세상에서 제일 간단한 여행 가계부</div>
+    <p class="desc">여행이든 모임이든, 회비와 지출을 기록하고 <strong>누가 얼마 주고받을지</strong> 한 번에 정산해요. 앱 설치도, 회원가입도 없어요.</p>
+    <a class="cta" href="./">모여셈 열기 →</a>
+  </div>
+
+  <div class="wrap">
+    <section>
+      <h2>3단계면 끝나요</h2>
+      <div class="step">
+        <div class="n">1</div>
+        <div class="body">
+          <h3>모임 만들기</h3>
+          <p>홈에서 <span class="hi">이름을 넣고 만들기</span>. 제주 여행, 동창회처럼 <strong>모임마다 따로</strong> 관리돼요. 끝나면 삭제하면 되고요.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <div class="body">
+          <h3>그때그때 기록하기</h3>
+          <p>돈 쓸 때마다 <span class="hi">지출 · 회비 · 찬조</span>를 골라 금액을 넣어요. 누가 냈는지, 누구랑 나눠 낼지만 체크하면 끝. 영수증 사진도 붙일 수 있어요.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <div class="body">
+          <h3>정산하고 공유하기</h3>
+          <p><span class="hi">정산 결과 보기</span>를 누르면 누가 누구에게 얼마를 보내면 되는지 딱 나와요. <strong>카톡으로 공유</strong>하거나 <strong>엑셀로 저장</strong>하면 끝.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>이런 것도 돼요</h2>
+      <div class="feat">
+        <div class="card"><div class="ic">💱</div><h4>여러 나라 돈</h4><p>달러·엔·동 등 통화를 등록하면 환율로 자동 환산. 환율 모르면 🔎 검색 버튼으로 바로 확인해요.</p></div>
+        <div class="card"><div class="ic">💰</div><h4>회비·찬조·대신 결제</h4><p>회비를 걷어도, 누가 대신 카드로 내도, 누가 보태줘도 전부 정확하게 계산돼요.</p></div>
+        <div class="card"><div class="ic">✈️</div><h4>인터넷 없이도</h4><p>홈 화면에 추가하면 비행기 안·해외에서도 열려요. 진짜 앱처럼요.</p></div>
+        <div class="card"><div class="ic">📊</div><h4>엑셀로 정리</h4><p>정산 내역을 표로 저장. 엑셀·구글시트에서 바로 열려요.</p></div>
+        <div class="card"><div class="ic">📷</div><h4>영수증 사진</h4><p>지출마다 사진을 붙여두면 나중에 헷갈릴 일이 없어요.</p></div>
+        <div class="card"><div class="ic">🔒</div><h4>내 폰에만 저장</h4><p>서버에 안 올라가요. 회원가입도 없고, 기록은 오직 내 폰에.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>홈 화면에 앱처럼 설치하기</h2>
+      <p class="lead">한 번 설치해두면 아이콘으로 바로 열리고, 인터넷 없이도 작동해요.</p>
+      <div class="install">
+        <div><strong>📱 아이폰 (사파리)</strong></div>
+        <ol>
+          <li>사파리로 <strong>모여셈</strong>을 열어요</li>
+          <li>아래 <strong>공유 버튼</strong>(⬆️) → <strong>"홈 화면에 추가"</strong></li>
+          <li>홈에 🧳 모여셈 아이콘이 생겨요</li>
+        </ol>
+        <div style="margin-top:16px;"><strong>🤖 안드로이드 (크롬)</strong></div>
+        <ol>
+          <li>크롬으로 <strong>모여셈</strong>을 열어요</li>
+          <li>오른쪽 위 <strong>⋮ 메뉴</strong> → <strong>"홈 화면에 추가"</strong></li>
+          <li>홈에 🧳 모여셈 아이콘이 생겨요</li>
+        </ol>
+      </div>
+    </section>
+
+    <section>
+      <h2>자주 묻는 질문</h2>
+      <details><summary>내 기록은 어디에 저장되나요?</summary><p>오직 <strong>내 폰(브라우저)</strong>에만 저장돼요. 서버로 보내지 않아서 안전하고, 회원가입도 필요 없어요. 대신 기기를 바꾸면 자동으로 옮겨가지 않으니, 아래 "기기를 바꾸면?"을 참고하세요.</p></details>
+      <details><summary>인터넷이 없어도 되나요?</summary><p>네. 홈 화면에 추가한 뒤에는 <strong>비행기 모드·해외 데이터 없이도</strong> 앱이 열려요. 환율 검색 버튼만 인터넷이 필요해요(없으면 자동으로 숨겨져요).</p></details>
+      <details><summary>기기를 바꾸거나 기록이 사라지면?</summary><p>정산 화면 아래 <strong>데이터 백업 → 내보내기</strong>로 파일 하나를 저장해두세요(사진도 함께 담겨요). 새 기기에서 <strong>가져오기</strong>로 열면 그대로 복원돼요. 여행이 끝나면 한 번 내보내서 카톡 "나에게 보내기"에 넣어두면 안심이에요.</p></details>
+      <details><summary>여러 모임을 동시에 쓸 수 있나요?</summary><p>네. 홈에서 모임을 여러 개 만들 수 있고, 각 모임의 멤버·지출·정산은 완전히 따로 관리돼요.</p></details>
+      <details><summary>회비를 안 걷는 모임도 되나요?</summary><p>물론이에요. 회비 없이 <strong>각자 쓴 걸 나누기만</strong> 해도 정산이 딱 맞아요.</p></details>
+      <details><summary>돈은 얼마예요?</summary><p>웹앱이라 <strong>설치·가입 없이</strong> 링크만 있으면 바로 써요.</p></details>
+    </section>
+  </div>
+
+  <footer>
+    🧳 모여셈 — 세상에서 제일 간단한 여행 가계부<br>
+    <a href="./" style="color:var(--accent);text-decoration:none;font-weight:600;">모여셈 열기</a>
+  </footer>
+</body>
+</html>

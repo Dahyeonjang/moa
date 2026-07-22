@@ -319,6 +319,23 @@
   .home-head { text-align: center; margin: 8px 0 26px; }
   .home-head h1 { font-size: 40px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
   .home-head p { font-size: var(--t-small); color: var(--sub); margin-top: 11px; letter-spacing: -0.01em; }
+  /* 첫 화면 안내 */
+  .onboard { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px 18px; }
+  .ob-title { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 14px; }
+  .ob-step { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; font-size: 14px; color: var(--sub); }
+  .ob-step b { color: var(--ink); font-weight: 600; }
+  .ob-n {
+    flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 12px;
+    display: flex; align-items: center; justify-content: center; margin-top: 1px;
+  }
+  .ob-eg { color: var(--faint); font-size: 12px; }
+  .guide-link {
+    display: block; text-align: center; margin-top: 16px; padding: 12px;
+    font-size: var(--t-small); color: var(--sub); text-decoration: none;
+  }
+  .guide-link:hover { color: var(--accent); }
+
   .group-card {
     display: flex; align-items: stretch; gap: 8px; margin-bottom: 10px;
   }
@@ -367,6 +384,7 @@
     <input type="text" id="newGroupInput" placeholder="새 모임 이름 (예: 제주 여행)">
     <button type="button" id="newGroupBtn">만들기</button>
   </div>
+  <a class="guide-link" href="guide.html">📖 처음이세요? 사용법 보기</a>
 </div>
 
 <div id="groupView" class="wrap" hidden>
@@ -1686,7 +1704,13 @@ async function renderHome() {
   const box = document.getElementById("groupList");
   box.innerHTML = "";
   if (list.length === 0) {
-    box.innerHTML = '<p class="empty-msg">아직 모임이 없어요.<br>아래에서 새 모임을 만들어 보세요.</p>';
+    box.innerHTML =
+      '<div class="onboard">' +
+      '<p class="ob-title">처음 오셨네요! 👋</p>' +
+      '<div class="ob-step"><span class="ob-n">1</span><span>아래에서 <b>모임</b>을 만들어요 <span class="ob-eg">예: 제주 여행</span></span></div>' +
+      '<div class="ob-step"><span class="ob-n">2</span><span>여행 중 <b>지출·회비</b>를 그때그때 기록해요</span></div>' +
+      '<div class="ob-step"><span class="ob-n">3</span><span><b>정산 결과</b>를 카톡·엑셀로 공유해요</span></div>' +
+      '</div>';
     return;
   }
   const raw = await dbAllRaw();

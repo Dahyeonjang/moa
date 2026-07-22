@@ -1,9 +1,10 @@
 // 모여셈 서비스워커 — 오프라인 지원
 // 캐시 버전을 올리면 예전 캐시를 비우고 새로 받는다
-const CACHE = "moyeosem-v2";
+const CACHE = "moyeosem-v3";
 const ASSETS = [
   "./",
   "./index.html",
+  "./guide.html",
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
