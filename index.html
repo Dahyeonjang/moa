@@ -149,6 +149,14 @@
     background: var(--accent); color: #fff;
   }
   .ccy-mini.ghost { background: var(--card); color: var(--sub); border: 1px solid var(--line); }
+  .rate-search {
+    display: inline-flex; align-items: center; gap: 3px;
+    border: 1px solid var(--line); background: var(--card); color: var(--accent);
+    border-radius: 20px; padding: 5px 11px; font-size: var(--t-caption); font-weight: 600;
+    cursor: pointer; white-space: nowrap; margin-left: 4px;
+  }
+  .rate-search:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .rate-search[hidden] { display: none; }
 
   /* 사진 */
   .photo-field { display: flex; align-items: center; gap: 10px; }
@@ -410,6 +418,7 @@
           <input type="number" id="fRate" step="any" min="0"
             style="width: 90px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 16px;">
           원 <span id="rateHint"></span>
+          <button type="button" class="rate-search" data-off-hide>🔎 환율 검색</button>
         </div>
         <div id="newCcyForm" class="ccy-form" style="display: none;">
           <div class="ccy-form-row">
@@ -420,6 +429,7 @@
             <span class="ccy-form-label">1<span id="ncSymEcho">₫</span> =</span>
             <input type="number" id="ncRate" step="any" min="0" placeholder="환율" autocomplete="off">
             <span>원</span>
+            <button type="button" class="rate-search" data-off-hide>🔎 검색</button>
           </div>
           <div class="ccy-form-btns">
             <button type="button" id="ncCancel" class="ccy-mini ghost">취소</button>
@@ -465,6 +475,9 @@
       <tbody id="settleBody"></tbody>
     </table>
     <button type="button" class="submit" id="resultBtn" style="margin-top: 14px;">정산 결과 보기</button>
+    <p class="note" style="text-align: center; margin-top: 8px;">
+      👆 눌러서 정산 결과를 <strong>카톡 공유</strong>하거나 <strong>엑셀 파일로 저장</strong>할 수 있어요
+    </p>
     <p class="note">
       · 부담액 = 각 지출을 참여자 수로 나눈 몫의 합<br>
       · 찬조는 모인 돈에 더해지고, 혜택 나눈 사람들의 부담액을 줄여줘요<br>
@@ -1110,6 +1123,29 @@ document.getElementById("ncSave").onclick = () => {
   saveCcy();
   selectCcy(c);
 };
+
+// 환율 검색: 구글 환율 페이지를 새 창으로 (오프라인이면 버튼 숨김)
+function currentCcyName() {
+  const ncName = document.getElementById("ncName").value.trim();
+  const ncSym = document.getElementById("ncSym").value.trim();
+  if (document.getElementById("newCcyForm").style.display !== "none" && (ncName || ncSym)) return ncName || ncSym;
+  if (selectedCcy) return selectedCcy.name || selectedCcy.sym;
+  return "";
+}
+document.querySelectorAll(".rate-search").forEach(btn => {
+  btn.onclick = () => {
+    const nm = currentCcyName();
+    const q = nm ? nm + " 환율" : "환율 계산기";
+    window.open("https://www.google.com/search?q=" + encodeURIComponent(q), "_blank", "noopener");
+  };
+});
+function updateOnlineUI() {
+  const on = navigator.onLine;
+  document.querySelectorAll("[data-off-hide]").forEach(el => { el.hidden = !on; });
+}
+window.addEventListener("online", updateOnlineUI);
+window.addEventListener("offline", updateOnlineUI);
+updateOnlineUI();
 
 document.querySelectorAll('input[name="etype"]').forEach(r => {
   r.onchange = () => {
