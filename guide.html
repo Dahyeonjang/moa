@@ -52,18 +52,7 @@
   .step .body p { margin-top: 3px; font-size: 14px; }
   .step .body .hi { color: var(--accent); font-weight: 600; }
 
-  /* 내보내기·가져오기 */
-  .backup-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  @media (max-width: 460px) { .backup-row { grid-template-columns: 1fr; } }
-  .backup-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
-  .backup-card .bu-ic { font-size: 24px; }
-  .backup-card h4 { font-size: 15px; font-weight: 700; margin: 8px 0 5px; letter-spacing: -0.02em; }
-  .backup-card p { font-size: 13px; line-height: 1.6; }
-  .tip {
-    margin-top: 14px; background: var(--accent-soft); border-radius: 12px;
-    padding: 14px 15px; font-size: 13px; line-height: 1.7; color: var(--brand-ink);
-  }
-  .tip strong { color: var(--brand-ink); font-weight: 700; }
+  .step .body .opt { font-size: 12px; color: var(--faint); font-weight: 500; }
 
   /* 기능 카드 */
   .feat { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -126,24 +115,13 @@
           <p><span class="hi">정산 결과 보기</span>를 누르면 누가 누구에게 얼마를 보내면 되는지 딱 나와요. <strong>카톡으로 공유</strong>하거나 <strong>엑셀로 저장</strong>하면 끝.</p>
         </div>
       </div>
-    </section>
-
-    <section>
-      <h2>내보내기 · 가져오기 — 기록 지키기</h2>
-      <p class="lead">모여셈은 기록을 <strong>내 폰에만</strong> 저장해요. 그래서 폰을 바꾸거나 실수로 기록이 사라질 때를 대비해, 정산 화면 맨 아래에 <strong>데이터 백업</strong>이 있어요.</p>
-      <div class="backup-row">
-        <div class="backup-card">
-          <div class="bu-ic">📤</div>
-          <h4>내보내기</h4>
-          <p>지금까지의 <strong>모든 기록(사진 포함)</strong>을 파일 하나로 저장해요. 카톡 "나에게 보내기"에 넣어두면 안전한 백업이 돼요.</p>
-        </div>
-        <div class="backup-card">
-          <div class="bu-ic">📥</div>
-          <h4>가져오기</h4>
-          <p>내보낸 파일을 열면 기록이 <strong>그대로 되살아나요</strong>. 새 폰으로 옮기거나, 컴퓨터에서 이어서 볼 때 써요.</p>
+      <div class="step">
+        <div class="n">4</div>
+        <div class="body">
+          <h3>백업하기 <span class="opt">(선택)</span></h3>
+          <p>기록은 내 폰에만 있어요. <span class="hi">내보내기</span>로 파일 하나 저장해두면, 폰을 바꿔도 <span class="hi">가져오기</span>로 그대로 되살아나요.</p>
         </div>
       </div>
-      <p class="tip">💡 <strong>공유하기</strong>(카톡·엑셀)와 헷갈리지 마세요. 공유는 <strong>사람이 보는 정산 결과</strong>를 보내는 거고, 내보내기는 <strong>앱이 다시 읽는 백업 파일</strong>이에요. 멤버들에게 보낼 땐 공유하기, 내 기록을 지킬 땐 내보내기!</p>
     </section>
 
     <section>
