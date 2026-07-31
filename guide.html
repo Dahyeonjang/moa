@@ -6,6 +6,18 @@
 <title>모여셈 사용법 · 세상에서 제일 간단한 여행 가계부</title>
 <meta name="description" content="여행·모임 회비와 지출을 기록하고 정산하는 가장 간단한 방법. 모여셈 사용 설명서.">
 <link rel="apple-touch-icon" href="icon-192.png">
+<script>
+  // 앱(Capacitor)인지 웹인지 판별해 <html>에 표시 — 가격·프로 안내는 앱에서만 보인다
+  (function () {
+    var isApp = false;
+    try {
+      if (typeof window.MOA_FORCE_APP === "boolean") isApp = window.MOA_FORCE_APP;
+      else if (/[?&]app=1/.test(location.search)) isApp = true;
+      else isApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    } catch (e) {}
+    document.documentElement.className = isApp ? "app" : "web";
+  })();
+</script>
 <style>
   :root {
     --bg: #f5f3ee; --card: #ffffff; --field: #faf9f6;
@@ -64,11 +76,37 @@
   .card h4 { font-size: 15px; font-weight: 700; margin: 9px 0 4px; letter-spacing: -0.02em; }
   .card p { font-size: 13px; line-height: 1.6; }
 
-  /* 설치 */
-  .install { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
-  .install ol { margin: 12px 0 0; padding-left: 20px; }
-  .install li { font-size: 14px; color: var(--sub); margin-bottom: 9px; }
-  .install li strong { color: var(--ink); }
+  /* 프로 배지 */
+  .pro-badge {
+    display: inline-block; margin-left: 6px; padding: 2px 7px; border-radius: 6px;
+    background: var(--accent-soft); color: var(--accent);
+    font-size: 11px; font-weight: 700; letter-spacing: 0; vertical-align: 2px;
+  }
+
+  /* 앱에서만 / 웹에서만 보이는 부분 — .pro-badge 뒤에 와야 숨김이 이긴다 */
+  .app-only { display: none; }
+  html.app section.app-only { display: block; }
+  html.app details.app-only { display: block; }
+  html.app span.app-only { display: inline; }
+  html.app span.pro-badge.app-only { display: inline-block; }
+  html.app .web-only { display: none; }
+
+  /* 무료·프로 비교표 */
+  .plan { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--card); }
+  .plan-row {
+    display: grid; grid-template-columns: 1fr 68px 68px; align-items: center;
+    padding: 11px 14px; font-size: 14px; border-top: 1px solid var(--line-soft);
+  }
+  .plan-row:first-child { border-top: none; }
+  .plan-row span:nth-child(2), .plan-row span:nth-child(3) { text-align: center; }
+  .plan-head { background: var(--field); font-size: 12px; font-weight: 700; color: var(--sub); letter-spacing: 0.02em; }
+  .plan-row .yes { color: var(--accent); font-weight: 700; }
+  .plan-row .no { color: var(--faint); }
+  .plan-row .qty { font-weight: 600; font-size: 13px; }
+  .plan-price {
+    margin-top: 14px; text-align: center; font-size: 14px; color: var(--sub);
+  }
+  .plan-price b { color: var(--ink); font-size: 17px; font-weight: 700; }
 
   /* FAQ */
   details { border-bottom: 1px solid var(--line-soft); padding: 15px 2px; }
@@ -85,9 +123,9 @@
 </head>
 <body>
   <div class="hero">
-    <div class="logo">🧳 모여셈 👥</div>
+    <div class="logo">모여셈 💸</div>
     <div class="tag">세상에서 제일 간단한 여행 가계부</div>
-    <p class="desc">여행이든 모임이든, 회비와 지출을 기록하고 <strong>누가 얼마 주고받을지</strong> 한 번에 정산해요. 앱 설치도, 회원가입도 없어요.</p>
+    <p class="desc">여행이든 모임이든, 회비와 지출을 기록하고 <strong>누가 얼마 주고받을지</strong> 한 번에 정산해요. 회원가입도, 로그인도 없어요.</p>
     <a class="cta" href="./">모여셈 열기 →</a>
   </div>
 
@@ -118,7 +156,7 @@
       <div class="step">
         <div class="n">4</div>
         <div class="body">
-          <h3>백업하기 <span class="opt">(선택)</span></h3>
+          <h3>백업하기 <span class="opt">(선택)</span><span class="pro-badge app-only">프로</span></h3>
           <p>기록은 내 폰에만 있어요. <span class="hi">내보내기</span>로 파일 하나 저장해두면, 폰을 바꿔도 <span class="hi">가져오기</span>로 그대로 되살아나요.</p>
         </div>
       </div>
@@ -129,46 +167,54 @@
       <div class="feat">
         <div class="card"><div class="ic">💱</div><h4>여러 나라 돈</h4><p>달러·엔·동 등 통화를 등록하면 환율로 자동 환산. 환율 모르면 🔎 검색 버튼으로 바로 확인해요.</p></div>
         <div class="card"><div class="ic">💰</div><h4>회비·찬조·대신 결제</h4><p>회비를 걷어도, 누가 대신 카드로 내도, 누가 보태줘도 전부 정확하게 계산돼요.</p></div>
-        <div class="card"><div class="ic">✈️</div><h4>인터넷 없이도</h4><p>홈 화면에 추가하면 비행기 안·해외에서도 열려요. 진짜 앱처럼요.</p></div>
-        <div class="card"><div class="ic">📊</div><h4>엑셀로 정리</h4><p>정산 내역을 표로 저장. 엑셀·구글시트에서 바로 열려요.</p></div>
+        <div class="card"><div class="ic">✈️</div><h4>인터넷 없이도</h4><p>비행기 안에서도, 데이터 안 터지는 해외에서도 그대로 열려요.</p></div>
+        <div class="card"><div class="ic">📊</div><h4>엑셀로 정리<span class="pro-badge app-only">프로</span></h4><p>정산 내역을 표로 저장. 엑셀·구글시트에서 바로 열려요.</p></div>
         <div class="card"><div class="ic">📷</div><h4>영수증 사진</h4><p>지출마다 사진을 붙여두면 나중에 헷갈릴 일이 없어요.</p></div>
         <div class="card"><div class="ic">🔒</div><h4>내 폰에만 저장</h4><p>서버에 안 올라가요. 회원가입도 없고, 기록은 오직 내 폰에.</p></div>
       </div>
     </section>
 
-    <section>
-      <h2>홈 화면에 앱처럼 설치하기</h2>
-      <p class="lead">한 번 설치해두면 아이콘으로 바로 열리고, 인터넷 없이도 작동해요.</p>
-      <div class="install">
-        <div><strong>📱 아이폰 (사파리)</strong></div>
-        <ol>
-          <li>사파리로 <strong>모여셈</strong>을 열어요</li>
-          <li>아래 <strong>공유 버튼</strong>(⬆️) → <strong>"홈 화면에 추가"</strong></li>
-          <li>홈에 🧳 모여셈 아이콘이 생겨요</li>
-        </ol>
-        <div style="margin-top:16px;"><strong>🤖 안드로이드 (크롬)</strong></div>
-        <ol>
-          <li>크롬으로 <strong>모여셈</strong>을 열어요</li>
-          <li>오른쪽 위 <strong>⋮ 메뉴</strong> → <strong>"홈 화면에 추가"</strong></li>
-          <li>홈에 🧳 모여셈 아이콘이 생겨요</li>
-        </ol>
+    <section class="app-only">
+      <h2>무료와 프로</h2>
+      <p class="lead">정산에 필요한 기능은 <strong>전부 무료</strong>예요. 프로는 기록을 파일로 오래 남기고 싶을 때만 필요해요.</p>
+      <div class="plan">
+        <div class="plan-row plan-head"><span>기능</span><span>무료</span><span>프로</span></div>
+        <div class="plan-row"><span>지출 · 회비 · 찬조 기록</span><span class="yes">○</span><span class="yes">○</span></div>
+        <div class="plan-row"><span>정산 결과 보기 · 카톡 공유</span><span class="yes">○</span><span class="yes">○</span></div>
+        <div class="plan-row"><span>멤버 수</span><span class="qty">무제한</span><span class="qty">무제한</span></div>
+        <div class="plan-row"><span>영수증 사진</span><span class="yes">○</span><span class="yes">○</span></div>
+        <div class="plan-row"><span>여러 나라 돈 · 환율</span><span class="yes">○</span><span class="yes">○</span></div>
+        <div class="plan-row"><span>모임 개수</span><span class="qty">2개</span><span class="qty">무제한</span></div>
+        <div class="plan-row"><span>엑셀(CSV) 저장</span><span class="no">–</span><span class="yes">○</span></div>
+        <div class="plan-row"><span>백업 · 가져오기</span><span class="no">–</span><span class="yes">○</span></div>
       </div>
+      <p class="plan-price"><b>프로 3,900원</b> · 한 번만 결제하면 계속 쓸 수 있어요 (구독 아니에요)</p>
     </section>
 
     <section>
       <h2>자주 묻는 질문</h2>
-      <details><summary>내 기록은 어디에 저장되나요?</summary><p>오직 <strong>내 폰(브라우저)</strong>에만 저장돼요. 서버로 보내지 않아서 안전하고, 회원가입도 필요 없어요. 대신 기기를 바꾸면 자동으로 옮겨가지 않으니, 아래 "기기를 바꾸면?"을 참고하세요.</p></details>
-      <details><summary>인터넷이 없어도 되나요?</summary><p>네. 홈 화면에 추가한 뒤에는 <strong>비행기 모드·해외 데이터 없이도</strong> 앱이 열려요. 환율 검색 버튼만 인터넷이 필요해요(없으면 자동으로 숨겨져요).</p></details>
-      <details><summary>기기를 바꾸거나 기록이 사라지면?</summary><p>정산 화면 아래 <strong>데이터 백업 → 내보내기</strong>로 파일 하나를 저장해두세요(사진도 함께 담겨요). 새 기기에서 <strong>가져오기</strong>로 열면 그대로 복원돼요. 여행이 끝나면 한 번 내보내서 카톡 "나에게 보내기"에 넣어두면 안심이에요.</p></details>
-      <details><summary>여러 모임을 동시에 쓸 수 있나요?</summary><p>네. 홈에서 모임을 여러 개 만들 수 있고, 각 모임의 멤버·지출·정산은 완전히 따로 관리돼요.</p></details>
+      <details><summary>내 기록은 어디에 저장되나요?</summary><p>오직 <strong>내 폰 안에만</strong> 저장돼요. 서버로 보내지 않아서 안전하고, 회원가입도 로그인도 필요 없어요. 대신 폰을 바꾸면 자동으로 옮겨가지 않으니, 아래 "폰을 바꾸거나 기록이 사라지면?"을 참고하세요.</p></details>
+      <details><summary>인터넷이 없어도 되나요?</summary><p>네. 한 번 열어둔 뒤에는 <strong>비행기 모드·해외 데이터 없이도</strong> 쓸 수 있어요. 환율 검색 버튼만 인터넷이 필요해요(없으면 자동으로 숨겨져요).</p></details>
+      <details><summary>여러 모임을 동시에 쓸 수 있나요?</summary><p>네. 제주 여행, 동창회처럼 모임을 따로 만들 수 있고 멤버·지출·정산이 완전히 분리돼요. <span class="app-only">무료로는 <strong>2개</strong>까지, 프로는 무제한이에요.</span></p></details>
       <details><summary>회비를 안 걷는 모임도 되나요?</summary><p>물론이에요. 회비 없이 <strong>각자 쓴 걸 나누기만</strong> 해도 정산이 딱 맞아요.</p></details>
-      <details><summary>돈은 얼마예요?</summary><p>웹앱이라 <strong>설치·가입 없이</strong> 링크만 있으면 바로 써요.</p></details>
+      <details><summary>폰을 바꾸거나 기록이 사라지면?</summary><p>정산 화면 아래 <strong>데이터 백업 → 내보내기</strong>로 파일 하나를 저장해두세요(사진도 함께 담겨요). 새 폰에서 <strong>가져오기</strong>로 열면 그대로 복원돼요. 여행이 끝나면 한 번 내보내서 카톡 "나에게 보내기"에 넣어두면 안심이에요.<span class="app-only"> 이 기능은 프로에서 쓸 수 있어요.</span></p></details>
+      <details><summary>모임을 지우면 기록이 완전히 사라지나요?</summary><p>네, 지운 모임은 되살릴 수 없어요. 그래서 삭제를 누르면 <strong>"지우기 전에 파일로 저장해 둘까요?"</strong>를 먼저 물어봐요.<span class="app-only"> 이때의 저장은 <strong>무료로도 쓸 수 있게</strong> 열어뒀어요. 기록을 못 챙기고 지우는 일은 없게 하고 싶었거든요.</span></p></details>
+
+      <details class="web-only"><summary>돈은 얼마예요?</summary><p>웹에서는 <strong>전부 무료</strong>예요. 설치도 가입도 없이 링크만 있으면 바로 씁니다.</p></details>
+
+      <details class="app-only"><summary>돈은 얼마예요?</summary><p>기본은 <strong>무료</strong>예요. 지출을 기록하고 정산해서 카톡으로 나누는 것까지 돈 한 푼 안 들어요.<br><br>더 필요할 때만 <strong>프로 3,900원</strong>을 한 번 결제하면 돼요. 모임을 3개 이상 만들거나, 엑셀로 저장하거나, 백업을 하고 싶을 때요.</p></details>
+      <details class="app-only"><summary>무료로도 충분한가요?</summary><p>여행 한두 번 정산하는 정도라면 <strong>무료로 충분해요</strong>. 지출 기록, 회비, 찬조, 영수증 사진, 여러 나라 돈, 정산 결과 공유까지 전부 무료거든요.<br><br>프로가 필요해지는 건 <strong>모임을 자주 여는 총무</strong>일 때예요. 모임이 계속 쌓이고, 정산 기록을 엑셀이나 파일로 남겨두고 싶어질 때요.</p></details>
+      <details class="app-only"><summary>프로는 매달 내야 하나요?</summary><p>아니요. <strong>한 번만 결제하면 끝</strong>이에요. 구독이 아니라서 매달 빠져나가는 돈이 없고, 나중에 해지할 것도 없어요.</p></details>
+      <details class="app-only"><summary>폰을 바꾸면 프로를 다시 사야 하나요?</summary><p>아니요. <strong>같은 구글 계정</strong>으로 앱을 설치하면 프로가 그대로 따라와요. 혹시 안 켜져 있으면 프로 안내 화면 아래쪽 <strong>"이미 구매했어요 (구매 복원)"</strong>를 눌러주세요.</p></details>
+      <details class="app-only"><summary>결제했는데 프로가 안 켜졌어요</summary><p>앱을 완전히 껐다 다시 켜보세요. 그래도 안 되면 프로 안내 화면의 <strong>"이미 구매했어요 (구매 복원)"</strong>를 눌러주세요. 구글 계정의 구매 기록을 다시 확인해서 켜줘요.</p></details>
     </section>
   </div>
 
   <footer>
-    🧳 모여셈 — 세상에서 제일 간단한 여행 가계부<br>
+    모여셈 — 세상에서 제일 간단한 여행 가계부<br>
     <a href="./" style="color:var(--accent);text-decoration:none;font-weight:600;">모여셈 열기</a>
+    · <a href="privacy.html" style="color:var(--accent);text-decoration:none;font-weight:600;">개인정보처리방침</a>
+    <br><span style="display:inline-block;margin-top:10px;font-size:11px;color:var(--faint);">앱 아이콘: Fluent Emoji © Microsoft Corporation — MIT License</span>
   </footer>
 </body>
 </html>

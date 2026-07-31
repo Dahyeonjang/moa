@@ -268,6 +268,49 @@
   #lightbox img { max-width: 94vw; max-height: 92vh; border-radius: 8px; }
 
   /* 정산 결과 */
+  /* 프로(유료) */
+  .pro-tag {
+    display: inline-block; margin-left: 5px; font-size: var(--t-micro);
+    font-weight: 600; letter-spacing: 0;
+  }
+  #proOverlay {
+    display: none; position: fixed; inset: 0; z-index: 300;
+    background: rgba(38,34,30,.45); overflow-y: auto; padding: 24px 12px 40px;
+  }
+  #proOverlay.on { display: block; }
+  .pro-sheet {
+    max-width: 420px; margin: 0 auto; background: var(--card);
+    border-radius: 16px; padding: 26px 20px 20px; position: relative;
+    box-shadow: 0 16px 48px rgba(38,34,30,.22); text-align: center;
+  }
+  .pro-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .pro-why { font-size: var(--t-small); color: var(--sub); margin-bottom: 18px; }
+  .pro-list {
+    text-align: left; background: var(--field); border: 1px solid var(--line);
+    border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 16px;
+  }
+  .pro-feat {
+    display: flex; gap: 9px; align-items: flex-start;
+    font-size: var(--t-small); padding: 5px 0;
+  }
+  .pro-feat b { font-weight: 600; }
+  .pro-feat .pf-sub { display: block; color: var(--sub); font-size: var(--t-caption); }
+  .pro-price { font-size: var(--t-caption); color: var(--sub); margin-bottom: 14px; }
+  .pro-price b { font-size: var(--t-amount); color: var(--ink); font-weight: 700; }
+  .pro-buy {
+    width: 100%; padding: 14px; border: none; border-radius: var(--radius-sm);
+    background: var(--accent); color: #fff; font-size: var(--t-input);
+    font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  .pro-later {
+    width: 100%; margin-top: 8px; padding: 11px; border: none; background: none;
+    color: var(--sub); font-size: var(--t-small); cursor: pointer; font-family: inherit;
+  }
+  .pro-restore {
+    margin-top: 6px; background: none; border: none; color: var(--faint);
+    font-size: var(--t-caption); cursor: pointer; font-family: inherit;
+    text-decoration: underline;
+  }
   #resultOverlay {
     display: none; position: fixed; inset: 0; z-index: 200;
     background: rgba(38,34,30,.45); overflow-y: auto; padding: 24px 12px 40px;
@@ -376,7 +419,7 @@
 
 <div id="homeView" class="wrap" hidden>
   <div class="home-head">
-    <h1>🧳 모여셈 👥</h1>
+    <h1>모여셈 💸</h1>
     <p>세상에서 제일 간단한 여행 가계부</p>
   </div>
   <div id="groupList"></div>
@@ -384,6 +427,7 @@
     <input type="text" id="newGroupInput" placeholder="새 모임 이름 (예: 제주 여행)">
     <button type="button" id="newGroupBtn">만들기</button>
   </div>
+  <p class="note" id="groupLimitNote" style="text-align: center;" hidden></p>
   <a class="guide-link" href="guide.html">📖 처음이세요? 사용법 보기</a>
 </div>
 
@@ -543,9 +587,29 @@
   </div>
 </div>
 
+<div id="proOverlay">
+  <div class="pro-sheet">
+    <p class="pro-title">모여셈 프로</p>
+    <p class="pro-why" id="proWhy"></p>
+    <div class="pro-list">
+      <div class="pro-feat"><span>🗂️</span><span><b>모임 무제한</b><span class="pf-sub">무료는 2개까지 만들 수 있어요</span></span></div>
+      <div class="pro-feat"><span>📊</span><span><b>엑셀(CSV) 저장</b><span class="pf-sub">정산 결과를 표로 내려받아요</span></span></div>
+      <div class="pro-feat"><span>💾</span><span><b>백업 · 가져오기</b><span class="pf-sub">기록을 파일로 보관하고 다른 기기로 옮겨요</span></span></div>
+    </div>
+    <p class="pro-price"><b>3,900원</b> · 한 번만 결제하면 계속 쓸 수 있어요</p>
+    <button type="button" class="pro-buy" id="proBuy">프로 사용하기</button>
+    <button type="button" class="pro-later" id="proLater">나중에</button>
+    <button type="button" class="pro-restore" id="proRestore">이미 구매했어요 (구매 복원)</button>
+  </div>
+</div>
+
+<script src="billing.js"></script>
 <script>
 // PWA: 오프라인 지원 (서비스워커 등록)
-if ("serviceWorker" in navigator) {
+// 앱(Capacitor)에서는 파일이 이미 기기에 들어 있어 필요 없고,
+// 스토어로 업데이트한 뒤 옛 캐시를 물고 있을 수 있어 등록하지 않는다.
+if ("serviceWorker" in navigator &&
+    !(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js").catch(() => {});
   });
@@ -806,7 +870,7 @@ function render() {
   const balance = FUND + feeTotal + donated - fundSpent;
   document.getElementById("balance").textContent = fmt(balance);
   document.getElementById("balanceCard").classList.toggle("negative", balance < 0);
-  document.getElementById("balanceNote").textContent = balance < 0 ? "⚠ 총무가 대신 내는 중" : "";
+  document.getElementById("balanceNote").textContent = balance < 0 ? "⚠️ 총무가 대신 내는 중" : "";
 
   // 지출 목록 (최신순)
   const list = document.getElementById("expenseList");
@@ -1404,35 +1468,134 @@ function buildFeeRows() {
   box.appendChild(addRow);
 }
 
-// ---------- 데이터 내보내기 / 가져오기 ----------
-document.getElementById("exportBtn").onclick = async () => {
-  const title = getTitle();
-  const data = { app: "moa", title, exportedAt: new Date().toISOString(), members: MEMBERS, fees: FEES, extra: EXTRA_PAID, currencies: CCY, expenses };
-  const json = JSON.stringify(data);
-  const safe = title.replace(/[\\/:*?"<>|]/g, "").trim() || "정산";
-  const fileName = safe + "_" + new Date().toISOString().slice(0, 10) + ".json";
+// ---------- 프로(유료) ----------
+// 웹(github.io)에서는 전 기능 무료. 앱(Capacitor)에서만 게이팅이 켜진다.
+// 콘솔에서 window.MOA_FORCE_APP = true 로 앱 모드를 흉내내 테스트할 수 있다.
+const IS_APP = (() => {
+  if (typeof window.MOA_FORCE_APP === "boolean") return window.MOA_FORCE_APP;
+  try { if (/[?&]app=1/.test(location.search)) return true; } catch (e) {}   // 테스트용
+  try { return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
+  catch (e) { return false; }
+})();
+const FREE_GROUP_LIMIT = 2;
 
-  // 아이폰 등: 공유 시트로 카톡에 바로 보내기
+function isPro() {
+  if (!IS_APP) return true;               // 웹은 전부 열려 있음
+  try { return localStorage.getItem("moa-pro") === "1"; } catch (e) { return false; }
+}
+function setPro(on) {
+  try { on ? localStorage.setItem("moa-pro", "1") : localStorage.removeItem("moa-pro"); } catch (e) {}
+  refreshProUI();
+}
+// 최초 1회 가져오기는 무료 (웹에서 앱으로 데이터를 옮겨오는 길)
+function importUsed() {
+  try { return localStorage.getItem("moa-import-used") === "1"; } catch (e) { return false; }
+}
+function markImportUsed() {
+  try { localStorage.setItem("moa-import-used", "1"); } catch (e) {}
+  refreshProUI();
+}
+function canImport() { return isPro() || !importUsed(); }
+
+const proOverlay = document.getElementById("proOverlay");
+function openPro(why) {
+  document.getElementById("proWhy").textContent = why || "이 기능은 프로에서 쓸 수 있어요";
+  proOverlay.classList.add("on");
+}
+function closePro() { proOverlay.classList.remove("on"); }
+document.getElementById("proLater").onclick = closePro;
+proOverlay.onclick = ev => { if (ev.target === proOverlay) closePro(); };
+
+// 결제는 앱 껍데기(Capacitor + Play 결제)가 window.moaBilling 으로 붙여준다.
+// 아직 안 붙었으면 안내만 하고 넘어간다.
+document.getElementById("proBuy").onclick = async () => {
+  const b = window.moaBilling;
+  if (!b || typeof b.purchase !== "function") {
+    alert("결제 준비 중이에요. 잠시 후 다시 시도해 주세요.");
+    return;
+  }
+  try {
+    const ok = await b.purchase();
+    if (ok) { setPro(true); closePro(); alert("고맙습니다! 프로가 켜졌어요 🎉"); }
+  } catch (err) {
+    if (err && err.message) alert("결제를 마치지 못했어요: " + err.message);
+  }
+};
+document.getElementById("proRestore").onclick = async () => {
+  const b = window.moaBilling;
+  if (!b || typeof b.restore !== "function") { alert("결제 준비 중이에요."); return; }
+  try {
+    const ok = await b.restore();
+    if (ok) { setPro(true); closePro(); alert("구매를 확인했어요. 프로가 켜졌어요 🎉"); }
+    else alert("이 구글 계정에서 구매 기록을 찾지 못했어요.");
+  } catch (err) {
+    alert("복원에 실패했어요: " + (err && err.message ? err.message : ""));
+  }
+};
+
+// 잠긴 기능 버튼에 자물쇠 표시
+function refreshProUI() {
+  const mark = (el, locked, label) => {
+    if (!el) return;
+    const old = el.querySelector(".pro-tag");
+    if (old) old.remove();
+    if (!locked) return;
+    const tag = document.createElement("span");
+    tag.className = "pro-tag";
+    tag.textContent = "🔒";
+    tag.title = label;
+    el.appendChild(tag);
+  };
+  const locked = !isPro();   // 웹에서는 isPro()가 항상 true라 자물쇠가 안 붙는다
+  mark(document.getElementById("exportBtn"), locked, "프로 기능");
+  mark(document.getElementById("importBtn"), locked && importUsed(), "프로 기능");
+  mark(document.getElementById("resultCsv"), locked, "프로 기능");
+}
+
+// 지정한 모임의 데이터를 파일로 저장 (열려 있지 않은 모임도 가능)
+async function exportGroupById(id) {
+  const s = JSON.parse(localStorage.getItem(groupKey(id)) || "{}");
+  const raw = await dbAllRaw();
+  const data = {
+    app: "moa", title: s.title || "정산", exportedAt: new Date().toISOString(),
+    members: s.members || [], fees: s.fees || {}, extra: s.extra || {},
+    currencies: s.currencies || [], expenses: raw.filter(e => e.gid === id)
+  };
+  await downloadJson(data, data.title);
+}
+async function downloadJson(data, title) {
+  const json = JSON.stringify(data);
+  const safe = String(title || "정산").replace(/[\\/:*?"<>|]/g, "").trim() || "정산";
+  const fileName = safe + "_" + new Date().toISOString().slice(0, 10) + ".json";
   try {
     const file = new File([json], fileName, { type: "application/json" });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: title + " 데이터" });
+      await navigator.share({ files: [file], title: safe + " 데이터" });
       return;
     }
   } catch (err) {
     if (err && err.name === "AbortError") return; // 사용자가 취소함
   }
-
-  // 그 외: 파일로 저장
   const blob = new Blob([json], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = fileName;
   a.click();
   URL.revokeObjectURL(a.href);
+}
+
+// ---------- 데이터 내보내기 / 가져오기 ----------
+document.getElementById("exportBtn").onclick = async () => {
+  if (!isPro()) { openPro("백업(내보내기)은 프로 기능이에요"); return; }
+  const title = getTitle();
+  const data = { app: "moa", title, exportedAt: new Date().toISOString(), members: MEMBERS, fees: FEES, extra: EXTRA_PAID, currencies: CCY, expenses };
+  await downloadJson(data, title);
 };
 
-document.getElementById("importBtn").onclick = () => document.getElementById("importFile").click();
+document.getElementById("importBtn").onclick = () => {
+  if (!canImport()) { openPro("가져오기는 프로 기능이에요 (처음 한 번은 무료)"); return; }
+  document.getElementById("importFile").click();
+};
 document.getElementById("importFile").onchange = async e => {
   const file = e.target.files[0];
   if (!file) return;
@@ -1456,6 +1619,7 @@ document.getElementById("importFile").onchange = async e => {
     ensureCcyFromExpenses();
     renderCcyChips();
     render();
+    markImportUsed();
     alert("가져오기 완료! (" + list.length + "건)");
   } catch (err) {
     alert("가져오기 실패: " + err.message);
@@ -1617,6 +1781,7 @@ function buildCsv() {
   return rows.map(r => r.map(csvCell).join(",")).join("\r\n");
 }
 document.getElementById("resultCsv").onclick = async () => {
+  if (!isPro()) { openPro("엑셀(CSV) 저장은 프로 기능이에요"); return; }
   if (!MEMBERS.length) { alert("먼저 멤버와 지출을 추가해 주세요"); return; }
   const csv = "﻿" + buildCsv(); // BOM: 엑셀에서 한글 안 깨지게
   const name = (getTitle().replace(/[\\/:*?"<>|]/g, "").trim() || "정산") + "_" + new Date().toISOString().slice(0, 10) + ".csv";
@@ -1671,6 +1836,10 @@ async function openGroup(id) {
 async function createGroup(name) {
   name = (name || "").trim();
   if (!name) return;
+  if (!isPro() && loadGroupList().length >= FREE_GROUP_LIMIT) {
+    openPro("무료로는 모임을 " + FREE_GROUP_LIMIT + "개까지 만들 수 있어요");
+    return;
+  }
   const id = newGid();
   CURRENT_GID = id;
   MEMBERS = []; FEES = {}; EXTRA_PAID = {}; CCY = [];
@@ -1680,8 +1849,13 @@ async function createGroup(name) {
   await openGroup(id);
 }
 async function removeGroup(id, title) {
-  const go = confirm('"' + title + '" 모임을 삭제할까요?\n\n삭제하면 이 모임의 기록은 되살릴 수 없어요.\n먼저 열어서 내보내기(백업)를 해두시길 권해요.');
+  const go = confirm('"' + title + '" 모임을 삭제할까요?\n\n삭제하면 이 모임의 기록은 되살릴 수 없어요.');
   if (!go) return;
+  // 삭제 직전 백업은 프로가 아니어도 열어준다 (데이터를 인질로 잡지 않기)
+  if (confirm("지우기 전에 이 모임 기록을 파일로 저장해 둘까요?\n\n나중에 가져오기로 되살릴 수 있어요.")) {
+    try { await exportGroupById(id); } catch (e) {}
+    if (!confirm("저장을 마쳤으면 이제 삭제할게요.\n계속할까요?")) return;
+  }
   const raw = await dbAllRaw();
   for (const e of raw.filter(e => e.gid === id)) await dbDelete(e.id);
   localStorage.removeItem(groupKey(id));
@@ -1703,13 +1877,23 @@ async function renderHome() {
   const list = loadGroupList().slice().sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   const box = document.getElementById("groupList");
   box.innerHTML = "";
+  const note = document.getElementById("groupLimitNote");
+  if (!isPro() && list.length >= FREE_GROUP_LIMIT) {
+    note.innerHTML = '무료로는 모임 ' + FREE_GROUP_LIMIT + '개까지 쓸 수 있어요. ' +
+      '<a href="#" id="proFromHome">프로 보기</a>';
+    note.hidden = false;
+    const a = document.getElementById("proFromHome");
+    if (a) a.onclick = ev => { ev.preventDefault(); openPro("모임을 더 만들려면 프로가 필요해요"); };
+  } else {
+    note.hidden = true;
+  }
   if (list.length === 0) {
     box.innerHTML =
       '<div class="onboard">' +
       '<p class="ob-title">처음 오셨네요! 👋</p>' +
       '<div class="ob-step"><span class="ob-n">1</span><span>아래에서 <b>모임</b>을 만들어요 <span class="ob-eg">예: 제주 여행</span></span></div>' +
       '<div class="ob-step"><span class="ob-n">2</span><span>여행 중 <b>지출·회비</b>를 그때그때 기록해요</span></div>' +
-      '<div class="ob-step"><span class="ob-n">3</span><span><b>정산 결과</b>를 카톡·엑셀로 공유해요</span></div>' +
+      '<div class="ob-step"><span class="ob-n">3</span><span><b>정산 결과</b>를 보고 카톡으로 공유해요</span></div>' +
       '</div>';
     return;
   }
@@ -1777,6 +1961,14 @@ async function migrateLegacy() {
       "지금 입력하는 내용은 화면에만 남고, 새로고침하면 사라져요.";
     w.hidden = false;
   }
+
+  // 앱에서는 Play 결제 상태를 물어 프로 여부를 맞춘다 (기기를 바꿔도 계정으로 복원됨).
+  // 결제 플러그인 응답을 기다리느라 앱이 늦게 뜨면 안 되므로 기다리지 않는다.
+  // 화면은 마지막으로 알던 상태로 먼저 뜨고, 답이 오면 그때 고쳐 그린다.
+  if (IS_APP && window.moaBilling && typeof window.moaBilling.check === "function") {
+    window.moaBilling.check().then(setPro).catch(() => {});
+  }
+  refreshProUI();
 
   const last = localStorage.getItem("moa-current");
   const exists = last && loadGroupList().some(g => g.id === last);
