@@ -7,15 +7,17 @@
 <meta name="description" content="여행·모임 회비와 지출을 기록하고 정산하는 가장 간단한 방법. 모여셈 사용 설명서.">
 <link rel="apple-touch-icon" href="icon-192.png">
 <script>
-  // 앱(Capacitor)인지 웹인지 판별해 <html>에 표시 — 가격·프로 안내는 앱에서만 보인다
+  // 앱(Capacitor)인지 웹인지 판별해 <html>에 표시 — 가격·프로 안내는 앱에서만 보인다.
+  // PRO_ENABLED 가 false면 어디서든 프로 안내를 감춘다 (index.html 의 스위치와 짝을 맞춘다).
   (function () {
+    var PRO_ENABLED = true;    // index.html 의 PRO_ENABLED 와 반드시 같게 유지할 것
     var isApp = false;
     try {
       if (typeof window.MOA_FORCE_APP === "boolean") isApp = window.MOA_FORCE_APP;
       else if (/[?&]app=1/.test(location.search)) isApp = true;
       else isApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
     } catch (e) {}
-    document.documentElement.className = isApp ? "app" : "web";
+    document.documentElement.className = (isApp && PRO_ENABLED) ? "app" : "web";
   })();
 </script>
 <style>

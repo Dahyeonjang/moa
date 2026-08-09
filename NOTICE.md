@@ -2,14 +2,17 @@
 
 모여셈은 아래 오픈소스 자산을 사용합니다.
 
-## Fluent Emoji — 앱 아이콘
+## Fluent Emoji — 앱 아이콘 · 스토어 그래픽 이미지
 
-앱 아이콘(`icon-192.png`, `icon-512.png`, `icon-maskable.png`)은
-Microsoft Fluent Emoji의 "Luggage" 3D 에셋을 사용해 만들었습니다.
+Microsoft Fluent Emoji의 3D 에셋을 사용해 만들었습니다.
 
 - 출처: https://github.com/microsoft/fluentui-emoji
-- 원본 파일: assets/Luggage/3D/luggage_3d.png (이 저장소의 `icon-source-luggage_3d.png`)
 - 라이선스: MIT
+
+| 쓰인 곳 | 원본 파일 | 이 저장소의 사본 |
+|---|---|---|
+| 앱 아이콘 (`icon-192.png`, `icon-512.png`, `icon-maskable.png`) | assets/Luggage/3D/luggage_3d.png | `icon-source-luggage_3d.png` |
+| Play 스토어 그래픽 이미지 (1024×500) | assets/Money with wings/3D/money_with_wings_3d.png | `icon-source-money_with_wings_3d.png` |
 
 ```
     MIT License
