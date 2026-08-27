@@ -49,9 +49,23 @@
 
   footer { margin-top: 40px; padding-top: 22px; border-top: 1px solid var(--line); text-align: center; color: var(--faint); font-size: 12px; }
   footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+  /* 돌아가는 길 — 어디까지 스크롤해도 늘 보이게 (2026-08-27 테스터 피드백 ②) */
+  .backbar {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(245,243,238,.94); backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--line);
+  }
+  .backbar a {
+    display: inline-flex; align-items: center; gap: 5px;
+    max-width: 660px; margin: 0 auto; padding: 13px 20px;
+    color: var(--accent); font-size: 14px; font-weight: 600; text-decoration: none;
+  }
 </style>
 </head>
 <body>
+
+<nav class="backbar"><a href="./" id="backLink">← 돌아가기</a></nav>
 
 <header>
   <h1>모여셈 개인정보처리방침</h1>
@@ -175,5 +189,27 @@
   </footer>
 
 </div>
+
+<script>
+// 돌아가는 길 하나로 통일한다.
+// 앞 페이지(보통 사용법)가 있으면 거기로, 없으면 모여셈 홈으로.
+function moaGoBack() {
+  if (history.length > 1) { history.back(); return; }
+  location.href = "./";
+}
+document.getElementById("backLink").onclick = function (e) {
+  if (history.length > 1) { e.preventDefault(); history.back(); }
+};
+
+// 안드로이드 하드웨어 뒤로가기.
+// Capacitor 8의 BridgeActivity는 뒤로가기를 가로채지 않아서, 아무 처리도 안 하면
+// 액티비티가 그대로 끝나 앱이 꺼진다 — 이 페이지에서 실제로 그렇게 됐다(2026-08-27 피드백 ②).
+// ⚠️ @capacitor/app 플러그인이 붙어야 동작한다. 지금 앱에는 없어 아무 일도 안 한다.
+(function () {
+  var App = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+  if (!App || typeof App.addListener !== "function") return;
+  App.addListener("backButton", moaGoBack);
+})();
+</script>
 </body>
 </html>
