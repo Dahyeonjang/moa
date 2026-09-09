@@ -86,6 +86,37 @@
   .card.balance .value { color: var(--accent); }
   .card.balance.negative .value { color: var(--danger); }
   .card .sub { font-size: var(--t-micro); color: var(--danger); margin-top: 5px; letter-spacing: 0; }
+  /* 경고가 아니라 '이 숫자가 무엇에서 왔나'를 밝히는 줄 (예산 + 찬조) — 같은 자리, 다른 색 */
+  .card .sub.calm { color: var(--sub); line-height: 1.45; }
+  .card .sub.calm b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  /* 예산 — 회비를 걷지 않고 정해둔 금액 안에서 쓰는 모임 */
+  .budget-bar { margin: -8px 0 16px; }
+  .budget-view { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--t-small); color: var(--sub); }
+  .budget-view .b-amt { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .budget-link {
+    background: transparent; border: 1px dashed var(--line); border-radius: 18px;
+    padding: 7px 13px; font-size: var(--t-small); color: var(--faint); cursor: pointer;
+  }
+  .budget-link:hover { color: var(--accent); border-color: var(--accent); }
+  .budget-mini {
+    background: none; border: none; color: var(--faint); font-size: var(--t-caption);
+    cursor: pointer; padding: 4px 2px; text-decoration: underline;
+  }
+  .budget-mini:hover { color: var(--accent); }
+  .budget-edit { display: flex; gap: 8px; align-items: center; }
+  /* ⚠️ display를 직접 지정한 요소는 hidden 속성이 안 먹는다 (.rate-search[hidden]과 같은 함정).
+     이 두 줄이 없으면 예산 입력칸이 늘 열려 있고, 보기 줄과 편집 줄이 동시에 뜬다 — 2026-09-09에 실제로 그랬다 */
+  .budget-view[hidden], .budget-edit[hidden] { display: none; }
+  .budget-edit input {
+    flex: 1; min-width: 0; padding: 10px 11px; border: 1px solid var(--line);
+    border-radius: 8px; font-size: var(--t-input); background: var(--card); color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .budget-note {
+    font-size: var(--t-caption); color: var(--sub); line-height: 1.6; margin-top: 9px;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px;
+  }
 
   /* 섹션 — 제목은 조용하게, 내용이 앞으로 */
   section {
@@ -256,6 +287,19 @@
   table.settle tbody tr:last-child td { border-bottom: none; }
   table.settle td.plus { color: var(--accent); font-weight: 700; }
   table.settle td.minus { color: var(--danger); font-weight: 700; }
+  /* 예산 모드에서는 「낸 회비」 열이 전부 0이라 읽는 사람을 헷갈리게 한다 — 숨긴다 */
+  table.settle.budget th:nth-child(2), table.settle.budget td:nth-child(2) { display: none; }
+  /* 예산 모임에서는 정산표를 기본으로 접어 둔다 (2026-09-09 다현님 결정).
+     ⚠️ [hidden] 은 브라우저 기본 스타일이라 저자 규칙에 진다 — display를 만지는 요소마다 짝으로 적는다 */
+  table.settle[hidden] { display: none; }
+  .settle-toggle {
+    display: block; width: 100%; margin-bottom: 4px;
+    background: var(--field); border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: 11px 12px; font-size: var(--t-small); color: var(--sub);
+    cursor: pointer; text-align: left; font-family: inherit;
+  }
+  .settle-toggle:hover { color: var(--accent); border-color: var(--accent); }
+  .settle-toggle[hidden] { display: none; }
 
   .note { font-size: var(--t-caption); color: var(--sub); margin-top: 14px; line-height: 1.75; }
   .note strong { color: var(--ink); font-weight: 600; }
@@ -332,6 +376,7 @@
   .r-card { background: var(--bg); border-radius: var(--radius-sm); padding: 13px 6px; text-align: center; }
   .r-card .l { font-size: var(--t-micro); color: var(--sub); margin-bottom: 5px; }
   .r-card .v { font-size: clamp(13px, 3.6vw, 16px); font-weight: 700; letter-spacing: -0.03em; }
+  .r-card .s { font-size: var(--t-micro); color: var(--sub); margin-top: 5px; line-height: 1.45; }
   .r-h {
     font-size: var(--t-caption); font-weight: 600; color: var(--sub);
     letter-spacing: 0.02em; margin: 22px 0 4px;
@@ -442,9 +487,19 @@
   <div id="dbWarn" class="db-warn" hidden></div>
 
   <div class="cards">
-    <div class="card"><div class="label">모인 돈</div><div class="value" id="fundTotal"></div></div>
+    <div class="card"><div class="label" id="fundLabel">모인 돈</div><div class="value" id="fundTotal"></div><div class="sub calm" id="fundBreakdown" hidden></div></div>
     <div class="card"><div class="label">쓴 돈</div><div class="value" id="spentTotal"></div></div>
-    <div class="card balance" id="balanceCard"><div class="label">남은 돈</div><div class="value" id="balance"></div><div class="sub" id="balanceNote"></div></div>
+    <div class="card balance" id="balanceCard"><div class="label" id="balanceLabel">남은 돈</div><div class="value" id="balance"></div><div class="sub" id="balanceNote"></div></div>
+  </div>
+
+  <div class="budget-bar">
+    <div class="budget-view" id="budgetView"></div>
+    <div class="budget-edit" id="budgetEdit" hidden>
+      <input type="number" id="budgetInput" min="0" step="any" inputmode="numeric" placeholder="예산 금액 (예: 1000000)">
+      <button type="button" id="budgetSave" class="ccy-mini">저장</button>
+      <button type="button" id="budgetCancel" class="ccy-mini ghost">취소</button>
+    </div>
+    <p class="budget-note" id="budgetExcludedNote" hidden></p>
   </div>
 
   <section>
@@ -454,8 +509,8 @@
         <label>구분</label>
         <div class="members">
           <label><input type="radio" name="etype" value="expense" checked>💸 지출</label>
-          <label><input type="radio" name="etype" value="fee">💰 회비 (걷은 돈)</label>
-          <label><input type="radio" name="etype" value="income">💝 찬조 (받은 돈)</label>
+          <label id="etypeFee"><input type="radio" name="etype" value="fee">💰 회비 (걷은 돈)</label>
+          <label id="etypeIncome"><input type="radio" name="etype" value="income">💝 찬조 (받은 돈)</label>
         </div>
       </div>
       <div class="field">
@@ -509,6 +564,10 @@
         <label id="pLabel">참여자 (함께 나눠 낼 사람)</label>
         <div class="members" id="fMembers"></div>
       </div>
+      <p class="budget-note" id="incomeBudgetNote" hidden style="margin: 0 0 13px;">
+        💝 이 찬조는 <strong>예산에 더해져요.</strong> 카드에 「예산 얼마 + 찬조 얼마」로 따로 보이고,
+        정산(누가 누구에게 줄 돈)은 개인 카드로 낸 지출만 가지고 계산해요.
+      </p>
       <div class="field">
         <label>영수증 사진 (선택)</label>
         <div class="photo-field">
@@ -534,7 +593,8 @@
 
   <section>
     <h2>정산</h2>
-    <table class="settle">
+    <button type="button" class="settle-toggle" id="settleToggle" hidden></button>
+    <table class="settle" id="settleTable">
       <thead><tr><th>이름</th><th>낸 회비</th><th>따로 결제</th><th>부담액</th><th>돌려받을 돈</th></tr></thead>
       <tbody id="settleBody"></tbody>
     </table>
@@ -542,7 +602,7 @@
     <p class="note" style="text-align: center; margin-top: 8px;">
       👆 눌러서 정산 결과를 <strong>카톡 공유</strong>하거나 <strong>엑셀 파일로 저장</strong>할 수 있어요
     </p>
-    <p class="note">
+    <p class="note" id="settleNote">
       · 부담액 = 각 지출을 참여자 수로 나눈 몫의 합<br>
       · 찬조는 모인 돈에 더해지고, 혜택 나눈 사람들의 부담액을 줄여줘요<br>
       · 따로 결제 = 공동 회비가 아니라 개인 돈으로 낸 금액 — 돌려받을 돈에 자동으로 더해져요<br>
@@ -553,7 +613,7 @@
   <section>
     <h2>멤버</h2>
     <div id="feeRows"></div>
-    <p class="note">
+    <p class="note" id="memberNote">
       · 이름을 누르면 수정, ✕로 삭제할 수 있어요<br>
       · 회비를 걷는 모임이면 기록 추가에서 <strong>💰 회비</strong>로 각자 낸 금액을 넣으세요 (이름 옆에 표시돼요)
     </p>
@@ -622,6 +682,13 @@ let MEMBERS = [];
 let FEES = {};        // 이름 → 회비
 let EXTRA_PAID = {};  // 이름 → 추가 납입(그대로 반환할 몫)
 
+// 예산 (모임마다 하나) — 0이면 예산을 안 쓰는 모임 = 지금까지의 회비 방식 그대로.
+// 예산 모드의 정의는 한 줄이다: "통에 돈이 모여 있지 않다. 정해둔 숫자만 있다."
+//   · 회비 모임: 남은 돈 = 모인 돈 − 공동 회비에서 나간 지출 (개인이 낸 건 통에서 안 빠졌으니 정산 때 돌려준다)
+//   · 예산 모임: 남은 예산 = 예산 − 나간 돈 전부 (누가 결제했든 돈은 이미 나갔다)
+let BUDGET = 0;
+function isBudgetMode() { return BUDGET > 0; }
+
 // ---------- 모임(여러 개) 관리 ----------
 let CURRENT_GID = null; // 지금 열려 있는 모임 id (null = 홈 화면)
 const groupKey = id => "moa-g-" + id;
@@ -643,7 +710,7 @@ function saveGroup() {
   if (!CURRENT_GID) return;
   const title = getTitle();
   localStorage.setItem(groupKey(CURRENT_GID), JSON.stringify({
-    title, members: MEMBERS, fees: FEES, extra: EXTRA_PAID, currencies: CCY
+    title, members: MEMBERS, fees: FEES, extra: EXTRA_PAID, currencies: CCY, budget: BUDGET
   }));
   touchGroup(CURRENT_GID, title);
 }
@@ -655,6 +722,8 @@ function loadGroupSettings(id) {
   FEES = s.fees || {};
   EXTRA_PAID = s.extra || {};
   CCY = Array.isArray(s.currencies) ? s.currencies.filter(c => c && c.sym) : [];
+  // budget이 없는 예전 모임은 0 = 회비 방식 그대로 (하위호환)
+  BUDGET = Math.max(0, Math.round(Number(s.budget) || 0));
   MEMBERS.forEach(m => { if (!(m in FEES)) FEES[m] = 0; });
   return s.title || "모임 정산";
 }
@@ -856,23 +925,28 @@ let editingId = null;
 // ---------- 렌더링 ----------
 function render() {
   const isExp = e => e.type !== "income" && e.type !== "fee"; // 실제 지출
-  const FUND = Object.values(FEES).reduce((a, b) => a + b, 0);
-  const spent = expenses.filter(isExp).reduce((a, e) => a + e.amount, 0);
-  const donated = expenses.filter(e => e.type === "income").reduce((a, e) => a + e.amount, 0);
-  // 회비 기록 (멤버가 낸 종잣돈) — 멤버별 합
-  const feePaid = Object.fromEntries(MEMBERS.map(m => [m, 0]));
-  expenses.filter(e => e.type === "fee").forEach(e => { if (e.payer in feePaid) feePaid[e.payer] += e.amount; });
-  const feeTotal = Object.values(feePaid).reduce((a, b) => a + b, 0);
-  // 회비에서 나간 지출만 잔액에서 차감 (개인 결제는 정산 때 돌려줌)
-  const fundSpent = expenses
-    .filter(e => isExp(e) && (!e.payer || e.payer === "회비"))
-    .reduce((a, e) => a + e.amount, 0);
-  document.getElementById("fundTotal").textContent = fmt(FUND + feeTotal + donated);
+  // 계산은 한 군데서만 한다 — 예전엔 여기와 computeSettlement()가 같은 식을 두 벌 갖고 있었다.
+  // 예산 모드처럼 규칙이 갈리는 게 생기면 두 벌은 반드시 어긋난다.
+  const s = computeSettlement();
+  const spent = s.spent;
+  const bp = budgetParts(s);
+  // 라벨은 여기서 정한다 — 「예산」이냐 「예산 + 찬조」냐가 찬조 기록에 따라 매번 달라지므로
+  document.getElementById("fundLabel").textContent = bp.fundLabel;
+  document.getElementById("balanceLabel").textContent = bp.balanceLabel;
+  document.getElementById("fundTotal").textContent = fmt(s.fund);
+  // 「예산」과 「찬조」가 각각 얼마인지 카드가 스스로 말한다. 찬조가 0이면 이 줄 자체가 없다
+  const fb = document.getElementById("fundBreakdown");
+  fb.innerHTML = bp.split
+    ? "예산 <b>" + fmt(bp.budget) + "</b><br>+ 찬조 <b>" + fmt(bp.donated) + "</b>"
+    : "";
+  fb.hidden = !bp.split;
   document.getElementById("spentTotal").textContent = fmt(spent);
-  const balance = FUND + feeTotal + donated - fundSpent;
-  document.getElementById("balance").textContent = fmt(balance);
-  document.getElementById("balanceCard").classList.toggle("negative", balance < 0);
-  document.getElementById("balanceNote").textContent = balance < 0 ? "⚠️ 총무가 대신 내는 중" : "";
+  document.getElementById("balance").textContent = fmt(s.balance);
+  document.getElementById("balanceCard").classList.toggle("negative", s.balance < 0);
+  document.getElementById("balanceNote").textContent =
+    s.balance >= 0 ? ""
+    : s.budgetOn ? "⚠️ 예산을 " + fmt(-s.balance) + " 넘었어요"
+    : "⚠️ 총무가 대신 내는 중";
 
   // 지출 목록 (최신순)
   const list = document.getElementById("expenseList");
@@ -912,6 +986,8 @@ function render() {
         (isIncome ? "찬조 · " : "") + (isFee ? "회비 · " : "") + (e.category ? e.category + " · " : "") +
         (isFee && e.payer ? e.payer + "님 냄 · " : "") +
         (!isFee && e.payer && e.payer !== "회비" ? e.payer + " 결제 · " : "") +
+        // 예산 모드에서는 「예산에서 낸 것」과 「개인 카드로 낸 것」이 정산에서 갈리므로 화면에서도 갈라 보여준다
+        (s.budgetOn && !isFee && !isIncome && (!e.payer || e.payer === "회비") ? "예산에서 · " : "") +
         (fxLabel ? fxLabel + " · " : "") +
         dateStr + " · " + e.participants.join(", ");
 
@@ -966,35 +1042,43 @@ function render() {
   }
 
   // 정산표
-  const shares = Object.fromEntries(MEMBERS.map(m => [m, 0]));
-  expenses.forEach(e => {
-    if (e.type === "fee") return; // 회비는 분담 계산에서 제외
-    if (!e.participants || e.participants.length === 0) return;
-    const sign = e.type === "income" ? -1 : 1;
-    const per = e.amount / e.participants.length * sign;
-    e.participants.forEach(p => { if (p in shares) shares[p] += per; });
-  });
-  // 개인 돈으로 결제한 지출 (정산 때 돌려줌)
-  const personalPaid = Object.fromEntries(MEMBERS.map(m => [m, 0]));
-  expenses.forEach(e => {
-    if (isExp(e) && e.payer && e.payer in personalPaid) personalPaid[e.payer] += e.amount;
-  });
   const body = document.getElementById("settleBody");
   body.innerHTML = "";
-  MEMBERS.forEach(m => {
-    const paid = FEES[m] + (EXTRA_PAID[m] || 0) + feePaid[m];
-    const refund = paid + personalPaid[m] - shares[m];
+  s.rows.forEach(r => {
+    const refund = r.settle;
     const tr = document.createElement("tr");
     const cls = refund >= 0 ? "plus" : "minus";
-    tr.innerHTML = "<td>" + m + "</td><td>" + fmt(paid) + "</td><td>" +
-      (personalPaid[m] ? fmt(personalPaid[m]) : "-") + "</td><td>" + fmt(shares[m]) +
+    tr.innerHTML = "<td>" + r.m + "</td><td>" + fmt(r.paid) + "</td><td>" +
+      (r.personalPaid ? fmt(r.personalPaid) : "-") + "</td><td>" + fmt(r.share) +
       '</td><td class="' + cls + '">' + (refund >= 0 ? fmt(refund) : "-" + fmt(-refund)) + "</td>";
     body.appendChild(tr);
   });
 
+  renderSettleFold(s.budgetOn);
+
   // 회비 기록이 바뀌면 멤버·회비 섹션의 안내도 따라 갱신
   safeRebuildFeeRows();
+  renderBudgetBar();
 }
+
+// 예산 모임의 정산표는 기본으로 접혀 있다 (2026-09-09 다현님 결정).
+// 표를 없애지는 않는다 — "항공권은 내가, 렌트카는 남편이"라는 사실은 남겨두고, 볼 때만 편다.
+// 회비 모임의 동작은 손대지 않는다: 토글이 뜨지 않고 표는 늘 펼쳐져 있다.
+let settleOpen = false;
+function renderSettleFold(budgetOn) {
+  const tbl = document.getElementById("settleTable");
+  const btn = document.getElementById("settleToggle");
+  if (!tbl || !btn) return;
+  btn.hidden = !budgetOn;
+  const open = !budgetOn || settleOpen;
+  tbl.hidden = !open;
+  btn.textContent = open ? "▾ 정산표 접기" : "▸ 정산표 보기 · 누가 얼마 냈는지";
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+}
+document.getElementById("settleToggle").onclick = () => {
+  settleOpen = !settleOpen;
+  renderSettleFold(isBudgetMode());
+};
 
 function showLightbox(src) {
   document.getElementById("lightboxImg").src = src;
@@ -1075,15 +1159,33 @@ function buildPayerChips(opts) {
   const picked = new Set(prev);                    // 회비 모드에서 쓸 다중 선택값
 
   payersBox.innerHTML = "";
-  // 공동 회비 — 회비 모드에서는 고를 대상이 아니라 숨긴다
+  // 공동 회비 — 회비 모드에서는 고를 대상이 아니라 숨긴다.
+  // 예산 모임에는 걷어둔 통이 없으므로 이름만 「🎯 예산에서」로 바뀐다 (저장값은 "회비" 그대로 = 데이터 호환).
   const fund = document.createElement("label");
   const fundRb = document.createElement("input");
   fundRb.type = "radio"; fundRb.name = "payer"; fundRb.value = "회비";
   fundRb.checked = !feeMode && single === "회비";
   fund.style.display = feeMode ? "none" : "";
   fund.appendChild(fundRb);
-  fund.appendChild(document.createTextNode("💰 공동 회비"));
+  fund.appendChild(document.createTextNode(isBudgetMode() ? "🎯 예산에서" : "💰 공동 회비"));
   payersBox.appendChild(fund);
+
+  // 「모두」 — 회비를 여러 명이 한꺼번에 낼 때 한 사람씩 누르지 않아도 되게 (2026-09-09 다현님 요청).
+  // 라디오/체크박스가 아니라 button이다 — checkedPayers()가 input[name=payer]만 읽으므로 저장에 섞이지 않는다.
+  if (multi && MEMBERS.length >= 2) {
+    const all = document.createElement("button");
+    all.type = "button";
+    all.id = "payerAllChip";
+    all.className = "ccy-chip";
+    all.onclick = () => {
+      const boxes = [...payersBox.querySelectorAll('input[name="payer"][type="checkbox"]')];
+      const turnOn = boxes.some(b => !b.checked);   // 하나라도 빠져 있으면 전부 고른다, 다 골랐으면 전부 푼다
+      boxes.forEach(b => { b.checked = turnOn; });
+      updateSelectAllChip();
+      updateFeeSplitHint();
+    };
+    payersBox.appendChild(all);
+  }
 
   MEMBERS.forEach(m => {
     const label = document.createElement("label");
@@ -1097,9 +1199,21 @@ function buildPayerChips(opts) {
   });
   payersBox.appendChild(makeAddChip(name => addMember(name)));
   updatePayerLabel();
+  updateSelectAllChip();
   updateFeeSplitHint();
 }
 function resetPayer() { buildPayerChips({ reset: true }); }
+
+// 「모두」 칩의 글자는 지금 상태를 그대로 말한다 — 다 골랐으면 다음 동작은 해제다
+function updateSelectAllChip() {
+  const chip = document.getElementById("payerAllChip");
+  if (!chip) return;
+  const boxes = [...payersBox.querySelectorAll('input[name="payer"][type="checkbox"]')];
+  const allOn = boxes.length > 0 && boxes.every(b => b.checked);
+  // 글자는 '지금 상태'가 아니라 '다시 누르면 무엇이 되나'를 말한다. 좁은 폰에서 한 줄을 안 밀도록 짧게
+  chip.textContent = allOn ? "☑ 모두 해제" : "☐ 모두 선택";
+  chip.classList.toggle("on", allOn);
+}
 
 function updatePayerLabel() {
   const feeMode = isFeeMode();
@@ -1130,7 +1244,7 @@ function updateFeeSplitHint() {
     : "선택한 " + names.length + "명이 각각 이 금액씩 내는 걸로 기록돼요 (회비 기록 " + names.length + "건)";
 }
 // 칩을 다시 그려도 살아 있도록 상자에 걸어둔다 (change 이벤트는 위로 올라온다)
-payersBox.addEventListener("change", updateFeeSplitHint);
+payersBox.addEventListener("change", () => { updateSelectAllChip(); updateFeeSplitHint(); });
 
 // 항목 선택 (프리셋 + 직접 입력)
 const CATEGORIES = ["식당", "카페", "마트", "교통", "관광", "기념품", "숙소", "기타"];
@@ -1308,6 +1422,7 @@ document.querySelectorAll('input[name="etype"]').forEach(r => {
     // 회비 ↔ 지출은 입력 형태(체크박스/라디오)와 '공동 회비' 칩 유무가 다르므로,
     // 앞 모드의 선택이 남아 있으면 새 모드에서 엉뚱하게 저장된다.
     buildPayerChips({ reset: true });
+    applyIncomeFields();   // 예산 모임의 찬조는 참여자 칸을 묻지 않는다
   };
 });
 
@@ -1406,9 +1521,19 @@ document.getElementById("expenseForm").onsubmit = async e => {
   e.preventDefault();
   const etype = document.querySelector('input[name="etype"]:checked').value;
   const isFee = etype === "fee";
+  // 예산 모임의 찬조는 참여자 칸을 보여주지 않는다 (부담액을 안 깎으므로).
+  // 화면에 없는 값을 물을 수는 없으니, 수정이면 원래 값을 그대로 두고 새 기록이면 전원으로 채운다.
+  // — 예산을 껐을 때 이 찬조가 보통의 찬조(전원이 혜택)로 자연스럽게 되살아나게 하는 값이다
+  const budgetIncome = isBudgetMode() && etype === "income";
 
   let participants = [...membersBox.querySelectorAll("input:checked")].map(c => c.value);
-  if (!isFee && participants.length === 0) { alert("참여자를 한 명 이상 선택해 주세요"); return; }
+  if (budgetIncome) {
+    const prev = editingId ? expenses.find(x => x.id === editingId) : null;
+    participants = (prev && Array.isArray(prev.participants) && prev.participants.length)
+      ? prev.participants.slice() : MEMBERS.slice();
+  } else if (!isFee && participants.length === 0) {
+    alert("참여자를 한 명 이상 선택해 주세요"); return;
+  }
 
   const descVal = document.getElementById("fDesc").value.trim();
   if (!isFee && !descVal) { alert("내용을 입력해 주세요"); return; }
@@ -1540,6 +1665,146 @@ function buildFeeRows() {
   box.appendChild(addRow);
 }
 
+// ---------- 예산 (회비 없이 정해둔 금액 안에서 쓰는 모임) ----------
+let budgetEditing = false;
+
+// 예산으로 바꾸면 계산에서 빠지는 옛 기록 — 조용히 사라지지 않게 세어 둔다.
+// 찬조는 이제 예산 모임에서도 계산에 들어가므로(예산에 더해진다) 여기서 세지 않는다 — 회비만 빠진다.
+function budgetExcluded() {
+  const n = expenses.filter(e => e.type === "fee").length;
+  const manual = Object.values(FEES || {}).reduce((a, b) => a + b, 0);
+  return { n, manual };
+}
+function budgetExcludedText() {
+  const ex = budgetExcluded();
+  const parts = [];
+  if (ex.n > 0) parts.push("회비 기록 " + ex.n + "건");
+  if (ex.manual > 0) parts.push("멤버별 회비 " + fmt(ex.manual));
+  if (!parts.length) return "";
+  return "이 모임엔 " + parts.join("과 ") + "이 남아 있어요. 예산 모임에서는 계산에 넣지 않아요 — 지워진 건 아니고, 예산을 끄면 다시 들어가요. (찬조는 예산에 더해져서 그대로 계산돼요)";
+}
+
+function renderBudgetBar() {
+  const view = document.getElementById("budgetView");
+  const edit = document.getElementById("budgetEdit");
+  const note = document.getElementById("budgetExcludedNote");
+  if (!view) return;
+  view.hidden = budgetEditing;
+  edit.hidden = !budgetEditing;
+  view.innerHTML = "";
+  if (!budgetEditing) {
+    if (isBudgetMode()) {
+      const txt = document.createElement("span");
+      txt.appendChild(document.createTextNode("🎯 예산 "));
+      const amt = document.createElement("span");
+      amt.className = "b-amt";
+      amt.textContent = fmt(BUDGET);
+      txt.appendChild(amt);
+      const ch = document.createElement("button");
+      ch.type = "button"; ch.className = "budget-mini"; ch.textContent = "변경";
+      ch.onclick = openBudgetEdit;
+      const off = document.createElement("button");
+      off.type = "button"; off.className = "budget-mini"; off.textContent = "예산 끄기";
+      off.onclick = () => {
+        if (!confirm("예산을 끄면 회비·찬조를 쓰는 원래 방식으로 돌아가요.\n지출 기록은 그대로예요.\n\n계속할까요?")) return;
+        BUDGET = 0;
+        saveGroup();
+        applyBudgetUI();
+        render();
+      };
+      view.appendChild(txt); view.appendChild(ch); view.appendChild(off);
+    } else {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "budget-link";
+      b.textContent = "🎯 예산 정하기";
+      b.title = "회비를 걷지 않고 정해둔 예산 안에서 쓰는 모임이면 눌러요";
+      b.onclick = openBudgetEdit;
+      view.appendChild(b);
+    }
+  }
+  const msg = isBudgetMode() ? budgetExcludedText() : "";
+  note.textContent = msg;
+  note.hidden = !msg;
+}
+
+function openBudgetEdit() {
+  budgetEditing = true;
+  renderBudgetBar();
+  const inp = document.getElementById("budgetInput");
+  inp.value = BUDGET > 0 ? BUDGET : "";
+  inp.focus();
+}
+function closeBudgetEdit() { budgetEditing = false; renderBudgetBar(); }
+
+function saveBudget() {
+  const v = Math.round(Number(document.getElementById("budgetInput").value) || 0);
+  if (v <= 0) { alert("예산 금액을 입력해 주세요 (예: 1000000)"); return; }
+  // 켜는 순간 계산 결과가 달라지는 기록이 있으면 미리 말한다 — 숫자가 조용히 바뀌면 안 된다
+  if (!isBudgetMode()) {
+    const t = budgetExcludedText();
+    if (t && !confirm(t + "\n\n예산 " + fmt(v) + "으로 바꿀까요?")) return;
+    settleOpen = false;   // 처음 켤 때는 접힌 상태로 시작
+  }
+  BUDGET = v;
+  budgetEditing = false;
+  saveGroup();
+  applyBudgetUI();
+  render();
+}
+document.getElementById("budgetSave").onclick = saveBudget;
+document.getElementById("budgetCancel").onclick = closeBudgetEdit;
+document.getElementById("budgetInput").onkeydown = ev => {
+  if (ev.key === "Enter") { ev.preventDefault(); saveBudget(); }
+  if (ev.key === "Escape") { ev.preventDefault(); closeBudgetEdit(); }
+};
+
+// 예산 모임에서는 「회비」 구분만 숨긴다.
+// 다현님 원문은 "회비나 찬조 없이 그냥 예산"이었고 처음엔 둘 다 숨겼는데,
+// ~~찬조도 숨김~~ → **2026-09-09 다현님 결정으로 찬조는 되살렸다** — "누가 얼마 보태줬는지를
+// 숫자 합계가 아니라 기록으로 남기고 싶다". 대신 「예산」과 「찬조」가 카드에서 눈으로 갈린다.
+// 회비는 그대로 숨긴다 — 걷어둔 통이 없다는 게 예산의 정의라 정면으로 부딪힌다.
+function applyBudgetUI() {
+  const on = isBudgetMode();
+  document.getElementById("etypeFee").style.display = on ? "none" : "";
+  document.getElementById("settleTable").classList.toggle("budget", on);
+  // 예산 모임에는 「💰 회비」 버튼이 없다 — 없는 버튼을 가리키는 안내를 남겨두지 않는다
+  document.getElementById("memberNote").innerHTML = on
+    ? "· 이름을 누르면 수정, ✕로 삭제할 수 있어요<br>" +
+      "· 예산 모임이라 회비는 걷지 않아요. 누가 보태준 돈은 <strong>💝 찬조</strong>로 넣으면 예산에 더해져요"
+    : "· 이름을 누르면 수정, ✕로 삭제할 수 있어요<br>" +
+      "· 회비를 걷는 모임이면 기록 추가에서 <strong>💰 회비</strong>로 각자 낸 금액을 넣으세요 (이름 옆에 표시돼요)";
+  document.getElementById("settleNote").innerHTML = on
+    ? "· 남은 예산 = (예산 + 찬조) − 쓴 돈 전부 (누가 결제했든 예산에서 빠져요)<br>" +
+      "· 💝 찬조는 예산에 더해져요 — 카드에 「예산 얼마 + 찬조 얼마」로 나눠서 보여드려요<br>" +
+      "· 🎯 예산에서 낸 지출은 이미 공동으로 처리된 것이라 정산에 넣지 않아요<br>" +
+      "· 개인 카드로 낸 지출만 「따로 결제」로 잡히고, 참여자끼리 나눠 정산돼요<br>" +
+      "· 지출을 추가할 때마다 자동으로 다시 계산됩니다"
+    : "· 부담액 = 각 지출을 참여자 수로 나눈 몫의 합<br>" +
+      "· 찬조는 모인 돈에 더해지고, 혜택 나눈 사람들의 부담액을 줄여줘요<br>" +
+      "· 따로 결제 = 공동 회비가 아니라 개인 돈으로 낸 금액 — 돌려받을 돈에 자동으로 더해져요<br>" +
+      "· 지출을 추가할 때마다 자동으로 다시 계산됩니다";
+  // 숨긴 구분(회비)이 선택된 채로 남으면 안 보이는 모드로 저장된다 — 지출로 되돌린다.
+  // 찬조는 이제 예산 모임에서도 보이므로 건드리지 않는다
+  if (on) {
+    const cur = document.querySelector('input[name="etype"]:checked');
+    if (cur && cur.value === "fee") document.querySelector('input[name="etype"][value="expense"]').click();
+  }
+  buildPayerChips();      // 「💰 공동 회비」 ↔ 「🎯 예산에서」
+  applyIncomeFields();    // 예산 모임의 찬조는 참여자를 묻지 않는다 (부담액을 안 깎으므로)
+  renderBudgetBar();
+}
+
+// 찬조 입력 화면. 예산 모임에서는 찬조가 부담액을 깎지 않으므로 「혜택을 나눌 사람」을 묻지 않는다 —
+// 아무 영향이 없는 칸을 보여주면 화면이 거짓말을 하게 된다. 대신 찬조가 무엇을 하는지 한 줄로 말한다.
+function applyIncomeFields() {
+  const isIncome = (document.querySelector('input[name="etype"]:checked') || {}).value === "income";
+  const budgetIncome = isBudgetMode() && isIncome;
+  const pf = document.getElementById("participantField");
+  if (isIncome) pf.style.display = budgetIncome ? "none" : "block";
+  const note = document.getElementById("incomeBudgetNote");
+  if (note) note.hidden = !budgetIncome;
+}
+
 // ---------- 프로(유료) ----------
 // ★ 유료 기능 스위치 ★
 // true  = 프로(모임 무제한·엑셀·백업)를 인앱결제로 판다  ← 지금 상태. 스토어의 앱과 같다
@@ -1645,7 +1910,8 @@ async function exportGroupById(id) {
   const data = {
     app: "moa", title: s.title || "정산", exportedAt: new Date().toISOString(),
     members: s.members || [], fees: s.fees || {}, extra: s.extra || {},
-    currencies: s.currencies || [], expenses: raw.filter(e => e.gid === id)
+    currencies: s.currencies || [], budget: Number(s.budget) || 0,
+    expenses: raw.filter(e => e.gid === id)
   };
   await downloadJson(data, data.title);
 }
@@ -1674,7 +1940,7 @@ async function downloadJson(data, title) {
 document.getElementById("exportBtn").onclick = async () => {
   if (!isPro()) { openPro("백업(내보내기)은 프로 기능이에요"); return; }
   const title = getTitle();
-  const data = { app: "moa", title, exportedAt: new Date().toISOString(), members: MEMBERS, fees: FEES, extra: EXTRA_PAID, currencies: CCY, expenses };
+  const data = { app: "moa", title, exportedAt: new Date().toISOString(), members: MEMBERS, fees: FEES, extra: EXTRA_PAID, currencies: CCY, budget: BUDGET, expenses };
   await downloadJson(data, title);
 };
 
@@ -1699,11 +1965,14 @@ document.getElementById("importFile").onchange = async e => {
     if (Array.isArray(data.members)) MEMBERS = data.members.slice();
     if (data.title) setTitle(data.title);
     if (Array.isArray(data.currencies)) { CCY = data.currencies.filter(c => c && c.sym); saveCcy(); }
+    // budget이 없는 예전 파일이면 지금 모임의 예산을 건드리지 않는다 (하위호환)
+    if (data.budget != null) BUDGET = Math.max(0, Math.round(Number(data.budget) || 0));
     syncMembersFromData();
     saveFees();
     refreshMemberUI();
     ensureCcyFromExpenses();
     renderCcyChips();
+    applyBudgetUI();
     render();
     markImportUsed();
     alert("가져오기 완료! (" + list.length + "건)");
@@ -1716,17 +1985,37 @@ document.getElementById("importFile").onchange = async e => {
 // ---------- 정산 결과 계산·보기·공유 ----------
 function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
+// 이 앱의 모든 숫자는 여기서 나온다 (요약 카드·정산표·정산 결과·공유 글·CSV 전부).
+//
+// 예산 모드에서 달라지는 것 셋 — 전부 "통이 없다"에서 따라 나온다.
+//  ① 남은 예산 = (예산 + 찬조) − 나간 돈 전부. 누가 결제했든 돈은 이미 나갔다.
+//     (회비 모임은 반대다 — 개인이 낸 돈은 통에서 안 빠졌으니 잔액이 그대로다)
+//  ② 「예산에서」 낸 지출은 정산에서 뺀다. 되받을 통이 없어서다.
+//     안 빼면 전원이 "내야 함"만 뜨고 받을 사람이 없는 화면이 된다 — 송금 매칭이 빈다.
+//  ③ 예산 잔액은 송금 상대(공동 회비)로 넣지 않는다. 남은 예산은 나눠줄 현금이 아니라 안 쓴 숫자다.
+//
+// 💝 찬조는 예산 모임에서도 쓴다 (2026-09-09 다현님 결정 — "누가 얼마 보태줬는지 기록으로 남기고 싶다").
+//   · 찬조는 예산이라는 통에 더해진다: fund = BUDGET + donated
+//   · 다만 부담액(shares)은 건드리지 않는다. 예산에서 낸 지출이 이미 정산 밖에 있으므로,
+//     찬조로 부담액을 깎으면 갚을 사람 없는 「받을 돈」이 생겨 송금 매칭이 빈 화면이 된다(②와 같은 이유).
+//   · 그래서 화면은 「예산」과 「찬조」를 각각 얼마인지 나눠 말한다 — budgetParts() 참조.
 function computeSettlement() {
+  const budgetOn = isBudgetMode();
   const isExp = e => e.type !== "income" && e.type !== "fee";
+  const isPersonal = e => !!(e.payer && e.payer !== "회비");   // 개인 돈으로 결제
   const spent = expenses.filter(isExp).reduce((a, e) => a + e.amount, 0);
   const donated = expenses.filter(e => e.type === "income").reduce((a, e) => a + e.amount, 0);
-  const FUND = Object.values(FEES).reduce((a, b) => a + b, 0);
+  const FUND = budgetOn ? 0 : Object.values(FEES).reduce((a, b) => a + b, 0);
   const feePaid = Object.fromEntries(MEMBERS.map(m => [m, 0]));
-  expenses.filter(e => e.type === "fee").forEach(e => { if (e.payer in feePaid) feePaid[e.payer] += e.amount; });
+  if (!budgetOn) {
+    expenses.filter(e => e.type === "fee").forEach(e => { if (e.payer in feePaid) feePaid[e.payer] += e.amount; });
+  }
   const feeTotal = Object.values(feePaid).reduce((a, b) => a + b, 0);
   const shares = Object.fromEntries(MEMBERS.map(m => [m, 0]));
   expenses.forEach(e => {
     if (e.type === "fee") return;
+    if (budgetOn && e.type === "income") return;   // 찬조는 예산 통에만 더해진다 (부담액은 안 깎는다)
+    if (budgetOn && !isPersonal(e)) return;        // ② 예산에서 낸 건 서로 갚을 게 없다
     if (!e.participants || !e.participants.length) return;
     const sign = e.type === "income" ? -1 : 1;
     const per = e.amount / e.participants.length * sign;
@@ -1734,12 +2023,34 @@ function computeSettlement() {
   });
   const personalPaid = Object.fromEntries(MEMBERS.map(m => [m, 0]));
   expenses.forEach(e => { if (isExp(e) && e.payer && e.payer in personalPaid) personalPaid[e.payer] += e.amount; });
-  const fundSpent = expenses.filter(e => isExp(e) && (!e.payer || e.payer === "회비")).reduce((a, e) => a + e.amount, 0);
+  const fundSpent = expenses.filter(e => isExp(e) && !isPersonal(e)).reduce((a, e) => a + e.amount, 0);
   const rows = MEMBERS.map(m => {
-    const paid = FEES[m] + (EXTRA_PAID[m] || 0) + feePaid[m];
+    const paid = budgetOn ? 0 : (FEES[m] || 0) + (EXTRA_PAID[m] || 0) + feePaid[m];
     return { m, paid, personalPaid: personalPaid[m], share: shares[m], settle: paid + personalPaid[m] - shares[m] };
   });
-  return { spent, donated, feeTotal, FUND, fund: FUND + feeTotal + donated, balance: FUND + feeTotal + donated - fundSpent, rows };
+  const fund = budgetOn ? BUDGET + donated : FUND + feeTotal + donated;
+  const balance = budgetOn ? BUDGET + donated - spent : FUND + feeTotal + donated - fundSpent;
+  return {
+    budgetOn, spent, donated, feeTotal, FUND, fund, balance,
+    budget: budgetOn ? BUDGET : 0,         // 사용자가 직접 정해둔 금액 (찬조를 뺀 값)
+    flowBalance: budgetOn ? 0 : balance,   // ③ 예산엔 통이 없으니 송금 상대로 넣지 않는다
+    rows
+  };
+}
+
+// 예산 모임의 「모인 돈」 자리를 무엇이라 부르고, 그 밑에 무엇을 밝힐지 한 곳에서 정한다.
+// 찬조가 0이면 예산을 켜기 전과 글자 하나까지 같다 — 줄이 늘어나지 않는다.
+// 찬조가 있으면 라벨이 「예산 + 찬조」가 되고, 그 아래에 각각 얼마인지가 붙는다.
+// 이렇게 해야 카드 세 개가 그대로 뺄셈이 된다: (예산 + 찬조) − 쓴 돈 = 남은 예산.
+function budgetParts(s) {
+  const split = s.budgetOn && s.donated > 0;
+  return {
+    split,
+    fundLabel: !s.budgetOn ? "모인 돈" : split ? "예산 + 찬조" : "예산",
+    balanceLabel: s.budgetOn ? "남은 예산" : "남은 돈",
+    budget: s.budget,
+    donated: s.donated
+  };
 }
 
 // 최소 송금 매칭 (그리디) — 공동 회비도 하나의 상대로 넣어 모든 돈의 행선지를 보여준다
@@ -1781,20 +2092,24 @@ function renderResult() {
   let h = "";
   h += '<div class="r-title">' + escapeHtml(getTitle()) + "</div>";
   h += '<div class="r-sub">' + MEMBERS.map(escapeHtml).join(" · ") + "</div>";
+  const bp = budgetParts(s);
   h += '<div class="r-cards">'
-    + '<div class="r-card"><div class="l">모인 돈</div><div class="v">' + fmt(s.fund) + "</div></div>"
+    + '<div class="r-card"><div class="l">' + bp.fundLabel + '</div><div class="v">' + fmt(s.fund) + "</div>"
+    + (bp.split ? '<div class="s">예산 ' + fmt(bp.budget) + "<br>+ 찬조 " + fmt(bp.donated) + "</div>" : "")
+    + "</div>"
     + '<div class="r-card"><div class="l">쓴 돈</div><div class="v">' + fmt(s.spent) + "</div></div>"
-    + '<div class="r-card"><div class="l">남은 돈</div><div class="v" style="color:var(--accent)">' + fmt(s.balance) + "</div></div>"
+    + '<div class="r-card"><div class="l">' + bp.balanceLabel
+    + '</div><div class="v" style="color:var(--' + (s.balance < 0 ? "danger" : "accent") + ')">' + fmt(s.balance) + "</div></div>"
     + "</div>";
   h += '<div class="r-h">정산</div>';
   s.rows.forEach(r => {
     const cls = near0(r.settle) ? "r-even" : r.settle > 0 ? "r-get" : "r-owe";
     h += '<div class="r-row"><span class="rn">' + escapeHtml(r.m) + '</span><span class="' + cls + '">' + settleLabel(r.settle) + "</span></div>";
   });
-  const flow = settleFlow(s.rows, s.balance);
+  const flow = settleFlow(s.rows, s.flowBalance);
   if (flow.length) {
     h += '<div class="r-flow"><b>주고받을 돈</b>' + flow.map(l => "<br>" + escapeHtml(l)).join("");
-    const note = fundNote(s.balance);
+    const note = fundNote(s.flowBalance);
     if (note) h += '<div class="r-flow-note">' + escapeHtml(note) + "</div>";
     h += "</div>";
   }
@@ -1803,13 +2118,17 @@ function renderResult() {
 
 function shareText() {
   const s = computeSettlement();
+  const bp = budgetParts(s);
   let t = "[" + getTitle() + "]\n\n";
-  t += "모인 돈 " + fmt(s.fund) + "\n쓴 돈 " + fmt(s.spent) + "\n남은 돈 " + fmt(s.balance) + "\n\n정산\n";
+  // 찬조가 있으면 「예산」과 「찬조」를 각각 적는다 — 합계만 보내면 받는 사람이 무엇이 얼마인지 모른다
+  if (bp.split) t += "예산 " + fmt(bp.budget) + "\n찬조 " + fmt(bp.donated) + "\n";
+  t += bp.fundLabel + " " + fmt(s.fund) + "\n쓴 돈 " + fmt(s.spent) +
+       "\n" + bp.balanceLabel + " " + fmt(s.balance) + "\n\n정산\n";
   s.rows.forEach(r => { t += "· " + r.m + " : " + settleLabel(r.settle) + "\n"; });
-  const flow = settleFlow(s.rows, s.balance);
+  const flow = settleFlow(s.rows, s.flowBalance);
   if (flow.length) {
     t += "\n주고받을 돈\n" + flow.map(l => "· " + l).join("\n");
-    const note = fundNote(s.balance);
+    const note = fundNote(s.flowBalance);
     if (note) t += "\n\n※ " + note;
   }
   return t;
@@ -1846,21 +2165,30 @@ function buildCsv() {
   const rows = [];
   rows.push([getTitle()]);
   rows.push([]);
+  const bp = budgetParts(s);
   rows.push(["요약"]);
-  rows.push(["모인 돈", s.fund]);
+  // 화면이 「예산 + 찬조」로 갈라 보여주면 파일도 같이 갈라야 한다 — 둘이 어긋나면 안 된다
+  if (bp.split) { rows.push(["예산", bp.budget]); rows.push(["찬조", bp.donated]); }
+  rows.push([bp.fundLabel, s.fund]);
   rows.push(["쓴 돈", s.spent]);
-  rows.push(["남은 돈", s.balance]);
+  rows.push([bp.balanceLabel, s.balance]);
   rows.push([]);
   rows.push(["정산"]);
-  rows.push(["이름", "낸 회비", "개인 결제", "부담액", "정산(받을+ / 낼-)"]);
-  s.rows.forEach(r => rows.push([r.m, r.paid, r.personalPaid, Math.round(r.share), Math.round(r.settle)]));
+  // 예산 모임엔 「낸 회비」가 없다. 화면에서 숨긴 열을 파일에만 남기면 둘이 어긋난다
+  if (s.budgetOn) {
+    rows.push(["이름", "개인 결제", "부담액", "정산(받을+ / 낼-)"]);
+    s.rows.forEach(r => rows.push([r.m, r.personalPaid, Math.round(r.share), Math.round(r.settle)]));
+  } else {
+    rows.push(["이름", "낸 회비", "개인 결제", "부담액", "정산(받을+ / 낼-)"]);
+    s.rows.forEach(r => rows.push([r.m, r.paid, r.personalPaid, Math.round(r.share), Math.round(r.settle)]));
+  }
   rows.push([]);
   rows.push(["내역"]);
   rows.push(["날짜", "구분", "항목", "내용", "외화", "금액(원)", "결제자", "참여자"]);
   [...expenses].sort((a, b) => (a.date || "").localeCompare(b.date || "")).forEach(e => {
     rows.push([
       e.date || "", TYPE_KR[e.type] || e.type, e.category || "", e.desc || "",
-      fxLabelOf(e), e.amount, (e.payer === "회비" ? "공동" : (e.payer || "")),
+      fxLabelOf(e), e.amount, (e.payer === "회비" ? (s.budgetOn ? "예산" : "공동") : (e.payer || "")),
       (e.participants || []).join(" ")
     ]);
   });
@@ -1914,6 +2242,9 @@ async function openGroup(id) {
   refreshMemberUI();
   renderCcyChips();
   selectCcy(null);
+  budgetEditing = false;
+  settleOpen = false;   // 예산 모임의 정산표는 모임을 열 때마다 접힌 상태로 시작한다
+  applyBudgetUI();
   render();
   document.getElementById("homeView").hidden = true;
   document.getElementById("groupView").hidden = false;
@@ -1928,7 +2259,7 @@ async function createGroup(name) {
   }
   const id = newGid();
   CURRENT_GID = id;
-  MEMBERS = []; FEES = {}; EXTRA_PAID = {}; CCY = [];
+  MEMBERS = []; FEES = {}; EXTRA_PAID = {}; CCY = []; BUDGET = 0;
   titleEl.textContent = name;
   touchGroup(id, name);
   saveGroup();

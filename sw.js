@@ -1,6 +1,6 @@
 // 모여셈 서비스워커 — 오프라인 지원
 // 캐시 버전을 올리면 예전 캐시를 비우고 새로 받는다
-const CACHE = "moyeosem-v5";
+const CACHE = "moyeosem-v6";   // v6: 예산 모임(찬조 부활·정산표 접기) + 회비 「모두 선택」 — 2026-09-09
 const ASSETS = [
   "./",
   "./index.html",
