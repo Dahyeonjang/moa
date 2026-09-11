@@ -118,6 +118,45 @@
     background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px;
   }
 
+  /* 예산 안내 — 회비를 한 건도 안 걷은 채로 지출이 쌓이면 작은 칩이 한 줄 카드로 커진다.
+     ⚠️ 회비 기록이나 멤버별 회비가 하나라도 있으면 절대 뜨지 않는다 (회비 모임 화면은 안 바뀐다) */
+  .budget-hint {
+    width: 100%; background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius-sm); padding: 12px 13px;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .budget-hint .bh-msg {
+    flex: 1 1 100%; font-size: var(--t-caption); color: var(--sub); line-height: 1.65;
+  }
+  .budget-hint .bh-msg b { color: var(--ink); font-weight: 600; }
+  .budget-hint .bh-go {
+    background: var(--accent-soft); border: none; border-radius: 18px;
+    padding: 8px 14px; font-size: var(--t-caption); font-weight: 600;
+    color: var(--accent); cursor: pointer; font-family: inherit;
+  }
+  .budget-hint .bh-no {
+    background: none; border: none; color: var(--faint);
+    font-size: var(--t-caption); cursor: pointer; padding: 8px 6px; font-family: inherit;
+  }
+  .budget-hint .bh-no:hover { color: var(--sub); }
+
+  /* 새로 생긴 기능을 한 번만 알리는 줄 (기존 사용자에게만·닫으면 다시 안 뜬다) */
+  .news-bar {
+    display: flex; align-items: flex-start; gap: 8px;
+    background: var(--accent-soft); border-radius: var(--radius-sm);
+    padding: 11px 12px; margin-bottom: 16px;
+    font-size: var(--t-caption); color: var(--ink); line-height: 1.6;
+  }
+  /* ⚠️ display를 직접 지정한 요소는 hidden 속성이 안 먹는다 (.budget-view[hidden]과 같은 함정) */
+  .news-bar[hidden] { display: none; }
+  .news-bar .nb-txt { flex: 1; }
+  .news-bar .nb-txt b { font-weight: 700; }
+  .news-bar .nb-x {
+    flex: 0 0 auto; background: none; border: none; color: var(--sub);
+    font-size: 14px; line-height: 1.2; cursor: pointer; padding: 2px 2px; font-family: inherit;
+  }
+  .news-bar .nb-x:hover { color: var(--ink); }
+
   /* 섹션 — 제목은 조용하게, 내용이 앞으로 */
   section {
     background: var(--card); border: 1px solid var(--line);
@@ -454,6 +493,13 @@
     flex: 0 0 auto; padding: 0 20px; border: none; border-radius: var(--radius-sm);
     background: var(--accent); color: #fff; font-size: var(--t-body); font-weight: 600; cursor: pointer;
   }
+  /* 홈 — 저장해 둔 파일로 모임 만들기. 「만들기」의 보조 동선이라 글자 링크만큼만 보이게 */
+  .home-import {
+    display: block; margin: 10px auto 0; padding: 6px 10px;
+    background: none; border: none; color: var(--faint);
+    font-size: var(--t-caption); font-family: inherit; cursor: pointer; text-decoration: underline;
+  }
+  .home-import:hover { color: var(--accent); }
   .back-home {
     display: inline-flex; align-items: center; gap: 4px; background: none; border: none;
     color: var(--sub); font-size: var(--t-small); cursor: pointer; padding: 4px 2px; margin-bottom: 6px;
@@ -462,6 +508,11 @@
 </style>
 </head>
 <body>
+
+<!-- 새로 생긴 기능 알림 — 홈에서도 모임 안에서도 같은 자리에 뜬다.
+     재방문 사용자는 init()이 마지막 모임을 바로 열어서 홈 화면을 보지 않으므로,
+     둘 중 한 화면에만 두면 기존 사용자에게 영영 안 보인다. 그래서 두 화면 위에 하나로 둔다. -->
+<div id="newsBar" class="news-bar wrap" hidden></div>
 
 <div id="homeView" class="wrap" hidden>
   <div class="home-head">
@@ -473,6 +524,10 @@
     <input type="text" id="newGroupInput" placeholder="새 모임 이름 (예: 제주 여행)">
     <button type="button" id="newGroupBtn">만들기</button>
   </div>
+  <!-- 저장해 둔 파일(내보내기한 JSON)로 모임을 만드는 길 — 만들기 아래에 작게 (2026-09-11 다현님 요청).
+       모임 안의 「가져오기」는 지금 열린 모임에 병합하는 것이고, 여기는 파일로 새 모임을 만든다. -->
+  <button type="button" class="home-import" id="homeImportBtn">💾 저장해 둔 데이터 가져오기</button>
+  <input type="file" id="homeImportFile" accept=".json,application/json" hidden>
   <p class="note" id="groupLimitNote" style="text-align: center;" hidden></p>
   <a class="guide-link" href="guide.html">📖 처음이세요? 사용법 보기</a>
 </div>
@@ -688,6 +743,9 @@ let EXTRA_PAID = {};  // 이름 → 추가 납입(그대로 반환할 몫)
 //   · 예산 모임: 남은 예산 = 예산 − 나간 돈 전부 (누가 결제했든 돈은 이미 나갔다)
 let BUDGET = 0;
 function isBudgetMode() { return BUDGET > 0; }
+// 「예산으로 쓰기」 안내를 이 모임에서 껐는가 (「괜찮아요」를 누른 모임에만 기억한다).
+// 모임마다 따로 두는 이유: 회비를 걷는 모임과 안 걷는 모임을 한 사람이 같이 쓴다.
+let BUDGET_HINT_OFF = false;
 
 // ---------- 모임(여러 개) 관리 ----------
 let CURRENT_GID = null; // 지금 열려 있는 모임 id (null = 홈 화면)
@@ -710,7 +768,8 @@ function saveGroup() {
   if (!CURRENT_GID) return;
   const title = getTitle();
   localStorage.setItem(groupKey(CURRENT_GID), JSON.stringify({
-    title, members: MEMBERS, fees: FEES, extra: EXTRA_PAID, currencies: CCY, budget: BUDGET
+    title, members: MEMBERS, fees: FEES, extra: EXTRA_PAID, currencies: CCY,
+    budget: BUDGET, budgetHintOff: BUDGET_HINT_OFF
   }));
   touchGroup(CURRENT_GID, title);
 }
@@ -724,6 +783,7 @@ function loadGroupSettings(id) {
   CCY = Array.isArray(s.currencies) ? s.currencies.filter(c => c && c.sym) : [];
   // budget이 없는 예전 모임은 0 = 회비 방식 그대로 (하위호환)
   BUDGET = Math.max(0, Math.round(Number(s.budget) || 0));
+  BUDGET_HINT_OFF = s.budgetHintOff === true;   // 없으면 false = 안내가 살아 있음 (하위호환)
   MEMBERS.forEach(m => { if (!(m in FEES)) FEES[m] = 0; });
   return s.title || "모임 정산";
 }
@@ -1684,6 +1744,29 @@ function budgetExcludedText() {
   return "이 모임엔 " + parts.join("과 ") + "이 남아 있어요. 예산 모임에서는 계산에 넣지 않아요 — 지워진 건 아니고, 예산을 끄면 다시 들어가요. (찬조는 예산에 더해져서 그대로 계산돼요)";
 }
 
+// 「예산으로 쓰기」를 권할 때인가. 네 가지가 전부 맞아야 뜬다 —
+//   ① 예산이 꺼져 있고 ② 이 모임에서 「괜찮아요」를 안 눌렀고
+//   ③ 회비를 한 건도 안 걷었고 ④ 지출이 쌓였다
+// ⚠️ ③이 이 판단의 핵심이다. 회비 기록이 하나라도(멤버별 회비 포함) 있으면 회비를 걷는 모임이므로
+//    이 안내는 절대 뜨지 않는다 — 회비 모임 화면은 예전과 한 픽셀도 달라지지 않는다.
+// 기준을 3건으로 둔 이유: 1건은 아직 시험 삼아 넣어본 것일 수 있고, 2건으로는 "회비를 안 걷는다"가
+//    아직 패턴이 아니다. 3건째에 회비가 0원이면 그건 이 모임의 방식이다.
+// 예외로 즉시 뜨는 경우가 하나 있다 — 「⚠️ 총무가 대신 내는 중」이 화면에 떠 있을 때.
+//    걷어둔 회비가 0원이면 총무가 대신 낼 통 자체가 없으니 그 경고는 틀린 말이다.
+//    화면이 이미 틀린 말을 하고 있는데 두 건을 더 기다릴 이유가 없다.
+const BUDGET_HINT_MIN = 3;
+function budgetHintState() {
+  if (isBudgetMode() || BUDGET_HINT_OFF) return null;
+  const feeCount = expenses.filter(e => e.type === "fee").length;
+  const feeManual = Object.values(FEES || {}).reduce((a, b) => a + b, 0);
+  if (feeCount > 0 || feeManual > 0) return null;   // 회비를 걷는 모임 — 손대지 않는다
+  const spends = expenses.filter(e => e.type !== "fee" && e.type !== "income").length;
+  if (!spends) return null;
+  const wrongWarning = computeSettlement().balance < 0;
+  if (!wrongWarning && spends < BUDGET_HINT_MIN) return null;
+  return { wrongWarning };
+}
+
 function renderBudgetBar() {
   const view = document.getElementById("budgetView");
   const edit = document.getElementById("budgetEdit");
@@ -1706,20 +1789,45 @@ function renderBudgetBar() {
       const off = document.createElement("button");
       off.type = "button"; off.className = "budget-mini"; off.textContent = "예산 끄기";
       off.onclick = () => {
-        if (!confirm("예산을 끄면 회비·찬조를 쓰는 원래 방식으로 돌아가요.\n지출 기록은 그대로예요.\n\n계속할까요?")) return;
+        if (!confirm("예산을 끄면 「회비로 걷기」로 돌아가요.\n회비·찬조를 걷어 나누는 원래 방식이에요.\n지출 기록은 그대로예요.\n\n계속할까요?")) return;
         BUDGET = 0;
+        // 방금 「예산으로 쓰기」를 직접 끈 사람에게 "예산 어때요?"를 다시 권하지 않는다.
+        // 이건 이미 답을 들은 질문이다
+        BUDGET_HINT_OFF = true;
         saveGroup();
         applyBudgetUI();
         render();
       };
       view.appendChild(txt); view.appendChild(ch); view.appendChild(off);
     } else {
-      const b = document.createElement("button");
-      b.type = "button"; b.className = "budget-link";
-      b.textContent = "🎯 예산 정하기";
-      b.title = "회비를 걷지 않고 정해둔 예산 안에서 쓰는 모임이면 눌러요";
-      b.onclick = openBudgetEdit;
-      view.appendChild(b);
+      const hint = budgetHintState();
+      if (hint) {
+        // 작은 칩이 한 줄 카드로 커진다 — 화면이 스스로 말하게 한다
+        const box = document.createElement("div");
+        box.className = "budget-hint";
+        const msg = document.createElement("p");
+        msg.className = "bh-msg";
+        msg.innerHTML = hint.wrongWarning
+          ? "걷은 회비가 없는데 <b>공동 회비</b>에서 돈이 나간 걸로 잡혀 있어요. " +
+            "회비를 안 걷는 모임이면 <b>예산으로 쓰기</b>가 맞아요 — 금액만 정해두면 쓴 만큼 빠지고 <b>남은 예산</b>이 보여요."
+          : "회비를 안 걷는 모임인가요? <b>예산으로 쓰기</b>를 켜면 " +
+            "정해둔 금액에서 쓴 만큼 빠지고 <b>남은 예산</b>이 바로 보여요.";
+        const go = document.createElement("button");
+        go.type = "button"; go.className = "bh-go"; go.textContent = "🎯 예산 정하기";
+        go.onclick = openBudgetEdit;
+        const no = document.createElement("button");
+        no.type = "button"; no.className = "bh-no"; no.textContent = "괜찮아요";
+        no.onclick = () => { BUDGET_HINT_OFF = true; saveGroup(); renderBudgetBar(); };
+        box.appendChild(msg); box.appendChild(go); box.appendChild(no);
+        view.appendChild(box);
+      } else {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "budget-link";
+        b.textContent = "🎯 예산 정하기";
+        b.title = "회비를 걷지 않고 정해둔 예산 안에서 쓰는 모임이면 눌러요";
+        b.onclick = openBudgetEdit;
+        view.appendChild(b);
+      }
     }
   }
   const msg = isBudgetMode() ? budgetExcludedText() : "";
@@ -1900,6 +2008,7 @@ function refreshProUI() {
   const locked = !isPro();   // 웹에서는 isPro()가 항상 true라 자물쇠가 안 붙는다
   mark(document.getElementById("exportBtn"), locked, "프로 기능");
   mark(document.getElementById("importBtn"), locked && importUsed(), "프로 기능");
+  mark(document.getElementById("homeImportBtn"), locked && importUsed(), "프로 기능");
   mark(document.getElementById("resultCsv"), locked, "프로 기능");
 }
 
@@ -1948,33 +2057,91 @@ document.getElementById("importBtn").onclick = () => {
   if (!canImport()) { openPro("가져오기는 프로 기능이에요 (처음 한 번은 무료)"); return; }
   document.getElementById("importFile").click();
 };
+// 내보내기한 파일을 읽어 { data, list } 로 돌려준다. 이 앱 파일이 아니면 던진다.
+async function parseImportFile(file) {
+  const data = JSON.parse(await file.text());
+  const list = Array.isArray(data) ? data : data.expenses;
+  if (!Array.isArray(list)) throw new Error("정산 앱에서 내보낸 파일이 아니에요");
+  return { data, list };
+}
+// 읽은 파일을 「지금 열린 모임」에 적용한다 — 모임 안 「가져오기」와 홈의 「저장해 둔 데이터 가져오기」가 같이 쓴다.
+// ⚠️ 이 안의 순서·규칙은 2026-09-11 이전 가져오기와 같다(같은 id는 덮어쓰고 나머지는 추가·budget 없는 옛 파일은 예산을 안 건드림).
+async function applyImportData(data, list) {
+  for (const item of list) { if (item && item.id) { item.gid = CURRENT_GID; await dbPut(item); } }
+  expenses = await dbAll();
+  if (data.fees) { FEES = Object.assign({}, data.fees); EXTRA_PAID = Object.assign({}, data.extra || {}); }
+  if (Array.isArray(data.members)) MEMBERS = data.members.slice();
+  if (data.title) setTitle(data.title);
+  if (Array.isArray(data.currencies)) { CCY = data.currencies.filter(c => c && c.sym); saveCcy(); }
+  // budget이 없는 예전 파일이면 지금 모임의 예산을 건드리지 않는다 (하위호환)
+  if (data.budget != null) BUDGET = Math.max(0, Math.round(Number(data.budget) || 0));
+  syncMembersFromData();
+  saveFees();
+  refreshMemberUI();
+  ensureCcyFromExpenses();
+  renderCcyChips();
+  applyBudgetUI();
+  render();
+  markImportUsed();
+}
 document.getElementById("importFile").onchange = async e => {
   const file = e.target.files[0];
   if (!file) return;
   try {
-    const data = JSON.parse(await file.text());
-    const list = Array.isArray(data) ? data : data.expenses;
-    if (!Array.isArray(list)) throw new Error("정산 앱에서 내보낸 파일이 아니에요");
+    const { data, list } = await parseImportFile(file);
     if (!confirm("기록 " + list.length + "건을 불러올까요?\n(같은 기록은 덮어쓰고, 나머지는 추가돼요)")) {
       e.target.value = "";
       return;
     }
-    for (const item of list) { if (item && item.id) { item.gid = CURRENT_GID; await dbPut(item); } }
-    expenses = await dbAll();
-    if (data.fees) { FEES = Object.assign({}, data.fees); EXTRA_PAID = Object.assign({}, data.extra || {}); }
-    if (Array.isArray(data.members)) MEMBERS = data.members.slice();
-    if (data.title) setTitle(data.title);
-    if (Array.isArray(data.currencies)) { CCY = data.currencies.filter(c => c && c.sym); saveCcy(); }
-    // budget이 없는 예전 파일이면 지금 모임의 예산을 건드리지 않는다 (하위호환)
-    if (data.budget != null) BUDGET = Math.max(0, Math.round(Number(data.budget) || 0));
-    syncMembersFromData();
-    saveFees();
-    refreshMemberUI();
-    ensureCcyFromExpenses();
-    renderCcyChips();
-    applyBudgetUI();
-    render();
-    markImportUsed();
+    await applyImportData(data, list);
+    alert("가져오기 완료! (" + list.length + "건)");
+  } catch (err) {
+    alert("가져오기 실패: " + err.message);
+  }
+  e.target.value = "";
+};
+
+// ---------- 홈: 저장해 둔 파일로 모임 만들기 (2026-09-11 다현님 요청) ----------
+// 앱을 처음 켠 사람(모임 0개)이 백업 파일을 갖고 있을 때, 빈 모임을 먼저 만들고 그 안에서 가져오기를 찾아
+// 내려가지 않아도 되게 한다. 파일의 제목으로 새 모임을 만든 뒤 위 applyImportData()를 그대로 쓴다.
+// 게이팅은 모임 안 가져오기와 같다(프로 또는 최초 1회 무료) + 새 모임을 만드니 무료 모임 개수 제한도 같이 본다.
+document.getElementById("homeImportBtn").onclick = () => {
+  if (!canImport()) { openPro("가져오기는 프로 기능이에요 (처음 한 번은 무료)"); return; }
+  if (!isPro() && loadGroupList().length >= FREE_GROUP_LIMIT) {
+    openPro("무료로는 모임을 " + FREE_GROUP_LIMIT + "개까지 만들 수 있어요");
+    return;
+  }
+  document.getElementById("homeImportFile").click();
+};
+document.getElementById("homeImportFile").onchange = async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const { data, list } = await parseImportFile(file);
+    // 제목: 파일 안의 제목 → 없으면(옛 배열 형식) 파일 이름에서 "_날짜.json"을 뗀 것 → 그것도 없으면 기본값
+    const title = (data.title || "").trim() ||
+      String(file.name || "").replace(/\.json$/i, "").replace(/_\d{4}-\d{2}-\d{2}$/, "").trim() ||
+      "가져온 모임";
+    // ⚠️ 기록은 id로 저장되고 가져오기는 같은 id를 덮어쓴다. 이 파일을 이미 한 번 가져온 기기에서 또 가져오면
+    //    새 모임이 생기면서 기록이 원래 모임에서 새 모임으로 "옮겨져" 원래 모임이 빈 것처럼 보인다.
+    //    그래서 홈에서는 먼저 겹치는 기록이 있는지 보고, 있으면 새 모임을 만들지 않고 그 모임을 연다.
+    const ids = new Set(list.filter(x => x && x.id).map(x => x.id));
+    const dup = (await dbAllRaw()).find(x => ids.has(x.id));
+    if (dup) {
+      const g = loadGroupList().find(x => x.id === dup.gid);
+      const gname = g ? g.title : "다른";
+      if (g && confirm("이 파일의 기록은 이미 「" + gname + "」 모임에 있어요.\n그 모임을 열까요?")) await openGroup(g.id);
+      else if (!g) alert("이 파일의 기록이 이미 이 기기에 있어요.");
+      e.target.value = "";
+      return;
+    }
+    if (!confirm("「" + title + "」 모임을 새로 만들고 기록 " + list.length + "건을 불러올까요?")) {
+      e.target.value = "";
+      return;
+    }
+    await createGroup(title);
+    if (!CURRENT_GID) { e.target.value = ""; return; }   // 모임 개수 제한 등으로 못 만들었으면 여기서 멈춘다
+    await applyImportData(data, list);
     alert("가져오기 완료! (" + list.length + "건)");
   } catch (err) {
     alert("가져오기 실패: " + err.message);
@@ -2259,7 +2426,7 @@ async function createGroup(name) {
   }
   const id = newGid();
   CURRENT_GID = id;
-  MEMBERS = []; FEES = {}; EXTRA_PAID = {}; CCY = []; BUDGET = 0;
+  MEMBERS = []; FEES = {}; EXTRA_PAID = {}; CCY = []; BUDGET = 0; BUDGET_HINT_OFF = false;
   titleEl.textContent = name;
   touchGroup(id, name);
   saveGroup();
@@ -2309,7 +2476,10 @@ async function renderHome() {
       '<div class="onboard">' +
       '<p class="ob-title">처음 오셨네요! 👋</p>' +
       '<div class="ob-step"><span class="ob-n">1</span><span>아래에서 <b>모임</b>을 만들어요 <span class="ob-eg">예: 제주 여행</span></span></div>' +
-      '<div class="ob-step"><span class="ob-n">2</span><span>여행 중 <b>지출·회비</b>를 그때그때 기록해요</span></div>' +
+      // 「회비」만 말하면 회비를 걷는 모임만 이 앱을 쓰는 것처럼 읽힌다.
+      // 첫 화면에서 두 가지 방식이 다 있다는 걸 말해 둔다 (동사형 — 화면에 「모드」라는 말은 안 쓴다)
+      '<div class="ob-step"><span class="ob-n">2</span><span><b>지출</b>을 그때그때 기록해요 ' +
+      '<span class="ob-eg">회비를 걷어도 되고, 예산만 정해둬도 돼요</span></span></div>' +
       '<div class="ob-step"><span class="ob-n">3</span><span><b>정산 결과</b>를 보고 카톡으로 공유해요</span></div>' +
       '</div>';
     return;
@@ -2323,7 +2493,10 @@ async function renderHome() {
     const main = document.createElement("button");
     main.type = "button"; main.className = "group-open";
     main.innerHTML = '<span class="g-title"></span><span class="g-meta"></span>';
-    main.querySelector(".g-title").textContent = g.title || "이름 없는 모임";
+    // 예산으로 쓰는 모임은 제목 앞에 🎯 하나. 목록에서 두 방식이 눈으로 갈린다
+    let budgetOn = false;
+    try { budgetOn = (JSON.parse(localStorage.getItem(groupKey(g.id))) || {}).budget > 0; } catch (e) {}
+    main.querySelector(".g-title").textContent = (budgetOn ? "🎯 " : "") + (g.title || "이름 없는 모임");
     const n = countByGid[g.id] || 0;
     main.querySelector(".g-meta").textContent = (n ? n + "건" : "비어 있음") + (g.updatedAt ? " · " + fmtWhen(g.updatedAt) : "");
     main.onclick = () => openGroup(g.id);
@@ -2365,6 +2538,37 @@ async function migrateLegacy() {
   localStorage.setItem("moa-migrated", "1");
 }
 
+// ---------- 새로 생긴 기능을 한 번만 알리기 ----------
+// 재방문 사용자는 init()이 `moa-current`로 마지막 모임을 바로 열기 때문에 홈 화면을 다시 보지 않는다.
+// 온보딩 3단계는 모임이 0개일 때만 그려지므로, 새 기능은 가만 두면 기존 사용자에게 영영 안 보인다.
+// 그래서 두 화면 위에 한 줄을 띄운다 — 한 번만, 닫으면 끝.
+//   값 없음 = 이 코드가 이 기기에서 처음 도는 순간. 그때 모임이 이미 있으면 「기존 사용자」다
+//   "0" = 보여줄 것  ·  "1" = 이미 봤다(또는 볼 필요 없다)
+const NEWS_KEY = "moa-news-budget";
+function initNews() {
+  let seen = null;
+  try { seen = localStorage.getItem(NEWS_KEY); } catch (e) { return; }
+  if (seen == null) {
+    // 새로 온 사람에겐 온보딩 2번이 이미 같은 말을 한다 — 두 번 말하지 않는다
+    const existingUser = loadGroupList().length > 0;
+    seen = existingUser ? "0" : "1";
+    try { localStorage.setItem(NEWS_KEY, seen); } catch (e) {}
+  }
+  if (seen !== "0") return;
+  const bar = document.getElementById("newsBar");
+  if (!bar) return;
+  bar.innerHTML = '<span class="nb-txt">🎯 <b>새로 생겼어요</b> — 회비를 안 걷는 모임은 ' +
+    '<b>예산만 정해두고</b> 쓸 수 있어요. 요약 카드 아래 「예산 정하기」를 눌러보세요.</span>' +
+    '<button type="button" class="nb-x" aria-label="닫기">✕</button>';
+  bar.querySelector(".nb-x").onclick = closeNews;
+  bar.hidden = false;
+}
+function closeNews() {
+  try { localStorage.setItem(NEWS_KEY, "1"); } catch (e) {}
+  const bar = document.getElementById("newsBar");
+  if (bar) bar.hidden = true;
+}
+
 // ---------- 시작 ----------
 (async function init() {
   document.getElementById("fDate").value = new Date().toISOString().slice(0, 10);
@@ -2386,6 +2590,9 @@ async function migrateLegacy() {
     window.moaBilling.check().then(setPro).catch(() => {});
   }
   refreshProUI();
+
+  // ⚠️ 화면을 열기 전에 판정한다 — migrateLegacy()까지 끝난 뒤라야 「모임이 있는가」가 사실이 된다
+  initNews();
 
   const last = localStorage.getItem("moa-current");
   const exists = last && loadGroupList().some(g => g.id === last);
