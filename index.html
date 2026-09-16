@@ -186,6 +186,12 @@
 
   /* 선택 칩 */
   .members { display: flex; gap: 6px; flex-wrap: wrap; }
+  /* ⚠️ display:flex를 준 요소는 hidden 속성이 안 먹는다 — 참여자 칩(쏠게요 켜면 숨김)·쏠게요 줄(회비·찬조에선 숨김)에 쓴다 */
+  .members[hidden] { display: none; }
+  /* 🎁 제가 쏠게요 — 참여자 칩 아래 한 줄. 켜면 참여자 칩이 사라지고 결제한 사람이 전부 낸다 */
+  .treat-row { margin-top: 8px; }
+  .treat-row label { border-style: dashed; color: var(--sub); background: transparent; }
+  .treat-row label:has(input:checked) { border-style: solid; }
   .members label, .ccy-chip {
     display: inline-flex; align-items: center; gap: 5px;
     border: 1px solid var(--line); border-radius: 18px;
@@ -278,6 +284,37 @@
   .expense .edit:hover { color: var(--accent); }
   .expense .del:hover { color: var(--danger); }
   .empty-msg { text-align: center; color: var(--faint); font-size: var(--t-small); padding: 20px 0; }
+
+  /* 지출 내역 — 찾기 + 보기 전환 (시간순 · 항목별 · 날짜별 · 결제자별). 기록이 없으면 통째로 숨긴다 */
+  .list-tools { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .list-tools[hidden] { display: none; }
+  .list-tools input[type="search"] {
+    width: 100%; min-width: 0; padding: 10px 12px; border: 1px solid var(--line);
+    border-radius: var(--radius-sm); font-size: var(--t-input); background: var(--field); color: var(--ink);
+    -webkit-appearance: none; appearance: none; font-family: inherit;
+  }
+  .list-tools input[type="search"]::placeholder { color: var(--faint); }
+  .list-tools input[type="search"]:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  .view-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .view-tab {
+    border: 1px solid var(--line); border-radius: 18px; background: var(--field); color: var(--sub);
+    padding: 7px 12px; font-size: var(--t-caption); font-weight: 500; cursor: pointer; font-family: inherit;
+  }
+  .view-tab.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  /* 묶음 머리 — 이름은 왼쪽, 건수·소계는 오른쪽. 첫 묶음 위에는 선을 안 긋는다 */
+  .list-group-head {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+    padding: 14px 0 6px; border-top: 1px solid var(--line); margin-top: 4px;
+  }
+  .list-group-head:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+  .list-group-head .lg-name { font-size: var(--t-small); font-weight: 700; color: var(--ink); letter-spacing: -0.02em; }
+  .list-group-head .lg-meta { font-size: var(--t-caption); color: var(--sub); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .list-group-head .lg-meta b { color: var(--ink); font-weight: 600; }
+  .list-group-head + .expense { padding-top: 8px; }
+  .list-count { font-size: var(--t-caption); color: var(--faint); text-align: right; margin-top: 2px; }
+  /* 정산 아래 「🎁 쏜 것」 한 줄 — 정산표에는 안 들어가고 여기서만 말한다 */
+  .treat-line { margin-top: 10px; }
+  .treat-line b { color: var(--ink); font-weight: 600; }
 
   /* 멤버 */
   .feerow { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
@@ -618,6 +655,12 @@
       <div class="field" id="participantField">
         <label id="pLabel">참여자 (함께 나눠 낼 사람)</label>
         <div class="members" id="fMembers"></div>
+        <!-- 🎁 제가 쏠게요 — 나눠 내지 않고 결제한 사람이 전부 낸다 (2026-09-16 다현님 요청).
+             참여자 칩과 같은 상자에 두면 participants 읽기에 섞이므로 따로 둔다. 지출에서만 보인다. -->
+        <div class="members treat-row" id="treatRow">
+          <label><input type="checkbox" id="fTreat">🎁 제가 쏠게요</label>
+        </div>
+        <p class="note" id="treatHint" hidden style="margin-top: 8px;"></p>
       </div>
       <p class="budget-note" id="incomeBudgetNote" hidden style="margin: 0 0 13px;">
         💝 이 찬조는 <strong>예산에 더해져요.</strong> 카드에 「예산 얼마 + 찬조 얼마」로 따로 보이고,
@@ -638,7 +681,18 @@
 
   <section>
     <h2>지출 내역</h2>
+    <!-- 찾기 + 보기 전환 (2026-09-16 다현님 요청 — 2박3일 넘어가면 목록이 길어진다). 기록이 없으면 숨긴다 -->
+    <div class="list-tools" id="listTools" hidden>
+      <input type="search" id="listSearch" placeholder="🔍 찾기 — 내용 · 항목 · 이름 · 금액" autocomplete="off">
+      <div class="view-tabs" id="viewTabs">
+        <button type="button" class="view-tab" data-view="time">시간순</button>
+        <button type="button" class="view-tab" data-view="cat">항목별</button>
+        <button type="button" class="view-tab" data-view="date">날짜별</button>
+        <button type="button" class="view-tab" data-view="payer">결제자별</button>
+      </div>
+    </div>
     <div id="expenseList"></div>
+    <p class="list-count" id="listCount" hidden></p>
   </section>
 
   <section>
@@ -653,6 +707,7 @@
       <thead><tr><th>이름</th><th>낸 회비</th><th>따로 결제</th><th>부담액</th><th>돌려받을 돈</th></tr></thead>
       <tbody id="settleBody"></tbody>
     </table>
+    <p class="note treat-line" id="treatLine" hidden></p>
     <button type="button" class="submit" id="resultBtn" style="margin-top: 14px;">정산 결과 보기</button>
     <p class="note" style="text-align: center; margin-top: 8px;">
       👆 눌러서 정산 결과를 <strong>카톡 공유</strong>하거나 <strong>엑셀 파일로 저장</strong>할 수 있어요
@@ -661,6 +716,7 @@
       · 부담액 = 각 지출을 참여자 수로 나눈 몫의 합<br>
       · 찬조는 모인 돈에 더해지고, 혜택 나눈 사람들의 부담액을 줄여줘요<br>
       · 따로 결제 = 공동 회비가 아니라 개인 돈으로 낸 금액 — 돌려받을 돈에 자동으로 더해져요<br>
+      · 🎁 쏜 것은 쓴 돈에는 들어가지만 정산에서는 빠져요 — 결제한 사람이 전부 내는 거예요<br>
       · 지출을 추가할 때마다 자동으로 다시 계산됩니다
     </p>
   </section>
@@ -1008,72 +1064,8 @@ function render() {
     : s.budgetOn ? "⚠️ 예산을 " + fmt(-s.balance) + " 넘었어요"
     : "⚠️ 총무가 대신 내는 중";
 
-  // 지출 목록 (최신순)
-  const list = document.getElementById("expenseList");
-  list.innerHTML = "";
-  if (expenses.length === 0) {
-    list.innerHTML = '<p class="empty-msg">아직 지출이 없어요</p>';
-  } else {
-    [...expenses].sort((a, b) => (b.date + b.id).localeCompare(a.date + a.id)).forEach(e => {
-      const row = document.createElement("div");
-      row.className = "expense";
-
-      let thumb;
-      if (e.photo) {
-        thumb = document.createElement("img");
-        thumb.className = "thumb";
-        thumb.src = e.photo;
-        thumb.onclick = () => showLightbox(e.photo);
-      } else {
-        thumb = document.createElement("div");
-        thumb.className = "thumb empty";
-        thumb.textContent = e.type === "income" ? "💝" : e.type === "fee" ? "💰" : "🧾";
-      }
-
-      const info = document.createElement("div");
-      info.className = "info";
-      const dateStr = e.date ? e.date.slice(5).replace("-", "/") : "";
-      info.innerHTML =
-        '<div class="top"><span class="desc"></span><span class="amount"></span></div>' +
-        '<div class="meta"></div>';
-      const isIncome = e.type === "income";
-      const isFee = e.type === "fee";
-      info.querySelector(".desc").textContent = e.desc;
-      info.querySelector(".amount").textContent = (isIncome || isFee ? "+" : "") + fmt(e.amount);
-      if (isIncome || isFee) info.querySelector(".amount").style.color = "var(--accent)";
-      const fxLabel = fxLabelOf(e);
-      info.querySelector(".meta").textContent =
-        (isIncome ? "찬조 · " : "") + (isFee ? "회비 · " : "") + (e.category ? e.category + " · " : "") +
-        (isFee && e.payer ? e.payer + "님 냄 · " : "") +
-        (!isFee && e.payer && e.payer !== "회비" ? e.payer + " 결제 · " : "") +
-        // 예산 모드에서는 「예산에서 낸 것」과 「개인 카드로 낸 것」이 정산에서 갈리므로 화면에서도 갈라 보여준다
-        (s.budgetOn && !isFee && !isIncome && (!e.payer || e.payer === "회비") ? "예산에서 · " : "") +
-        (fxLabel ? fxLabel + " · " : "") +
-        dateStr + " · " + e.participants.join(", ");
-
-      const edit = document.createElement("button");
-      edit.className = "edit";
-      edit.textContent = "수정";
-      edit.onclick = () => startEdit(e);
-      info.appendChild(edit);
-
-      const del = document.createElement("button");
-      del.className = "del";
-      del.textContent = "삭제";
-      del.onclick = async () => {
-        if (!confirm('"' + e.desc + '" 지출을 삭제할까요?')) return;
-        await dbDelete(e.id);
-        expenses = expenses.filter(x => x.id !== e.id);
-        if (editingId === e.id) cancelEditMode();
-        render();
-      };
-      info.appendChild(del);
-
-      row.appendChild(thumb);
-      row.appendChild(info);
-      list.appendChild(row);
-    });
-  }
+  // 지출 목록 — 찾기·보기 전환은 renderList()가 맡는다 (검색 글자를 칠 때마다 전체를 다시 그리지 않으려고)
+  renderList(s);
 
   // 항목별 합계
   const catTotals = {};
@@ -1113,12 +1105,197 @@ function render() {
       '</td><td class="' + cls + '">' + (refund >= 0 ? fmt(refund) : "-" + fmt(-refund)) + "</td>";
     body.appendChild(tr);
   });
+  // 🎁 쏜 것 — 정산표 밖에서 한 줄로. 표에 넣으면 「따로 결제」와 「부담액」이 같은 금액만큼 부풀어 상쇄되는데,
+  // 그건 맞는 숫자여도 읽는 사람이 헷갈린다. 표는 나눠 내는 돈만 말하고, 쏜 건 여기서 말한다
+  const tl = document.getElementById("treatLine");
+  tl.innerHTML = s.treats.length ? "🎁 쏜 것 · " + s.treats.map(t => "<b>" + escapeHtml(t.m) + "</b> " + fmt(t.amt) + treatDetail(t)).join(" · ") : "";
+  tl.hidden = !s.treats.length;
 
   renderSettleFold(s.budgetOn);
 
   // 회비 기록이 바뀌면 멤버·회비 섹션의 안내도 따라 갱신
   safeRebuildFeeRows();
   renderBudgetBar();
+}
+
+// 쏜 것 한 사람분의 꼬리 — "(저녁 갈비)" / "(저녁 갈비 외 1건)". 결과·공유·정산 줄이 같이 쓴다
+function treatDetail(t) {
+  if (!t.first) return "";
+  return " (" + t.first + (t.n > 1 ? " 외 " + (t.n - 1) + "건" : "") + ")";
+}
+
+// ---------- 지출 내역: 찾기 + 보기 전환 ----------
+// 시간순(지금까지 그대로) · 항목별 · 날짜별 · 결제자별. 고른 보기는 기기에 기억한다 — 데이터가 아니라 화면 취향이라 내보내기엔 안 넣는다.
+// 찾기는 내용·항목·결제자·금액(84000 / 84,000 둘 다)·외화·날짜에 걸리고, 띄어쓰기로 나눈 낱말은 전부 맞아야 한다.
+// 참여자 이름은 일부러 안 건다 — 거의 모든 기록에 다 들어 있어서 이름을 치면 목록이 그대로 남는다.
+const LIST_VIEW_KEY = "moa-list-view";
+const LIST_VIEWS = ["time", "cat", "date", "payer"];
+let listView = (() => { try { const v = localStorage.getItem(LIST_VIEW_KEY); return LIST_VIEWS.includes(v) ? v : "time"; } catch (e) { return "time"; } })();
+function setListView(v) {
+  if (!LIST_VIEWS.includes(v)) v = "time";
+  listView = v;
+  try { localStorage.setItem(LIST_VIEW_KEY, v); } catch (e) {}
+  renderList();
+}
+document.querySelectorAll("#viewTabs .view-tab").forEach(b => { b.onclick = () => setListView(b.dataset.view); });
+document.getElementById("listSearch").oninput = () => renderList();
+
+function listQuery() { return (document.getElementById("listSearch").value || "").trim().toLowerCase(); }
+function searchHaystack(e, budgetOn) {
+  const parts = [e.desc, e.category, e.type === "income" ? "찬조" : e.type === "fee" ? "회비" : "지출"];
+  if (e.type === "fee" && e.payer) parts.push(e.payer);
+  else if (e.type !== "income" && e.payer) parts.push(e.payer === "회비" ? (budgetOn ? "예산에서 예산" : "공동 회비") : e.payer);
+  if (e.treat === true) parts.push("쏨 쏘기 쏠게요");
+  parts.push(String(e.amount), fmt(e.amount), fxLabelOf(e), e.date || "", (e.date || "").slice(5).replace("-", "/"));
+  return parts.filter(Boolean).join(" ").toLowerCase();
+}
+function matchesQuery(hay, q) {
+  if (!q) return true;
+  const norm = s => s.replace(/,/g, "");
+  return q.split(/\s+/).every(w => w && (hay.includes(w) || norm(hay).includes(norm(w))));
+}
+const WEEKDAY_KR = ["일", "월", "화", "수", "목", "금", "토"];
+function dateLabel(d) {
+  if (!d) return "날짜 없음";
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d);
+  if (!m) return d;
+  const dt = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return Number(m[2]) + "월 " + Number(m[3]) + "일 (" + WEEKDAY_KR[dt.getDay()] + ")";
+}
+// 보기마다 「어느 묶음에 들어가나」와 「묶음 순서」만 다르다. 묶음 안의 순서는 시간순 그대로
+function groupKeyOf(e, view, budgetOn) {
+  if (view === "date") return { key: "d:" + (e.date || ""), name: dateLabel(e.date), sort: e.date || "" };
+  if (e.type === "fee") return { key: "t:fee", name: "💰 회비", tail: 1 };
+  if (e.type === "income") return { key: "t:income", name: "💝 찬조", tail: 2 };
+  if (view === "cat") { const c = e.category || "미분류"; return { key: "c:" + c, name: c }; }
+  // 결제자별
+  if (!e.payer || e.payer === "회비") return { key: "p:회비", name: budgetOn ? "🎯 예산에서" : "💰 공동 회비" };
+  return { key: "p:" + e.payer, name: e.payer };
+}
+function buildGroups(list, view, budgetOn) {
+  const map = new Map();
+  list.forEach(e => {
+    const g = groupKeyOf(e, view, budgetOn);
+    if (!map.has(g.key)) map.set(g.key, Object.assign({ items: [], spend: 0, inflow: 0 }, g));
+    const grp = map.get(g.key);
+    grp.items.push(e);
+    if (e.type === "fee" || e.type === "income") grp.inflow += e.amount; else grp.spend += e.amount;
+  });
+  const groups = [...map.values()];
+  if (view === "date") groups.sort((a, b) => b.sort.localeCompare(a.sort));          // 최신 날짜가 위 (시간순과 같은 방향)
+  else groups.sort((a, b) => (a.tail || 0) - (b.tail || 0) || b.spend - a.spend);   // 큰 묶음이 위, 회비·찬조는 맨 아래
+  return groups;
+}
+function groupMeta(g) {
+  const bits = [g.items.length + "건"];
+  if (g.spend > 0) bits.push("소계 <b>" + fmt(g.spend) + "</b>");
+  if (g.inflow > 0) bits.push("+" + fmt(g.inflow));
+  return bits.join(" · ");
+}
+
+function renderList(s) {
+  s = s || computeSettlement();
+  const list = document.getElementById("expenseList");
+  const tools = document.getElementById("listTools");
+  const count = document.getElementById("listCount");
+  list.innerHTML = "";
+  tools.hidden = expenses.length === 0;
+  document.querySelectorAll("#viewTabs .view-tab").forEach(b => b.classList.toggle("on", b.dataset.view === listView));
+  if (expenses.length === 0) {
+    list.innerHTML = '<p class="empty-msg">아직 지출이 없어요</p>';
+    count.hidden = true;
+    return;
+  }
+  const q = listQuery();
+  const sorted = [...expenses].sort((a, b) => (b.date + b.id).localeCompare(a.date + a.id));
+  const shown = q ? sorted.filter(e => matchesQuery(searchHaystack(e, s.budgetOn), q)) : sorted;
+  if (shown.length === 0) {
+    const p = document.createElement("p");
+    p.className = "empty-msg";
+    p.textContent = "「" + q + "」에 맞는 기록이 없어요";
+    list.appendChild(p);
+    count.hidden = true;
+    return;
+  }
+  if (listView === "time") {
+    shown.forEach(e => list.appendChild(buildExpenseRow(e, s)));
+  } else {
+    buildGroups(shown, listView, s.budgetOn).forEach(g => {
+      const head = document.createElement("div");
+      head.className = "list-group-head";
+      head.innerHTML = '<span class="lg-name"></span><span class="lg-meta"></span>';
+      head.querySelector(".lg-name").textContent = g.name;
+      head.querySelector(".lg-meta").innerHTML = groupMeta(g);
+      list.appendChild(head);
+      g.items.forEach(e => list.appendChild(buildExpenseRow(e, s)));
+    });
+  }
+  // 찾는 중일 때만 「몇 건 중 몇 건」을 말한다 — 평소엔 조용히
+  count.textContent = q ? shown.length + "건 찾음 (전체 " + expenses.length + "건)" : "";
+  count.hidden = !q;
+}
+
+function buildExpenseRow(e, s) {
+  const row = document.createElement("div");
+  row.className = "expense";
+
+  const isIncome = e.type === "income";
+  const isFee = e.type === "fee";
+  const isTreat = !isIncome && !isFee && e.treat === true && !!e.payer && e.payer !== "회비";
+  let thumb;
+  if (e.photo) {
+    thumb = document.createElement("img");
+    thumb.className = "thumb";
+    thumb.src = e.photo;
+    thumb.onclick = () => showLightbox(e.photo);
+  } else {
+    thumb = document.createElement("div");
+    thumb.className = "thumb empty";
+    thumb.textContent = isIncome ? "💝" : isFee ? "💰" : isTreat ? "🎁" : "🧾";
+  }
+
+  const info = document.createElement("div");
+  info.className = "info";
+  const dateStr = e.date ? e.date.slice(5).replace("-", "/") : "";
+  info.innerHTML =
+    '<div class="top"><span class="desc"></span><span class="amount"></span></div>' +
+    '<div class="meta"></div>';
+  info.querySelector(".desc").textContent = e.desc;
+  info.querySelector(".amount").textContent = (isIncome || isFee ? "+" : "") + fmt(e.amount);
+  if (isIncome || isFee) info.querySelector(".amount").style.color = "var(--accent)";
+  const fxLabel = fxLabelOf(e);
+  info.querySelector(".meta").textContent =
+    (isIncome ? "찬조 · " : "") + (isFee ? "회비 · " : "") + (e.category ? e.category + " · " : "") +
+    (isFee && e.payer ? e.payer + "님 냄 · " : "") +
+    // 쏜 것은 「결제」가 아니라 「쏨」 — 그리고 참여자 대신 그 말이 끝에 온다
+    (isTreat ? "🎁 " + e.payer + "님이 쏨 · " : "") +
+    (!isFee && !isTreat && e.payer && e.payer !== "회비" ? e.payer + " 결제 · " : "") +
+    // 예산 모드에서는 「예산에서 낸 것」과 「개인 카드로 낸 것」이 정산에서 갈리므로 화면에서도 갈라 보여준다
+    (s.budgetOn && !isFee && !isIncome && (!e.payer || e.payer === "회비") ? "예산에서 · " : "") +
+    (fxLabel ? fxLabel + " · " : "") +
+    dateStr + (isTreat ? " · 나눠 내지 않아요" : " · " + (e.participants || []).join(", "));
+
+  const edit = document.createElement("button");
+  edit.className = "edit";
+  edit.textContent = "수정";
+  edit.onclick = () => startEdit(e);
+  info.appendChild(edit);
+
+  const del = document.createElement("button");
+  del.className = "del";
+  del.textContent = "삭제";
+  del.onclick = async () => {
+    if (!confirm('"' + e.desc + '" 지출을 삭제할까요?')) return;
+    await dbDelete(e.id);
+    expenses = expenses.filter(x => x.id !== e.id);
+    if (editingId === e.id) cancelEditMode();
+    render();
+  };
+  info.appendChild(del);
+
+  row.appendChild(thumb);
+  row.appendChild(info);
+  return row;
 }
 
 // 예산 모임의 정산표는 기본으로 접혀 있다 (2026-09-09 다현님 결정).
@@ -1199,6 +1376,42 @@ function isFeeMode() {
   const r = document.querySelector('input[name="etype"]:checked');
   return !!r && r.value === "fee";
 }
+// 🎁 제가 쏠게요 — 지출인데 아무도 나눠 내지 않는다. 결제한 사람이 전부 낸다 (2026-09-16 다현님 요청).
+// 구분(type)을 하나 더 만들지 않고 지출 안의 표시(treat: true)로 둔 이유:
+//   · 쏜 것도 항목·내용·영수증이 있는 지출이다 — 「쓴 돈」과 「항목별 합계」에 그대로 들어간다
+//   · 저장은 participants = [결제자]로 한다. 옛 버전(배포된 웹·앱 v1)이 이 기록을 읽어도
+//     "자기가 내고 자기가 부담" = 상쇄 0원이라 정산이 안 깨진다 — 하위호환이 저절로 된다
+//   · 새 버전은 이 표시를 보고 정산표·송금 매칭에서 아예 빼고 「🎁 쏜 것」 줄로 따로 말한다
+function isTreatMode() {
+  const r = document.querySelector('input[name="etype"]:checked');
+  return !!r && r.value === "expense" && document.getElementById("fTreat").checked;
+}
+// 켜면 참여자 칩이 사라지고 「공동 회비/예산에서」 칩도 사라진다 — 쏘는 사람은 반드시 멤버여야 하니까.
+// (공동 회비에서 낸 건 그냥 지출이지 쏜 게 아니다)
+function applyTreatUI() {
+  const etype = (document.querySelector('input[name="etype"]:checked') || {}).value;
+  const row = document.getElementById("treatRow");
+  const hint = document.getElementById("treatHint");
+  const on = isTreatMode();
+  row.hidden = etype !== "expense";
+  document.getElementById("fMembers").hidden = on;
+  document.getElementById("pLabel").textContent = on
+    ? "참여자 — 없어요. 결제한 사람이 전부 내요"
+    : etype === "income" ? "혜택을 나눌 사람 (보통 전원 체크)" : "참여자 (함께 나눠 낼 사람)";
+  const payer = (document.querySelector('input[name="payer"]:checked') || {}).value;
+  hint.textContent = on
+    ? (payer && payer !== "회비" ? payer + "님이 전부 내요. " : "누가 쏘는지 결제자를 골라 주세요. ") +
+      "쓴 돈에는 들어가고, 정산(주고받을 돈)에는 안 들어가요."
+    : "";
+  hint.hidden = !on;
+  document.getElementById("submitBtn").textContent =
+    editingId ? "✏️ 수정 저장" : on ? "🎁 쏜 걸로 기록하기" : etype === "fee" ? "회비 기록하기" : etype === "income" ? "찬조 기록하기" : "지출 기록하기";
+}
+document.getElementById("fTreat").onchange = () => {
+  // 켜는 순간 「공동 회비」가 골라져 있으면 그 칩이 사라지므로 선택을 비운다 — 저장 때 "누가 쏘는지"를 묻는다
+  buildPayerChips();
+  applyTreatUI();
+};
 // 지금 선택된 회비 납부자들 (공동 회비 칩은 제외)
 function checkedPayers() {
   return [...payersBox.querySelectorAll('input[name="payer"]:checked')]
@@ -1224,8 +1437,10 @@ function buildPayerChips(opts) {
   const fund = document.createElement("label");
   const fundRb = document.createElement("input");
   fundRb.type = "radio"; fundRb.name = "payer"; fundRb.value = "회비";
-  fundRb.checked = !feeMode && single === "회비";
-  fund.style.display = feeMode ? "none" : "";
+  // 🎁 쏠게요가 켜져 있으면 공동 회비(예산에서)는 고를 수 없다 — 쏘는 사람은 멤버다
+  const treat = isTreatMode();
+  fundRb.checked = !feeMode && !treat && single === "회비";
+  fund.style.display = (feeMode || treat) ? "none" : "";
   fund.appendChild(fundRb);
   fund.appendChild(document.createTextNode(isBudgetMode() ? "🎯 예산에서" : "💰 공동 회비"));
   payersBox.appendChild(fund);
@@ -1279,7 +1494,8 @@ function updatePayerLabel() {
   const feeMode = isFeeMode();
   const multi = feeMode && !editingId;
   document.getElementById("payerLabel").textContent =
-    !feeMode ? "누가 결제했나요?"
+    isTreatMode() ? "누가 쏘나요?"
+    : !feeMode ? "누가 결제했나요?"
     : multi ? "누가 낸 회비인가요? (여러 명 함께 고를 수 있어요)"
     : "누가 낸 회비인가요?";
 }
@@ -1304,7 +1520,7 @@ function updateFeeSplitHint() {
     : "선택한 " + names.length + "명이 각각 이 금액씩 내는 걸로 기록돼요 (회비 기록 " + names.length + "건)";
 }
 // 칩을 다시 그려도 살아 있도록 상자에 걸어둔다 (change 이벤트는 위로 올라온다)
-payersBox.addEventListener("change", () => { updateSelectAllChip(); updateFeeSplitHint(); });
+payersBox.addEventListener("change", () => { updateSelectAllChip(); updateFeeSplitHint(); if (isTreatMode()) applyTreatUI(); });
 
 // 항목 선택 (프리셋 + 직접 입력)
 const CATEGORIES = ["식당", "카페", "마트", "교통", "관광", "기념품", "숙소", "기타"];
@@ -1470,19 +1686,17 @@ document.querySelectorAll('input[name="etype"]').forEach(r => {
     const isFee = r.value === "fee";
     document.getElementById("fDesc").placeholder =
       isFee ? "예: 1차 회비 (비워도 돼요)" : isIncome ? "예: 스윗워러님 찬조" : "예: 저녁 갈비";
-    document.getElementById("pLabel").textContent = isIncome
-      ? "혜택을 나눌 사람 (보통 전원 체크)"
-      : "참여자 (함께 나눠 낼 사람)";
-    document.getElementById("submitBtn").textContent =
-      editingId ? "✏️ 수정 저장" : isFee ? "회비 기록하기" : isIncome ? "찬조 기록하기" : "지출 기록하기";
     document.getElementById("catField").style.display = (isIncome || isFee) ? "none" : "block";
     document.getElementById("participantField").style.display = isFee ? "none" : "block";
     document.getElementById("payerField").style.display = isIncome ? "none" : "block";
+    // 쏠게요는 지출에만 있는 표시다 — 구분을 바꾸면 끈다 (수정 중엔 startEdit이 다시 맞춘다)
+    document.getElementById("fTreat").checked = false;
     // 구분이 바뀌면 결제자 칩을 처음 상태로 다시 그린다.
     // 회비 ↔ 지출은 입력 형태(체크박스/라디오)와 '공동 회비' 칩 유무가 다르므로,
     // 앞 모드의 선택이 남아 있으면 새 모드에서 엉뚱하게 저장된다.
     buildPayerChips({ reset: true });
     applyIncomeFields();   // 예산 모임의 찬조는 참여자 칸을 묻지 않는다
+    applyTreatUI();        // 참여자 라벨·버튼 글자·쏠게요 줄 표시는 여기서 한 번에 정한다
   };
 });
 
@@ -1519,6 +1733,8 @@ function startEdit(e) {
     custom.style.display = catVal === "__custom" ? "block" : "none";
     custom.value = catVal === "__custom" ? e.category : "";
   }
+  // 🎁 쏜 기록이면 쏠게요를 켠 채로 연다 (공동 회비로 낸 건 표시가 있어도 쏜 게 아니다 — 계산과 같은 기준)
+  document.getElementById("fTreat").checked = e.type === "expense" && e.treat === true && !!e.payer && e.payer !== "회비";
   if (e.type === "expense" || e.type === "fee") {
     // ⚠️ 위의 etype .click()은 '이미 그 구분이 선택돼 있으면' change를 안 터뜨린다.
     //    (회비 기록을 저장한 직후 그 기록을 수정하는 경우가 딱 그렇다)
@@ -1528,6 +1744,7 @@ function startEdit(e) {
     const payerInput = document.querySelector('input[name="payer"][value="' + (e.payer || "회비") + '"]');
     (payerInput || document.querySelector('input[name="payer"][value="회비"]')).checked = true;
   }
+  applyTreatUI();
 
   const fxAmt = e.fxAmt != null ? e.fxAmt : e.usd;
   const fxSym = e.fxSym != null ? e.fxSym : (e.usd != null ? "$" : null);
@@ -1559,9 +1776,9 @@ function startEdit(e) {
 function cancelEditMode() {
   editingId = null;
   document.getElementById("cancelEdit").style.display = "none";
-  const etype = document.querySelector('input[name="etype"]:checked').value;
-  document.getElementById("submitBtn").textContent =
-    etype === "income" ? "찬조 기록하기" : etype === "fee" ? "회비 기록하기" : "지출 기록하기";
+  // 쏠게요는 기록 한 건짜리 예외라 다음 기록으로 안 넘긴다
+  document.getElementById("fTreat").checked = false;
+  applyTreatUI();   // 버튼 글자(지출/회비/찬조 기록하기)와 참여자 칸 복귀까지
 }
 
 document.getElementById("cancelEdit").onclick = () => {
@@ -1585,12 +1802,18 @@ document.getElementById("expenseForm").onsubmit = async e => {
   // 화면에 없는 값을 물을 수는 없으니, 수정이면 원래 값을 그대로 두고 새 기록이면 전원으로 채운다.
   // — 예산을 껐을 때 이 찬조가 보통의 찬조(전원이 혜택)로 자연스럽게 되살아나게 하는 값이다
   const budgetIncome = isBudgetMode() && etype === "income";
+  const treat = isTreatMode();
 
   let participants = [...membersBox.querySelectorAll("input:checked")].map(c => c.value);
   if (budgetIncome) {
     const prev = editingId ? expenses.find(x => x.id === editingId) : null;
     participants = (prev && Array.isArray(prev.participants) && prev.participants.length)
       ? prev.participants.slice() : MEMBERS.slice();
+  } else if (treat) {
+    // 쏜 것: 참여자는 결제자 한 명. 옛 버전이 읽어도 "내고 부담" = 0으로 상쇄되는 값이다
+    const p = (document.querySelector('input[name="payer"]:checked') || {}).value;
+    if (!p || p === "회비") { alert("누가 쏘는지 결제자를 골라 주세요"); return; }
+    participants = [p];
   } else if (!isFee && participants.length === 0) {
     alert("참여자를 한 명 이상 선택해 주세요"); return;
   }
@@ -1640,6 +1863,7 @@ document.getElementById("expenseForm").onsubmit = async e => {
     amount, fxAmt, fxSym, fxName, rate,
     photo: pendingPhoto
   };
+  if (treat) base.treat = true;   // 켰을 때만 남긴다 — 옛 기록엔 이 키가 없고, 없으면 보통 지출이다
 
   if (isFee && !editingId && feePayers.length > 1) {
     // 회비 여러 명 — 사람마다 기록 1건씩. 합치면 "둘 중 누가 얼마 냈는지"가 사라진다
@@ -1886,10 +2110,12 @@ function applyBudgetUI() {
       "· 💝 찬조는 예산에 더해져요 — 카드에 「예산 얼마 + 찬조 얼마」로 나눠서 보여드려요<br>" +
       "· 🎯 예산에서 낸 지출은 이미 공동으로 처리된 것이라 정산에 넣지 않아요<br>" +
       "· 개인 카드로 낸 지출만 「따로 결제」로 잡히고, 참여자끼리 나눠 정산돼요<br>" +
+      "· 🎁 쏜 것은 쓴 돈(남은 예산)에는 들어가지만 정산에서는 빠져요 — 결제한 사람이 전부 내는 거예요<br>" +
       "· 지출을 추가할 때마다 자동으로 다시 계산됩니다"
     : "· 부담액 = 각 지출을 참여자 수로 나눈 몫의 합<br>" +
       "· 찬조는 모인 돈에 더해지고, 혜택 나눈 사람들의 부담액을 줄여줘요<br>" +
       "· 따로 결제 = 공동 회비가 아니라 개인 돈으로 낸 금액 — 돌려받을 돈에 자동으로 더해져요<br>" +
+      "· 🎁 쏜 것은 쓴 돈에는 들어가지만 정산에서는 빠져요 — 결제한 사람이 전부 내는 거예요<br>" +
       "· 지출을 추가할 때마다 자동으로 다시 계산됩니다";
   // 숨긴 구분(회비)이 선택된 채로 남으면 안 보이는 모드로 저장된다 — 지출로 되돌린다.
   // 찬조는 이제 예산 모임에서도 보이므로 건드리지 않는다
@@ -2170,7 +2396,17 @@ function computeSettlement() {
   const budgetOn = isBudgetMode();
   const isExp = e => e.type !== "income" && e.type !== "fee";
   const isPersonal = e => !!(e.payer && e.payer !== "회비");   // 개인 돈으로 결제
+  // 🎁 쏜 것 — 개인 돈으로 냈고 아무도 나눠 내지 않는다. 쓴 돈·항목별 합계에는 들어가고 정산에서는 빠진다.
+  //    공동 회비로 낸 건 표시가 있어도 쏜 게 아니다(그 돈은 통에서 나갔다) — 그냥 지출로 센다
+  const isTreat = e => isExp(e) && e.treat === true && isPersonal(e);
   const spent = expenses.filter(isExp).reduce((a, e) => a + e.amount, 0);
+  const treatMap = {};
+  expenses.filter(isTreat).forEach(e => {
+    const t = treatMap[e.payer] || (treatMap[e.payer] = { m: e.payer, amt: 0, n: 0, first: "" });
+    t.amt += e.amount; t.n += 1; if (!t.first) t.first = e.desc || "";
+  });
+  const treats = Object.values(treatMap).sort((a, b) => b.amt - a.amt);
+  const treatTotal = treats.reduce((a, t) => a + t.amt, 0);
   const donated = expenses.filter(e => e.type === "income").reduce((a, e) => a + e.amount, 0);
   const FUND = budgetOn ? 0 : Object.values(FEES).reduce((a, b) => a + b, 0);
   const feePaid = Object.fromEntries(MEMBERS.map(m => [m, 0]));
@@ -2181,6 +2417,7 @@ function computeSettlement() {
   const shares = Object.fromEntries(MEMBERS.map(m => [m, 0]));
   expenses.forEach(e => {
     if (e.type === "fee") return;
+    if (isTreat(e)) return;                        // 🎁 쏜 건 나눌 부담이 없다
     if (budgetOn && e.type === "income") return;   // 찬조는 예산 통에만 더해진다 (부담액은 안 깎는다)
     if (budgetOn && !isPersonal(e)) return;        // ② 예산에서 낸 건 서로 갚을 게 없다
     if (!e.participants || !e.participants.length) return;
@@ -2189,7 +2426,8 @@ function computeSettlement() {
     e.participants.forEach(p => { if (p in shares) shares[p] += per; });
   });
   const personalPaid = Object.fromEntries(MEMBERS.map(m => [m, 0]));
-  expenses.forEach(e => { if (isExp(e) && e.payer && e.payer in personalPaid) personalPaid[e.payer] += e.amount; });
+  // 🎁 쏜 건 「따로 결제」에도 안 넣는다 — 돌려받을 돈이 아니니까
+  expenses.forEach(e => { if (isExp(e) && !isTreat(e) && e.payer && e.payer in personalPaid) personalPaid[e.payer] += e.amount; });
   const fundSpent = expenses.filter(e => isExp(e) && !isPersonal(e)).reduce((a, e) => a + e.amount, 0);
   const rows = MEMBERS.map(m => {
     const paid = budgetOn ? 0 : (FEES[m] || 0) + (EXTRA_PAID[m] || 0) + feePaid[m];
@@ -2201,6 +2439,7 @@ function computeSettlement() {
     budgetOn, spent, donated, feeTotal, FUND, fund, balance,
     budget: budgetOn ? BUDGET : 0,         // 사용자가 직접 정해둔 금액 (찬조를 뺀 값)
     flowBalance: budgetOn ? 0 : balance,   // ③ 예산엔 통이 없으니 송금 상대로 넣지 않는다
+    treats, treatTotal,                    // 🎁 쏜 것 — 사람별 { m, amt, n, first }. 화면·공유·CSV가 이걸 쓴다
     rows
   };
 }
@@ -2273,6 +2512,14 @@ function renderResult() {
     const cls = near0(r.settle) ? "r-even" : r.settle > 0 ? "r-get" : "r-owe";
     h += '<div class="r-row"><span class="rn">' + escapeHtml(r.m) + '</span><span class="' + cls + '">' + settleLabel(r.settle) + "</span></div>";
   });
+  // 🎁 쏜 것 — 정산 줄에 안 섞고 따로. 누가 얼마를 쐈는지가 이 줄의 전부다
+  if (s.treats.length) {
+    h += '<div class="r-h">🎁 쏜 것 · 정산에 안 들어가요</div>';
+    s.treats.forEach(t => {
+      h += '<div class="r-row"><span class="rn">' + escapeHtml(t.m) + '님이 쏨</span><span class="r-even" style="color:var(--ink)">'
+        + fmt(t.amt) + escapeHtml(treatDetail(t)) + "</span></div>";
+    });
+  }
   const flow = settleFlow(s.rows, s.flowBalance);
   if (flow.length) {
     h += '<div class="r-flow"><b>주고받을 돈</b>' + flow.map(l => "<br>" + escapeHtml(l)).join("");
@@ -2292,6 +2539,10 @@ function shareText() {
   t += bp.fundLabel + " " + fmt(s.fund) + "\n쓴 돈 " + fmt(s.spent) +
        "\n" + bp.balanceLabel + " " + fmt(s.balance) + "\n\n정산\n";
   s.rows.forEach(r => { t += "· " + r.m + " : " + settleLabel(r.settle) + "\n"; });
+  if (s.treats.length) {
+    t += "\n🎁 쏜 것 (정산에 안 들어가요)\n";
+    s.treats.forEach(x => { t += "· " + x.m + "님이 쏨 : " + fmt(x.amt) + treatDetail(x) + "\n"; });
+  }
   const flow = settleFlow(s.rows, s.flowBalance);
   if (flow.length) {
     t += "\n주고받을 돈\n" + flow.map(l => "· " + l).join("\n");
@@ -2349,14 +2600,22 @@ function buildCsv() {
     rows.push(["이름", "낸 회비", "개인 결제", "부담액", "정산(받을+ / 낼-)"]);
     s.rows.forEach(r => rows.push([r.m, r.paid, r.personalPaid, Math.round(r.share), Math.round(r.settle)]));
   }
+  // 화면·공유 글과 같은 자리에 같은 줄 — 정산 밖에서 따로
+  if (s.treats.length) {
+    rows.push([]);
+    rows.push(["쏜 것 (정산에 안 들어감)"]);
+    rows.push(["이름", "금액", "건수"]);
+    s.treats.forEach(t => rows.push([t.m, t.amt, t.n]));
+  }
   rows.push([]);
   rows.push(["내역"]);
   rows.push(["날짜", "구분", "항목", "내용", "외화", "금액(원)", "결제자", "참여자"]);
+  const isTreatRow = e => e.type === "expense" && e.treat === true && !!e.payer && e.payer !== "회비";
   [...expenses].sort((a, b) => (a.date || "").localeCompare(b.date || "")).forEach(e => {
     rows.push([
-      e.date || "", TYPE_KR[e.type] || e.type, e.category || "", e.desc || "",
+      e.date || "", isTreatRow(e) ? "지출(쏨)" : (TYPE_KR[e.type] || e.type), e.category || "", e.desc || "",
       fxLabelOf(e), e.amount, (e.payer === "회비" ? (s.budgetOn ? "예산" : "공동") : (e.payer || "")),
-      (e.participants || []).join(" ")
+      isTreatRow(e) ? "(쏨 · 나누지 않음)" : (e.participants || []).join(" ")
     ]);
   });
   return rows.map(r => r.map(csvCell).join(",")).join("\r\n");
@@ -2411,7 +2670,10 @@ async function openGroup(id) {
   selectCcy(null);
   budgetEditing = false;
   settleOpen = false;   // 예산 모임의 정산표는 모임을 열 때마다 접힌 상태로 시작한다
+  document.getElementById("listSearch").value = "";   // 다른 모임의 검색어를 물고 들어오지 않게
+  document.getElementById("fTreat").checked = false;
   applyBudgetUI();
+  applyTreatUI();
   render();
   document.getElementById("homeView").hidden = true;
   document.getElementById("groupView").hidden = false;
