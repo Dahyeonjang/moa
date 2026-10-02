@@ -631,6 +631,11 @@
           <button type="button" class="rate-search" data-off-hide>🔎 환율 검색</button>
         </div>
         <div id="newCcyForm" class="ccy-form" style="display: none;">
+          <!-- 2026-10-02: 나라·통화 이름·코드로 찾으면 기호·이름이 자동으로 채워진다 (아래 칸은 그대로 고칠 수 있다) -->
+          <div class="ccy-form-row">
+            <input type="search" id="ncFind" maxlength="20" placeholder="🔎 나라·통화 찾기 (예: 대만, 달러, TWD)" autocomplete="off" enterkeyhint="search">
+          </div>
+          <div class="members" id="ncPresets"></div>
           <div class="ccy-form-row">
             <input type="text" id="ncSym" maxlength="4" placeholder="기호 ₫" autocomplete="off">
             <input type="text" id="ncName" maxlength="12" placeholder="이름 (동)" autocomplete="off">
@@ -917,6 +922,79 @@ const PRESET_CCY = [
   { sym: "₱",  name: "페소" },
   { sym: "Rp", name: "루피아" }
 ];
+// 통화 찾기 표 (2026-10-02) — 코드·기호·이름·찾는 말(나라·도시).
+// ⚠️ 위 PRESET_CCY 8개와 기호·이름이 글자까지 같아야 한다 — 이미 등록된 통화와 「같은 통화」로 알아보는 기준이 sym+name이라서.
+// 표에 없는 코드는 브라우저 Intl로 보완한다(ccyFromIntl).
+const CCY_TABLE = [
+  ["USD", "$",    "미국 달러",     "미국 하와이 괌 사이판"],
+  ["EUR", "€",    "유로",          "유럽 프랑스 독일 이탈리아 스페인 포르투갈 그리스 네덜란드 벨기에 오스트리아 핀란드 아일랜드 크로아티아 슬로바키아 슬로베니아 에스토니아 라트비아 리투아니아 몰타 키프로스 룩셈부르크"],
+  ["JPY", "¥",    "엔",            "일본 엔화 도쿄 오사카 후쿠오카 오키나와 삿포로"],
+  ["CNY", "元",   "위안",          "중국 위안화 인민폐 상하이 베이징 칭다오"],
+  ["VND", "₫",    "동",            "베트남 다낭 하노이 호치민 나트랑 푸꾸옥"],
+  ["THB", "฿",    "바트",          "태국 방콕 치앙마이 푸켓 파타야"],
+  ["PHP", "₱",    "페소",          "필리핀 세부 보라카이 마닐라 보홀"],
+  ["IDR", "Rp",   "루피아",        "인도네시아 발리 자카르타"],
+  ["TWD", "NT$",  "대만 달러",     "대만 타이베이 타이완"],
+  ["HKD", "HK$",  "홍콩 달러",     "홍콩"],
+  ["MOP", "MOP$", "파타카",        "마카오"],
+  ["SGD", "S$",   "싱가포르 달러", "싱가포르"],
+  ["MYR", "RM",   "링깃",          "말레이시아 코타키나발루 쿠알라룸푸르"],
+  ["GBP", "£",    "파운드",        "영국 런던"],
+  ["CHF", "CHF",  "스위스 프랑",   "스위스"],
+  ["AUD", "A$",   "호주 달러",     "호주 시드니"],
+  ["NZD", "NZ$",  "뉴질랜드 달러", "뉴질랜드"],
+  ["CAD", "C$",   "캐나다 달러",   "캐나다 밴쿠버 토론토"],
+  ["MNT", "₮",    "투그릭",        "몽골"],
+  ["KHR", "៛",    "리엘",          "캄보디아 씨엠립"],
+  ["LAK", "₭",    "킵",            "라오스 비엔티안 루앙프라방"],
+  ["MMK", "K",    "짯",            "미얀마"],
+  ["INR", "₹",    "인도 루피",     "인도"],
+  ["NPR", "Rs",   "네팔 루피",     "네팔"],
+  ["LKR", "Rs",   "스리랑카 루피", "스리랑카"],
+  ["TRY", "₺",    "리라",          "튀르키예 터키 이스탄불"],
+  ["AED", "AED",  "디르함",        "아랍에미리트 두바이 아부다비 UAE"],
+  ["CZK", "Kč",   "코루나",        "체코 프라하"],
+  ["HUF", "Ft",   "포린트",        "헝가리 부다페스트"],
+  ["PLN", "zł",   "즈워티",        "폴란드"],
+  ["DKK", "kr",   "덴마크 크로네", "덴마크 코펜하겐"],
+  ["SEK", "kr",   "스웨덴 크로나", "스웨덴"],
+  ["NOK", "kr",   "노르웨이 크로네", "노르웨이"],
+  ["ISK", "kr",   "아이슬란드 크로나", "아이슬란드"],
+  ["MXN", "MX$",  "멕시코 페소",   "멕시코 칸쿤"],
+  ["BRL", "R$",   "헤알",          "브라질"],
+  ["EGP", "E£",   "이집트 파운드", "이집트"],
+  ["MAD", "DH",   "모로코 디르함", "모로코"],
+  ["RUB", "₽",    "루블",          "러시아 블라디보스토크"],
+  ["UZS", "so'm", "숨",            "우즈베키스탄"],
+  ["KZT", "₸",    "텡게",          "카자흐스탄"],
+  ["GEL", "₾",    "라리",          "조지아"],
+  ["ZAR", "R",    "랜드",          "남아공 남아프리카"]
+].map(([code, sym, name, kw]) => ({ code, sym, name, kw }));
+// 표에 없는 3글자 코드(예: PEN, ARS)는 브라우저가 아는 기호·한국어 이름으로 채운다. 모르는 코드면 null
+function ccyFromIntl(code) {
+  try {
+    const name = new Intl.DisplayNames(["ko"], { type: "currency", fallback: "none" }).of(code);
+    if (!name) return null;
+    const part = new Intl.NumberFormat("ko-KR", { style: "currency", currency: code, currencyDisplay: "narrowSymbol" })
+      .formatToParts(1).find(p => p.type === "currency");
+    let sym = part ? part.value : code;
+    if (sym.length > 4) sym = code;          // 기호 칸은 4자까지
+    return { code, sym, name: name.slice(0, 12), kw: "" };
+  } catch (e) { return null; }
+}
+// 찾는 말 → 후보 목록. 빈 말이면 null (= 기본 프리셋 칩을 보여준다)
+function findCcy(q) {
+  q = (q || "").trim().toLowerCase().replace(/\s+/g, "");
+  if (!q) return null;
+  const hits = CCY_TABLE.filter(c =>
+    c.code.toLowerCase().includes(q) || c.name.replace(/\s+/g, "").includes(q) ||
+    c.kw.replace(/\s+/g, "").toLowerCase().includes(q) || c.sym.toLowerCase() === q);
+  if (hits.length === 0 && /^[a-z]{3}$/.test(q)) {
+    const c = ccyFromIntl(q.toUpperCase());
+    if (c) hits.push(c);
+  }
+  return hits;
+}
 // 활성 외화 목록: { sym, name, rate }
 let CCY = [];
 let selectedCcy = null; // null = 원화, 아니면 CCY의 객체
@@ -1610,10 +1688,19 @@ function openNewCcyForm() {
   document.getElementById("ncName").value = "";
   document.getElementById("ncRate").value = "";
   document.getElementById("ncSymEcho").textContent = "?";
-  document.getElementById("ncSym").focus();
+  document.getElementById("ncFind").value = "";
+  document.getElementById("ncFind").focus();
 }
 function closeNewCcyForm() { ncForm.style.display = "none"; }
-function renderPresetPicks() {
+// 칩을 누르면 기호·이름이 채워진다 (채운 뒤에도 칸에서 고칠 수 있다)
+function fillNewCcy(p) {
+  document.getElementById("ncSym").value = p.sym;
+  document.getElementById("ncName").value = p.name;
+  document.getElementById("ncSymEcho").textContent = p.sym;
+  document.getElementById("ncRate").focus();
+}
+// 찾는 말이 비면 기본 프리셋, 있으면 찾은 통화를 칩으로 (이미 등록한 통화는 뺀다)
+function renderPresetPicks(query) {
   let row = document.getElementById("ncPresets");
   if (!row) {
     row = document.createElement("div");
@@ -1622,23 +1709,35 @@ function renderPresetPicks() {
     ncForm.insertBefore(row, ncForm.firstChild);
   }
   row.innerHTML = "";
-  const avail = PRESET_CCY.filter(p => !CCY.some(c => c.sym === p.sym && c.name === p.name));
-  if (avail.length === 0) { row.style.display = "none"; return; }
+  const found = findCcy(query);
+  const list = (found || PRESET_CCY).filter(p => !CCY.some(c => c.sym === p.sym && c.name === p.name));
+  if (list.length === 0) {
+    if (!found) { row.style.display = "none"; return; }
+    row.style.display = "flex";
+    const none = document.createElement("span");
+    none.className = "ccy-form-label";
+    none.textContent = found.length ? "이미 추가한 통화예요 — 위에서 골라 주세요" : "못 찾았어요 — 아래 칸에 직접 적어 주세요";
+    row.appendChild(none);
+    return;
+  }
   row.style.display = "flex";
-  avail.forEach(p => {
+  list.slice(0, 12).forEach(p => {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "ccy-chip";
     b.textContent = p.sym + " " + p.name;
-    b.onclick = () => {
-      document.getElementById("ncSym").value = p.sym;
-      document.getElementById("ncName").value = p.name;
-      document.getElementById("ncSymEcho").textContent = p.sym;
-      document.getElementById("ncRate").focus();
-    };
+    b.onclick = () => fillNewCcy(p);
     row.appendChild(b);
   });
 }
+document.getElementById("ncFind").oninput = e => renderPresetPicks(e.target.value);
+// 엔터: 찾은 게 하나뿐이면 바로 채운다
+document.getElementById("ncFind").onkeydown = e => {
+  if (e.key !== "Enter") return;
+  e.preventDefault();
+  const found = (findCcy(e.target.value) || []).filter(p => !CCY.some(c => c.sym === p.sym && c.name === p.name));
+  if (found.length === 1) fillNewCcy(found[0]);
+};
 document.getElementById("ncSym").oninput = e => {
   document.getElementById("ncSymEcho").textContent = e.target.value.trim() || "?";
 };
