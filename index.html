@@ -4,6 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>모여셈 · 세상에서 제일 간단한 여행 가계부</title>
+<!-- 공유 미리보기 (2026-10-04) — 카톡·문자에 링크를 붙이면 이 제목·설명·그림이 뜬다.
+     og:url·og:image는 절대 주소여야 한다. ⚠️ soldamlab.com/moa/로 옮기면 여기 주소 셋을 같이 바꿀 것 -->
+<meta name="description" content="가입 없이, 여행 끝나면 바로 정산. 누가 누구한테 얼마, 한 화면에.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="모여셈">
+<meta property="og:title" content="모여셈 — 세상에서 제일 간단한 여행 가계부">
+<meta property="og:description" content="가입 없이, 여행 끝나면 바로 정산. 누가 누구한테 얼마, 한 화면에.">
+<meta property="og:url" content="https://dahyeonjang.github.io/moa/">
+<meta property="og:image" content="https://dahyeonjang.github.io/moa/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="모여셈 정산 결과 — 누가 누구에게 얼마를 보내면 되는지 세 줄과 회비 잔액 한 줄">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<!-- 글꼴 (2026-10-04) — 예전엔 "Pretendard"라고 이름만 적고 한 번도 불러오지 않아서 기기마다 맑은 고딕·애플 SD로 보였다.
+     dynamic-subset = 화면에 쓰인 글자 조각만 받는다. crossorigin을 붙여야 서비스워커가 정상 응답으로 캐시해 비행기 모드에서도 같은 글꼴이 뜬다 -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#3f6b4d">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -11,40 +29,50 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="모여셈">
 <style>
+  /* ── 디자인 토큰 (2026-10-04 디자인 개편 A — 정본 앱개발\모여셈.md 「디자인 개편」) ──
+     색:   액센트 하나(초록) + 의미색 둘(받기=액센트 · 보내기/경고=danger). 그 밖의 색은 쓰지 않는다
+     글자: 12 / 13 / 15 / 18 / 32px 다섯 단계 · 굵기 400 / 600 / 700 셋
+           (입력칸만 16px — iOS 사파리는 16px보다 작은 입력칸에 손가락을 대면 화면을 확대해 버린다. 글자 단계가 아니라 기기 규칙이다)
+     모서리: 16(카드·시트) / 12(입력·버튼) / 999(칩)
+     faint는 글자에 쓰지 않는다 — 흰 바탕 대비 3.8:1이라 작은 글씨 기준(4.5:1) 미달. 아이콘·자리표시·취소선만 */
   :root {
     /* 색 — 3단계 위계 */
     --bg: #f5f3ee;
     --card: #ffffff;
     --field: #faf9f6;
     --ink: #26221e;
-    --sub: #7d746a;
-    --faint: #a9a196;
+    --sub: #6b645b;        /* 흰 바탕 5.8:1 (예전 #7d746a 4.6:1) */
+    --faint: #8a8277;      /* 흰 바탕 3.8:1 (예전 #a9a196 2.6:1) — 아이콘·자리표시 전용 */
     --accent: #3f6b4d;
     --accent-soft: #e9f0eb;
     --danger: #b4503f;
     --danger-soft: #f7e9e6;
     --line: #e6e1d8;
     --line-soft: #f0ece5;
-    --radius: 14px;
-    --radius-sm: 10px;
+    --radius: 16px;
+    --radius-sm: 12px;
+    --pill: 999px;
 
-    /* 타입 스케일 */
-    --t-micro: 11px;
+    /* 타입 스케일 — 다섯 단계 */
+    --t-micro: 12px;       /* 예전 11px → 12px로 합침 */
     --t-caption: 12px;
     --t-small: 13px;
     --t-body: 15px;
-    --t-input: 16px;
-    --t-amount: 17px;
-    --t-title: 26px;
+    --t-input: 16px;       /* 입력칸 전용 (위 iOS 규칙) */
+    --t-amount: 18px;
+    --t-title: 18px;       /* 모임 제목은 조용하게 — 큰 숫자 자리를 비워 둔다 */
+    --t-hero: 32px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: "Pretendard", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    font-family: "Pretendard Variable", "Pretendard", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
     background: var(--bg); color: var(--ink);
     font-size: var(--t-body); line-height: 1.5; letter-spacing: -0.01em;
-    padding: 28px 14px 64px; overflow-x: hidden;
+    padding: 28px 16px 64px; overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
   }
+  /* 버튼·입력칸은 기본으로 시스템 글꼴을 쓴다 — 본문과 같은 글꼴을 물려받게 */
+  button, input, select, textarea { font-family: inherit; }
   /* 숫자는 어디서나 자릿수 정렬 */
   .card .value, .card .sub, .expense .amount, .catrow .camt,
   table.settle td, .feerow input, .add-member-input,
@@ -63,7 +91,7 @@
   }
   #appTitle:hover { border-color: var(--line); }
   #appTitle:focus { border-style: solid; border-color: var(--accent); background: var(--accent-soft); }
-  .title-hint { font-size: var(--t-micro); color: var(--faint); margin-top: 7px; letter-spacing: 0; }
+  .title-hint { font-size: var(--t-micro); color: var(--sub); margin-top: 7px; letter-spacing: 0; }
 
   /* 저장 실패 경고 */
   .db-warn {
@@ -76,13 +104,15 @@
   /* 요약 카드 — 숫자가 주인공 */
   .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
   .card {
-    background: var(--card); border: 1px solid var(--line);
+    background: var(--card); border: 0;
     border-radius: var(--radius); padding: 15px 8px 14px; text-align: center;
   }
   .card .label { font-size: var(--t-micro); color: var(--sub); letter-spacing: 0; margin-bottom: 7px; }
   .card .value {
-    font-size: clamp(15px, 4.4vw, 19px); font-weight: 700; letter-spacing: -0.035em; line-height: 1.2;
+    font-size: var(--t-body); font-weight: 700; letter-spacing: -0.035em; line-height: 1.2;
   }
+  /* 카드 셋이 한 줄이라 좁은 폰에선 15px — 18px이면 1,000만 원대가 칸을 넘친다 (vw로 키우면 단계 밖 크기가 나온다) */
+  @media (min-width: 420px) { .card .value { font-size: var(--t-amount); } }
   .card.balance .value { color: var(--accent); }
   .card.balance.negative .value { color: var(--danger); }
   .card .sub { font-size: var(--t-micro); color: var(--danger); margin-top: 5px; letter-spacing: 0; }
@@ -95,12 +125,12 @@
   .budget-view { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--t-small); color: var(--sub); }
   .budget-view .b-amt { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
   .budget-link {
-    background: transparent; border: 1px dashed var(--line); border-radius: 18px;
-    padding: 7px 13px; font-size: var(--t-small); color: var(--faint); cursor: pointer;
+    background: transparent; border: 1px dashed var(--line); border-radius: var(--pill);
+    padding: 7px 13px; font-size: var(--t-small); color: var(--sub); cursor: pointer;
   }
   .budget-link:hover { color: var(--accent); border-color: var(--accent); }
   .budget-mini {
-    background: none; border: none; color: var(--faint); font-size: var(--t-caption);
+    background: none; border: none; color: var(--sub); font-size: var(--t-caption);
     cursor: pointer; padding: 4px 2px; text-decoration: underline;
   }
   .budget-mini:hover { color: var(--accent); }
@@ -110,18 +140,18 @@
   .budget-view[hidden], .budget-edit[hidden] { display: none; }
   .budget-edit input {
     flex: 1; min-width: 0; padding: 10px 11px; border: 1px solid var(--line);
-    border-radius: 8px; font-size: var(--t-input); background: var(--card); color: var(--ink);
+    border-radius: var(--radius-sm); font-size: var(--t-input); background: var(--card); color: var(--ink);
     font-variant-numeric: tabular-nums;
   }
   .budget-note {
     font-size: var(--t-caption); color: var(--sub); line-height: 1.6; margin-top: 9px;
-    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px;
+    background: var(--card); border: 0; border-radius: var(--radius-sm); padding: 10px 12px;
   }
 
   /* 예산 안내 — 회비를 한 건도 안 걷은 채로 지출이 쌓이면 작은 칩이 한 줄 카드로 커진다.
      ⚠️ 회비 기록이나 멤버별 회비가 하나라도 있으면 절대 뜨지 않는다 (회비 모임 화면은 안 바뀐다) */
   .budget-hint {
-    width: 100%; background: var(--card); border: 1px solid var(--line);
+    width: 100%; background: var(--card); border: 0;
     border-radius: var(--radius-sm); padding: 12px 13px;
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   }
@@ -130,15 +160,15 @@
   }
   .budget-hint .bh-msg b { color: var(--ink); font-weight: 600; }
   .budget-hint .bh-go {
-    background: var(--accent-soft); border: none; border-radius: 18px;
+    background: var(--accent-soft); border: none; border-radius: var(--pill);
     padding: 8px 14px; font-size: var(--t-caption); font-weight: 600;
     color: var(--accent); cursor: pointer; font-family: inherit;
   }
   .budget-hint .bh-no {
-    background: none; border: none; color: var(--faint);
+    background: none; border: none; color: var(--sub);
     font-size: var(--t-caption); cursor: pointer; padding: 8px 6px; font-family: inherit;
   }
-  .budget-hint .bh-no:hover { color: var(--sub); }
+  .budget-hint .bh-no:hover { color: var(--ink); }
 
   /* 새로 생긴 기능을 한 번만 알리는 줄 (기존 사용자에게만·닫으면 다시 안 뜬다) */
   .news-bar {
@@ -153,13 +183,13 @@
   .news-bar .nb-txt b { font-weight: 700; }
   .news-bar .nb-x {
     flex: 0 0 auto; background: none; border: none; color: var(--sub);
-    font-size: 14px; line-height: 1.2; cursor: pointer; padding: 2px 2px; font-family: inherit;
+    font-size: var(--t-small); line-height: 1.2; cursor: pointer; padding: 2px 2px; font-family: inherit;
   }
   .news-bar .nb-x:hover { color: var(--ink); }
 
   /* 섹션 — 제목은 조용하게, 내용이 앞으로 */
   section {
-    background: var(--card); border: 1px solid var(--line);
+    background: var(--card); border: 0;
     border-radius: var(--radius); padding: 18px 16px; margin-bottom: 12px;
   }
   section h2 {
@@ -169,7 +199,7 @@
 
   /* 입력 필드 */
   .field { margin-bottom: 13px; }
-  .field label { display: block; font-size: var(--t-caption); font-weight: 500; color: var(--sub); margin-bottom: 6px; }
+  .field label { display: block; font-size: var(--t-caption); font-weight: 400; color: var(--sub); margin-bottom: 6px; }
   .field input[type="date"], .field input[type="text"], .field input[type="number"] {
     width: 100%; max-width: 100%; min-width: 0;
     padding: 11px 12px; border: 1px solid var(--line);
@@ -194,8 +224,8 @@
   .treat-row label:has(input:checked) { border-style: solid; }
   .members label, .ccy-chip {
     display: inline-flex; align-items: center; gap: 5px;
-    border: 1px solid var(--line); border-radius: 18px;
-    padding: 8px 13px; font-size: var(--t-small); font-weight: 500;
+    border: 1px solid var(--line); border-radius: var(--pill);
+    padding: 8px 13px; font-size: var(--t-small); font-weight: 400;
     cursor: pointer; user-select: none; background: var(--field); color: var(--ink);
   }
   .members label:has(input:checked), .ccy-chip.on {
@@ -203,7 +233,7 @@
     color: var(--accent); font-weight: 600;
   }
   .members input { accent-color: var(--accent); }
-  .ccy-chip.add { border-style: dashed; color: var(--faint); background: transparent; }
+  .ccy-chip.add { border-style: dashed; color: var(--sub); background: transparent; }
 
   /* 통화 추가 폼 */
   .ccy-form {
@@ -214,13 +244,13 @@
   .ccy-form-row { display: flex; align-items: center; gap: 8px; }
   .ccy-form-row input {
     flex: 1; min-width: 0; padding: 9px 11px; border: 1px solid var(--line);
-    border-radius: 8px; font-size: var(--t-input); background: var(--card); color: var(--ink);
+    border-radius: var(--radius-sm); font-size: var(--t-input); background: var(--card); color: var(--ink);
   }
   .ccy-form-row input#ncRate { flex: 0 1 110px; }
   .ccy-form-label { font-size: var(--t-small); color: var(--sub); white-space: nowrap; }
   .ccy-form-btns { display: flex; gap: 8px; justify-content: flex-end; }
   .ccy-mini {
-    padding: 9px 16px; border: none; border-radius: 8px;
+    padding: 9px 16px; border: none; border-radius: var(--radius-sm);
     font-size: var(--t-small); font-weight: 600; cursor: pointer;
     background: var(--accent); color: #fff;
   }
@@ -228,7 +258,7 @@
   .rate-search {
     display: inline-flex; align-items: center; gap: 3px;
     border: 1px solid var(--line); background: var(--card); color: var(--accent);
-    border-radius: 20px; padding: 5px 11px; font-size: var(--t-caption); font-weight: 600;
+    border-radius: var(--pill); padding: 5px 11px; font-size: var(--t-caption); font-weight: 600;
     cursor: pointer; white-space: nowrap; margin-left: 4px;
   }
   .rate-search:hover { border-color: var(--accent); background: var(--accent-soft); }
@@ -240,7 +270,7 @@
     border: 1px dashed var(--line); background: transparent; border-radius: var(--radius-sm);
     padding: 10px 14px; font-size: var(--t-small); color: var(--sub); cursor: pointer;
   }
-  .photo-preview { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; display: none; border: 1px solid var(--line); }
+  .photo-preview { width: 44px; height: 44px; border-radius: var(--radius-sm); object-fit: cover; display: none; border: 1px solid var(--line); }
 
   /* 버튼 */
   .submit {
@@ -250,6 +280,8 @@
     letter-spacing: -0.01em; cursor: pointer;
   }
   .submit:active { transform: scale(0.99); }
+  /* 보조 버튼 — 주 버튼(초록 채움) 옆에 서는 두 번째 행동. 예전 백업 버튼의 회청·황토색(팔레트 밖)을 대신한다 */
+  .submit.soft { background: var(--accent-soft); color: var(--accent); }
   .cancel-btn {
     width: 100%; padding: 12px; margin-top: 8px;
     background: var(--card); color: var(--sub); border: 1px solid var(--line);
@@ -269,7 +301,7 @@
   }
   .expense .thumb.empty {
     display: flex; align-items: center; justify-content: center;
-    background: var(--field); color: var(--faint); font-size: 17px; cursor: default; border-style: dashed;
+    background: var(--field); color: var(--faint); font-size: var(--t-amount); cursor: default; border-style: dashed;
   }
   .expense .info { flex: 1; min-width: 0; }
   .expense .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
@@ -277,13 +309,13 @@
   .expense .amount { font-size: var(--t-amount); font-weight: 700; letter-spacing: -0.03em; white-space: nowrap; }
   .expense .meta { font-size: var(--t-caption); color: var(--sub); margin-top: 4px; }
   .expense .del, .expense .edit {
-    background: none; border: none; color: var(--faint); font-size: var(--t-caption);
+    background: none; border: none; color: var(--sub); font-size: var(--t-caption);
     cursor: pointer; padding: 3px 0; margin-top: 6px;
   }
   .expense .edit { margin-right: 14px; }
   .expense .edit:hover { color: var(--accent); }
   .expense .del:hover { color: var(--danger); }
-  .empty-msg { text-align: center; color: var(--faint); font-size: var(--t-small); padding: 20px 0; }
+  .empty-msg { text-align: center; color: var(--sub); font-size: var(--t-small); padding: 20px 0; }
 
   /* 지출 내역 — 찾기 + 보기 전환 (시간순 · 항목별 · 날짜별 · 결제자별). 기록이 없으면 통째로 숨긴다 */
   .list-tools { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
@@ -297,8 +329,8 @@
   .list-tools input[type="search"]:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
   .view-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
   .view-tab {
-    border: 1px solid var(--line); border-radius: 18px; background: var(--field); color: var(--sub);
-    padding: 7px 12px; font-size: var(--t-caption); font-weight: 500; cursor: pointer; font-family: inherit;
+    border: 1px solid var(--line); border-radius: var(--pill); background: var(--field); color: var(--sub);
+    padding: 7px 12px; font-size: var(--t-caption); font-weight: 400; cursor: pointer; font-family: inherit;
   }
   .view-tab.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
   /* 묶음 머리 — 이름은 왼쪽, 건수·소계는 오른쪽. 첫 묶음 위에는 선을 안 긋는다 */
@@ -311,7 +343,7 @@
   .list-group-head .lg-meta { font-size: var(--t-caption); color: var(--sub); white-space: nowrap; font-variant-numeric: tabular-nums; }
   .list-group-head .lg-meta b { color: var(--ink); font-weight: 600; }
   .list-group-head + .expense { padding-top: 8px; }
-  .list-count { font-size: var(--t-caption); color: var(--faint); text-align: right; margin-top: 2px; }
+  .list-count { font-size: var(--t-caption); color: var(--sub); text-align: right; margin-top: 2px; }
   /* 정산 아래 「🎁 쏜 것」 한 줄 — 정산표에는 안 들어가고 여기서만 말한다 */
   .treat-line { margin-top: 10px; }
   .treat-line b { color: var(--ink); font-weight: 600; }
@@ -333,13 +365,13 @@
   }
   .feerow .fdel {
     flex: 0 0 auto; width: 28px; background: none; border: none;
-    color: var(--faint); font-size: 14px; cursor: pointer; padding: 4px;
+    color: var(--faint); font-size: var(--t-small); cursor: pointer; padding: 4px;
   }
   .feerow .fdel:hover { color: var(--danger); }
   .feerow.add-row { margin-top: 12px; gap: 8px; }
   .add-member-input {
     flex: 1; min-width: 0; padding: 10px 11px; border: 1px solid var(--line);
-    border-radius: 8px; font-size: var(--t-input); background: var(--field); color: var(--ink);
+    border-radius: var(--radius-sm); font-size: var(--t-input); background: var(--field); color: var(--ink);
   }
   .add-member-input::placeholder { color: var(--faint); }
   .add-inline {
@@ -352,14 +384,14 @@
   .catrow .cname { width: 58px; font-weight: 600; flex-shrink: 0; letter-spacing: -0.02em; }
   .catrow .cbar { flex: 1; height: 6px; background: var(--line-soft); border-radius: 3px; overflow: hidden; }
   .catrow .cbar > div { height: 100%; background: var(--accent); border-radius: 3px; }
-  .catrow .camt { min-width: 116px; text-align: right; white-space: nowrap; font-weight: 500; }
-  .catrow .camt .pct { color: var(--faint); font-size: var(--t-micro); margin-left: 5px; font-weight: 400; }
+  .catrow .camt { min-width: 116px; text-align: right; white-space: nowrap; font-weight: 600; }
+  .catrow .camt .pct { color: var(--sub); font-size: var(--t-micro); margin-left: 5px; font-weight: 400; }
 
   /* 정산표 */
   table.settle { width: 100%; border-collapse: collapse; font-size: var(--t-small); }
-  table.settle th, table.settle td { padding: 10px 6px; text-align: right; border-bottom: 1px solid var(--line-soft); }
+  table.settle th, table.settle td { padding: 10px 3px; text-align: right; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
   table.settle th:first-child, table.settle td:first-child { text-align: left; font-weight: 600; letter-spacing: -0.02em; }
-  table.settle th { color: var(--faint); font-weight: 500; font-size: var(--t-micro); padding-bottom: 8px; }
+  table.settle th { color: var(--sub); font-weight: 400; font-size: var(--t-micro); padding-bottom: 8px; }
   table.settle tbody tr:last-child td { border-bottom: none; }
   table.settle td.plus { color: var(--accent); font-weight: 700; }
   table.settle td.minus { color: var(--danger); font-weight: 700; }
@@ -385,7 +417,7 @@
     display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
     z-index: 100; align-items: center; justify-content: center; cursor: zoom-out;
   }
-  #lightbox img { max-width: 94vw; max-height: 92vh; border-radius: 8px; }
+  #lightbox img { max-width: 94vw; max-height: 92vh; border-radius: var(--radius-sm); }
 
   /* 정산 결과 */
   /* 프로(유료) */
@@ -403,10 +435,12 @@
     border-radius: 16px; padding: 26px 20px 20px; position: relative;
     box-shadow: 0 16px 48px rgba(38,34,30,.22); text-align: center;
   }
-  .pro-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .pro-title { font-size: var(--t-amount); font-weight: 700; margin-bottom: 6px; letter-spacing: -0.02em; }
+  /* 무료로 계속하는 길 — 결제창이 「돈을 내야만」으로 읽히지 않게 제목 바로 밑에 작게 (2026-10-04 다현님 승인) */
+  .pro-free-path { font-size: var(--t-caption); color: var(--sub); margin: -2px 0 16px; }
   .pro-why { font-size: var(--t-small); color: var(--sub); margin-bottom: 18px; }
   .pro-list {
-    text-align: left; background: var(--field); border: 1px solid var(--line);
+    text-align: left; background: var(--field); border: 0;
     border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 16px;
   }
   .pro-feat {
@@ -427,7 +461,7 @@
     color: var(--sub); font-size: var(--t-small); cursor: pointer; font-family: inherit;
   }
   .pro-restore {
-    margin-top: 6px; background: none; border: none; color: var(--faint);
+    margin-top: 6px; background: none; border: none; color: var(--sub);
     font-size: var(--t-caption); cursor: pointer; font-family: inherit;
     text-decoration: underline;
   }
@@ -448,10 +482,10 @@
   }
   .pro-code-input { text-align: center; letter-spacing: 1px; text-transform: uppercase; }
   .pro-msg { font-size: var(--t-caption); color: var(--danger); margin-bottom: 8px; }
-  .pro-fine { font-size: var(--t-micro); color: var(--faint); margin-top: 8px; line-height: 1.5; }
+  .pro-fine { font-size: var(--t-micro); color: var(--sub); margin-top: 8px; line-height: 1.5; }
   .pro-fine a { color: inherit; }
   .pro-code {
-    font-size: 20px; font-weight: 700; letter-spacing: 1px; padding: 14px 8px; margin-bottom: 4px;
+    font-size: var(--t-amount); font-weight: 700; letter-spacing: 1px; padding: 14px 8px; margin-bottom: 4px;
     background: var(--field); border: 1px dashed var(--line); border-radius: var(--radius-sm);
     user-select: all; -webkit-user-select: all; word-break: break-all;
   }
@@ -473,12 +507,13 @@
     border: none; background: var(--bg); border-radius: 50%; font-size: var(--t-caption);
     color: var(--sub); cursor: pointer;
   }
-  .r-title { font-size: 21px; font-weight: 700; text-align: center; letter-spacing: -0.03em; margin: 0 0 5px; }
-  .r-sub { text-align: center; font-size: var(--t-caption); color: var(--faint); margin: 0 0 20px; }
+  .r-title { font-size: var(--t-amount); font-weight: 700; text-align: center; letter-spacing: -0.03em; margin: 0 0 5px; }
+  .r-sub { text-align: center; font-size: var(--t-caption); color: var(--sub); margin: 0 0 20px; }
   .r-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
   .r-card { background: var(--bg); border-radius: var(--radius-sm); padding: 13px 6px; text-align: center; }
   .r-card .l { font-size: var(--t-micro); color: var(--sub); margin-bottom: 5px; }
-  .r-card .v { font-size: clamp(13px, 3.6vw, 16px); font-weight: 700; letter-spacing: -0.03em; }
+  .r-card .v { font-size: var(--t-small); font-weight: 700; letter-spacing: -0.03em; }
+  @media (min-width: 420px) { .r-card .v { font-size: var(--t-body); } }
   .r-card .s { font-size: var(--t-micro); color: var(--sub); margin-top: 5px; line-height: 1.45; }
   .r-h {
     font-size: var(--t-caption); font-weight: 600; color: var(--sub);
@@ -492,7 +527,7 @@
   .r-row .rn { font-weight: 600; letter-spacing: -0.02em; }
   .r-get { color: var(--accent); font-weight: 700; letter-spacing: -0.02em; }
   .r-owe { color: var(--danger); font-weight: 700; letter-spacing: -0.02em; }
-  .r-even { color: var(--faint); font-weight: 500; }
+  .r-even { color: var(--sub); font-weight: 400; }
   .r-flow {
     background: var(--bg); border-radius: var(--radius-sm); padding: 14px 15px;
     font-size: var(--t-small); line-height: 1.8; margin-top: 14px; color: var(--sub);
@@ -500,7 +535,7 @@
   .r-flow b { color: var(--ink); font-weight: 600; }
   .r-flow-note {
     margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line);
-    font-size: var(--t-caption); color: var(--faint); line-height: 1.6;
+    font-size: var(--t-caption); color: var(--sub); line-height: 1.6;
   }
   .result-actions { display: flex; gap: 8px; margin-top: 22px; }
   .result-actions .submit { margin-top: 0; flex: 1 1 auto; white-space: nowrap; }
@@ -508,20 +543,20 @@
 
   /* 홈 — 모임 목록 */
   .home-head { text-align: center; margin: 8px 0 26px; }
-  .home-head h1 { font-size: 40px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+  .home-head h1 { font-size: var(--t-hero); font-weight: 700; letter-spacing: -0.04em; line-height: 1.1; }
   #groupLimitNote a { color: var(--accent); font-weight: 600; text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 1px; }
   .home-head p { font-size: var(--t-small); color: var(--sub); margin-top: 11px; letter-spacing: -0.01em; }
   /* 첫 화면 안내 */
-  .onboard { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px 18px; }
-  .ob-title { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 14px; }
-  .ob-step { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; font-size: 14px; color: var(--sub); }
+  .onboard { background: var(--card); border: 0; border-radius: var(--radius); padding: 20px 18px; }
+  .ob-title { font-size: var(--t-body); font-weight: 700; color: var(--ink); margin-bottom: 14px; }
+  .ob-step { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; font-size: var(--t-body); color: var(--sub); }
   .ob-step b { color: var(--ink); font-weight: 600; }
   .ob-n {
     flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
-    background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 12px;
+    background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: var(--t-caption);
     display: flex; align-items: center; justify-content: center; margin-top: 1px;
   }
-  .ob-eg { color: var(--faint); font-size: 12px; }
+  .ob-eg { color: var(--sub); font-size: var(--t-caption); }
   .guide-link {
     display: block; text-align: center; margin-top: 16px; padding: 12px;
     font-size: var(--t-small); color: var(--sub); text-decoration: none;
@@ -533,20 +568,20 @@
   }
   .group-open {
     flex: 1; min-width: 0; text-align: left; cursor: pointer;
-    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    background: var(--card); border: 0; border-radius: var(--radius);
     padding: 16px 16px; display: flex; flex-direction: column; gap: 4px;
   }
-  .group-open:hover { border-color: var(--accent); }
+  .group-open:hover { box-shadow: inset 0 0 0 1px var(--accent); }
   .group-open .g-title { font-size: var(--t-body); font-weight: 600; letter-spacing: -0.02em; color: var(--ink); }
-  .group-open .g-meta { font-size: var(--t-caption); color: var(--faint); font-variant-numeric: tabular-nums; }
+  .group-open .g-meta { font-size: var(--t-caption); color: var(--sub); font-variant-numeric: tabular-nums; }
   .group-del {
-    flex: 0 0 auto; width: 46px; border: 1px solid var(--line); border-radius: var(--radius);
-    background: var(--card); color: var(--faint); font-size: 15px; cursor: pointer;
+    flex: 0 0 auto; width: 46px; border: 0; border-radius: var(--radius);
+    background: var(--card); color: var(--faint); font-size: var(--t-body); cursor: pointer;
   }
-  .group-del:hover { color: var(--danger); border-color: var(--danger); }
+  .group-del:hover { color: var(--danger); }
   .new-group {
     display: flex; gap: 8px; margin-top: 18px;
-    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px;
+    background: var(--card); border: 0; border-radius: var(--radius); padding: 14px;
   }
   .new-group input {
     flex: 1; min-width: 0; padding: 11px 12px; border: 1px solid var(--line);
@@ -560,7 +595,7 @@
   /* 홈 — 저장해 둔 파일로 모임 만들기. 「만들기」의 보조 동선이라 글자 링크만큼만 보이게 */
   .home-import {
     display: block; margin: 10px auto 0; padding: 6px 10px;
-    background: none; border: none; color: var(--faint);
+    background: none; border: none; color: var(--sub);
     font-size: var(--t-caption); font-family: inherit; cursor: pointer; text-decoration: underline;
   }
   .home-import:hover { color: var(--accent); }
@@ -580,7 +615,7 @@
 
 <div id="homeView" class="wrap" hidden>
   <div class="home-head">
-    <h1>모여셈 💸</h1>
+    <h1>모여셈</h1>
     <p>세상에서 제일 간단한 여행 가계부</p>
   </div>
   <div id="groupList"></div>
@@ -590,10 +625,10 @@
   </div>
   <!-- 저장해 둔 파일(내보내기한 JSON)로 모임을 만드는 길 — 만들기 아래에 작게 (2026-09-11 다현님 요청).
        모임 안의 「가져오기」는 지금 열린 모임에 병합하는 것이고, 여기는 파일로 새 모임을 만든다. -->
-  <button type="button" class="home-import" id="homeImportBtn">💾 저장해 둔 데이터 가져오기</button>
+  <button type="button" class="home-import" id="homeImportBtn">저장해 둔 데이터 가져오기</button>
   <input type="file" id="homeImportFile" accept=".json,application/json" hidden>
   <p class="note" id="groupLimitNote" style="text-align: center;" hidden></p>
-  <a class="guide-link" href="guide.html">📖 처음이세요? 사용법 보기</a>
+  <a class="guide-link" href="guide.html">처음이세요? 사용법 보기</a>
 </div>
 
 <div id="groupView" class="wrap" hidden>
@@ -653,9 +688,9 @@
         <div id="rateRow" style="display: none; margin-top: 6px; font-size: 13px; color: var(--sub);">
           환율 1<span id="rateSym">$</span> =
           <input type="number" id="fRate" step="any" min="0"
-            style="width: 90px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 16px;">
+            style="width: 90px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: var(--t-input);">
           원 <span id="rateHint"></span>
-          <button type="button" class="rate-search" data-off-hide>🔎 환율 검색</button>
+          <button type="button" class="rate-search" data-off-hide>환율 검색</button>
         </div>
         <div id="newCcyForm" class="ccy-form" style="display: none;">
           <!-- 2026-10-02: 나라·통화 이름·코드로 찾으면 기호·이름이 자동으로 채워진다 (아래 칸은 그대로 고칠 수 있다) -->
@@ -671,7 +706,7 @@
             <span class="ccy-form-label">1<span id="ncSymEcho">₫</span> =</span>
             <input type="number" id="ncRate" step="any" min="0" placeholder="환율" autocomplete="off">
             <span>원</span>
-            <button type="button" class="rate-search" data-off-hide>🔎 검색</button>
+            <button type="button" class="rate-search" data-off-hide>검색</button>
           </div>
           <div class="ccy-form-btns">
             <button type="button" id="ncCancel" class="ccy-mini ghost">취소</button>
@@ -742,7 +777,7 @@
     <p class="note treat-line" id="treatLine" hidden></p>
     <button type="button" class="submit" id="resultBtn" style="margin-top: 14px;">정산 결과 보기</button>
     <p class="note" style="text-align: center; margin-top: 8px;">
-      👆 눌러서 정산 결과를 <strong>카톡 공유</strong>하거나 <strong>엑셀 파일로 저장</strong>할 수 있어요
+      눌러서 정산 결과를 <strong>카톡 공유</strong>하거나 <strong>엑셀 파일로 저장</strong>할 수 있어요
     </p>
     <p class="note" id="settleNote">
       · 부담액 = 각 지출을 참여자 수로 나눈 몫의 합<br>
@@ -765,8 +800,8 @@
   <section>
     <h2>데이터 백업</h2>
     <div style="display: flex; gap: 8px;">
-      <button type="button" class="submit" id="exportBtn" style="background: #5a7a8c; margin-top: 0;">내보내기</button>
-      <button type="button" class="submit" id="importBtn" style="background: #8c7a5a; margin-top: 0;">가져오기</button>
+      <button type="button" class="submit soft" id="exportBtn" style="margin-top: 0;">내보내기</button>
+      <button type="button" class="submit soft" id="importBtn" style="margin-top: 0;">가져오기</button>
       <input type="file" id="importFile" accept=".json,application/json" hidden>
     </div>
     <p class="note">
@@ -796,7 +831,8 @@
   <div class="pro-sheet">
     <!-- ① 안내·결제 (2026-10-02 웹 결제 — 모여셈.md 「웹 결제 설계 확정」) -->
     <div id="proMain">
-      <p class="pro-title">모여셈 프로</p>
+      <p class="pro-title" id="proTitle">모여셈 프로</p>
+      <p class="pro-free-path" id="proFreePath" hidden>무료로 계속하려면: 지난 모임을 지우면 새로 만들 수 있어요</p>
       <p class="pro-why" id="proWhy"></p>
       <div class="pro-list">
         <div class="pro-feat"><span>🗂️</span><span><b>모임 여러 개</b><span class="pf-sub">지난 여행을 지우지 않고 보관해요</span></span></div>
@@ -1538,7 +1574,7 @@ function applyTreatUI() {
     : "";
   hint.hidden = !on;
   document.getElementById("submitBtn").textContent =
-    editingId ? "✏️ 수정 저장" : on ? "🎁 쏜 걸로 기록하기" : etype === "fee" ? "회비 기록하기" : etype === "income" ? "찬조 기록하기" : "지출 기록하기";
+    editingId ? "수정 저장" : on ? "쏜 걸로 기록하기" : etype === "fee" ? "회비 기록하기" : etype === "income" ? "찬조 기록하기" : "지출 기록하기";
 }
 document.getElementById("fTreat").onchange = () => {
   // 켜는 순간 「공동 회비」가 골라져 있으면 그 칩이 사라지므로 선택을 비운다 — 저장 때 "누가 쏘는지"를 묻는다
@@ -1922,7 +1958,7 @@ function startEdit(e) {
   if (pendingPhoto) pv.src = pendingPhoto;
   document.getElementById("photoBtn").textContent = pendingPhoto ? "사진 변경" : "사진 추가";
 
-  document.getElementById("submitBtn").textContent = "✏️ 수정 저장";
+  document.getElementById("submitBtn").textContent = "수정 저장";
   document.getElementById("cancelEdit").style.display = "block";
   document.getElementById("expenseForm").scrollIntoView({ behavior: "smooth" });
 }
@@ -2191,7 +2227,7 @@ function renderBudgetBar() {
           : "회비를 안 걷는 모임인가요? <b>예산으로 쓰기</b>를 켜면 " +
             "정해둔 금액에서 쓴 만큼 빠지고 <b>남은 예산</b>이 바로 보여요.";
         const go = document.createElement("button");
-        go.type = "button"; go.className = "bh-go"; go.textContent = "🎯 예산 정하기";
+        go.type = "button"; go.className = "bh-go"; go.textContent = "예산 정하기";
         go.onclick = openBudgetEdit;
         const no = document.createElement("button");
         no.type = "button"; no.className = "bh-no"; no.textContent = "괜찮아요";
@@ -2201,7 +2237,7 @@ function renderBudgetBar() {
       } else {
         const b = document.createElement("button");
         b.type = "button"; b.className = "budget-link";
-        b.textContent = "🎯 예산 정하기";
+        b.textContent = "예산 정하기";
         b.title = "회비를 걷지 않고 정해둔 예산 안에서 쓰는 모임이면 눌러요";
         b.onclick = openBudgetEdit;
         view.appendChild(b);
@@ -2404,6 +2440,12 @@ function paintPrice(p) {
 }
 // place = 결제창이 뜬 자리. 서버가 노출 횟수만 센다(판정 기준: 노출 대비 결제 5%↑ 유지 · 2~5% 문구 수정 · 2%↓ 범위 재검토)
 function openPro(why, place) {
+  // 「모임 1개」에 막혀 뜬 결제창이면 제목이 그 상황을 말하고, 돈 안 내고 계속하는 길을 바로 밑에 적는다 (2026-10-04 다현님 승인).
+  // 엑셀·백업·가져오기에서 뜬 결제창엔 「지난 여행」 제목이 안 맞으므로 예전 제목 그대로 둔다 — 모임을 지워도 그 기능은 안 열리니까
+  const limit = why === FREE_LIMIT_WHY;
+  document.getElementById("proTitle").textContent = limit ? "지난 여행, 지우지 않고 남겨둘까요?" : "모여셈 프로";
+  document.getElementById("proFreePath").hidden = !limit;
+  document.getElementById("proWhy").hidden = limit;   // 제목과 무료 줄이 같은 말을 이미 했다 — 세 번 말하지 않는다
   document.getElementById("proWhy").textContent = why || "이 기능은 프로에서 쓸 수 있어요";
   proView("main");
   proMsg("proMsg", "");
@@ -3043,7 +3085,7 @@ async function renderHome() {
   if (list.length === 0) {
     box.innerHTML =
       '<div class="onboard">' +
-      '<p class="ob-title">처음 오셨네요! 👋</p>' +
+      '<p class="ob-title">처음 오셨네요!</p>' +
       '<div class="ob-step"><span class="ob-n">1</span><span>아래에서 <b>모임</b>을 만들어요 <span class="ob-eg">예: 제주 여행</span></span></div>' +
       // 「회비」만 말하면 회비를 걷는 모임만 이 앱을 쓰는 것처럼 읽힌다.
       // 첫 화면에서 두 가지 방식이 다 있다는 걸 말해 둔다 (동사형 — 화면에 「모드」라는 말은 안 쓴다)
