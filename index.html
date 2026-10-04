@@ -1987,7 +1987,7 @@ function buildPayerChips(opts) {
   const feeMode = isFeeMode();
   const multi = feeMode && !editingId;
   const prev = reset ? [] : [...payersBox.querySelectorAll('input[name="payer"]:checked')].map(i => i.value);
-  const single = prev.length ? prev[0] : "회비";   // 지출·찬조에서 쓸 단일 선택값
+  const single = prev.length ? prev[0] : defaultPayer();   // 지출·찬조에서 쓸 단일 선택값 ("" = 아직 안 고름)
   const picked = new Set(prev);                    // 회비 모드에서 쓸 다중 선택값
 
   payersBox.innerHTML = "";
@@ -2039,6 +2039,20 @@ function buildPayerChips(opts) {
   updateSummary();
 }
 function resetPayer() { buildPayerChips({ reset: true }); }
+
+// 새 기록의 결제자 기본값 (2026-10-04 다현님 결정).
+//   · 회비를 걷는 모임(회비 기록이나 멤버별 회비가 있음) → 「💰 공동 회비」 — 지금까지와 같다
+//   · 예산 모임 → 「🎯 예산에서」(저장값은 똑같이 "회비") — 예산 모임 동작은 그대로
+//   · 회비를 한 푼도 안 걷은 모임 → **고르지 않은 상태**. 예전엔 여기서도 공동 회비가 골라져 있어서
+//     그냥 저장하면 없는 통에서 돈이 나간 걸로 잡혔다 → 큰 숫자가 첫 지출부터 「남은 회비 −○원」 빨강.
+//     이제 요약 줄이 빨간 글씨로 「누가 냈는지 골라 주세요」라고 말하고, 고르기 전엔 저장이 안 된다.
+//   ⚠️ 이미 저장된 기록(공동 회비로 저장된 옛 지출)은 건드리지 않는다 — 새 기록의 기본값만 바뀐다
+function defaultPayer() {
+  if (isBudgetMode()) return "회비";
+  const feeCount = expenses.filter(e => e.type === "fee").length;
+  const feeManual = Object.values(FEES || {}).reduce((a, b) => a + b, 0);
+  return feeCount > 0 || feeManual > 0 ? "회비" : "";
+}
 
 // 「모두」 칩의 글자는 지금 상태를 그대로 말한다 — 다 골랐으면 다음 동작은 해제다
 function updateSelectAllChip() {
@@ -2437,7 +2451,10 @@ document.getElementById("expenseForm").onsubmit = async e => {
     payer = feePayers[0];
     participants = [payer];
   } else if (etype !== "income") {
-    payer = document.querySelector('input[name="payer"]:checked').value;
+    const picked = document.querySelector('input[name="payer"]:checked');
+    // 회비를 안 걷는 모임은 결제자가 비어 있는 채로 시작한다 — 고르기 전엔 저장하지 않는다
+    if (!picked) { toggleSummary(true); alert("누가 냈는지 골라 주세요"); return; }
+    payer = picked.value;
   }
 
   const raw = Number(document.getElementById("fAmount").value);
@@ -3431,6 +3448,7 @@ async function openGroup(id) {
   // ⚠️ 예전엔 빈 앱에서 모임을 만들거나 가져오면 칩이 전부 꺼진 채로 떴다 — 칩 상자가 멤버 0명일 때 한 번 그려지고 나서
   //    「이전 선택 유지」로만 다시 그려졌기 때문(2026-10-04 디자인 개편 B 검증 중 발견, 그 전부터 있던 버그)
   membersBox.querySelectorAll("input").forEach(cb => { cb.checked = true; });
+  resetPayer();   // 결제자 기본값은 모임마다 다르다(회비를 걷나) — 앞 모임의 선택을 물고 들어오지 않게
   renderCcyChips();
   selectCcy(null);
   budgetEditing = false;
@@ -3646,7 +3664,9 @@ document.addEventListener("keydown", ev => {
 // ---- 기록 시트
 function openAddSheet(fromEdit) {
   if (!fromEdit && !editingId) {
-    toggleSummary(isFeeMode());   // 회비는 「누가 냈나」를 꼭 골라야 해서 펼친 채로
+    // 회비는 「누가 냈나」를 꼭 골라야 해서 펼친 채로. 회비 없는 모임에서 결제자가 비어 있어도 펼쳐서 바로 고르게
+    const etypeNow = (document.querySelector('input[name="etype"]:checked') || {}).value;
+    toggleSummary(isFeeMode() || (etypeNow === "expense" && !document.querySelector('input[name="payer"]:checked')));
     updateSummary();
   }
   openSheet("add");
@@ -3695,7 +3715,7 @@ function updateSummary() {
     html = p && p !== "회비" ? "🎁 <b>" + esc(p) + "</b>이(가) 쏴요 · 나눠 내지 않아요" : '🎁 <span class="warn">누가 쏘는지 골라 주세요</span>';
   } else {
     const p = (document.querySelector('input[name="payer"]:checked') || {}).value;
-    const payTxt = !p ? '<span class="warn">결제한 사람을 골라 주세요</span>'
+    const payTxt = !p ? '<span class="warn">누가 냈는지 골라 주세요</span>'
       : p === "회비" ? "<b>" + (isBudgetMode() ? "예산에서" : "공동 회비로") + "</b> 결제"
       : "<b>" + esc(p) + "</b> 결제";
     html = payTxt + " · " + partTxt;
