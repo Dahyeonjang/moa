@@ -604,6 +604,216 @@
     color: var(--sub); font-size: var(--t-small); cursor: pointer; padding: 4px 2px; margin-bottom: 6px;
   }
   .back-home:hover { color: var(--accent); }
+
+  /* ════ 디자인 개편 B (2026-10-04) — 보는 화면 + 하는 시트 ════ */
+  /* ⚠️ hidden 속성은 브라우저 기본 스타일이라 저자 규칙(display:flex 등)에 진다 — B에서 새로 만든 요소가 많아
+     하나씩 짝을 적는 대신 한 줄로 못 박는다. hidden을 붙였는데 보여야 하는 요소는 이 앱에 없다 */
+  [hidden] { display: none !important; }
+  body { padding-bottom: 140px; }
+  .icon-btn {
+    width: 44px; height: 44px; flex: 0 0 auto; border: 0; background: none; border-radius: var(--radius-sm);
+    font-size: var(--t-amount); color: var(--sub); cursor: pointer;
+  }
+  .icon-btn:hover { background: var(--line-soft); color: var(--ink); }
+
+  /* 모임 머리 — ← 제목 ⋯ */
+  .gbar { display: flex; align-items: center; gap: 4px; margin: -12px 0 4px; }
+  .gbar #appTitle {
+    flex: 1; min-width: 0; font-size: var(--t-amount); font-weight: 700; text-align: center;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 6px 8px;
+  }
+
+  /* 큰 숫자 하나 */
+  .hero { text-align: center; padding: 6px 0 14px; }
+  .hero-lbl { font-size: var(--t-small); color: var(--sub); }
+  .hero-big { font-size: var(--t-hero); font-weight: 700; letter-spacing: -0.04em; line-height: 1.2; color: var(--accent); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .hero-big.neg { color: var(--danger); }
+  .hero-big.plain { color: var(--ink); }
+  .hero-line { font-size: var(--t-small); color: var(--sub); margin-top: 6px; font-variant-numeric: tabular-nums; line-height: 1.6; }
+  .hero-line b { color: var(--ink); font-weight: 600; }
+  .hero-warn { font-size: var(--t-caption); color: var(--danger); margin-top: 4px; }
+  .budget-bar { margin: 0 0 10px; }
+  .budget-view { justify-content: center; }
+
+  /* 지출 | 정산 탭 */
+  .gtabs {
+    display: flex; border-bottom: 1px solid var(--line); margin: 0 -16px 8px; padding: 0 16px;
+    position: sticky; top: 0; background: var(--bg); z-index: 5;
+  }
+  .gtabs button {
+    flex: 1; height: 48px; border: 0; background: none; font-size: var(--t-body); color: var(--sub);
+    cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; font-family: inherit;
+  }
+  .gtabs button.on { color: var(--ink); font-weight: 700; border-bottom-color: var(--ink); }
+
+  /* 지출 목록 — 날짜별 묶음 + 카드 */
+  .list-tools { margin-bottom: 4px; gap: 6px; }
+  .tools-row { display: flex; align-items: center; gap: 4px; }
+  .tools-total { flex: 1; font-size: var(--t-small); color: var(--sub); font-variant-numeric: tabular-nums; }
+  .tools-total b { color: var(--ink); font-weight: 600; }
+  .view-pick { display: inline-flex; align-items: center; gap: 4px; font-size: var(--t-small); color: var(--sub); min-height: 44px; }
+  .view-pick select {
+    border: 0; background: transparent; font: inherit; font-weight: 600; color: var(--ink);
+    min-height: 44px; padding: 0 2px; cursor: pointer;
+  }
+  #expenseList .list-group-head { border-top: 0; padding: 16px 2px 6px; margin: 0; }
+  #expenseList .list-group-head:first-child { padding-top: 4px; }
+  .egroup { background: var(--card); border-radius: var(--radius); padding: 0 16px; }
+  #expenseList .expense {
+    align-items: center; gap: 12px; min-height: 64px; padding: 10px 0; cursor: pointer;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  #expenseList .egroup .expense:first-child { padding-top: 10px; }
+  #expenseList .egroup .expense:last-child { border-bottom: 0; padding-bottom: 10px; }
+  #expenseList .expense .thumb { width: 40px; height: 40px; border-radius: 50%; }
+  #expenseList .expense .thumb.empty { border: 0; background: var(--accent-soft); font-size: var(--t-body); }
+  #expenseList .expense .top { align-items: center; }
+  #expenseList .expense .desc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #expenseList .expense .amount { font-size: var(--t-body); }
+  .expense .fxsub { display: block; text-align: right; font-size: var(--t-caption); color: var(--sub); font-weight: 400; margin-top: 1px; }
+  .expense .tag { display: inline-block; font-size: var(--t-caption); color: var(--accent); background: var(--accent-soft); border-radius: var(--pill); padding: 0 7px; margin-left: 6px; font-weight: 600; vertical-align: 1px; }
+  .expense .amt-col { flex: 0 0 auto; text-align: right; }
+  #expenseList > .empty-msg { background: var(--card); border-radius: var(--radius); padding: 28px 16px; }
+
+  /* 정산 탭 */
+  .pcard { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+  .pcard h3 { font-size: var(--t-small); font-weight: 600; color: var(--sub); margin-bottom: 6px; }
+  .h3-row { display: flex; justify-content: space-between; }
+  .h3-total { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .xfer { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line-soft); font-size: var(--t-body); font-variant-numeric: tabular-nums; }
+  .xfer:last-child { border-bottom: 0; }
+  .xfer .who b { font-weight: 700; }
+  .xfer .ar { color: var(--faint); margin: 0 6px; }
+  .xfer .m { font-weight: 700; white-space: nowrap; }
+  .xfer-note { font-size: var(--t-caption); color: var(--sub); margin-top: 8px; line-height: 1.6; }
+  .bal { display: grid; grid-template-columns: 56px 1fr 128px; align-items: center; gap: 10px; min-height: 40px; font-size: var(--t-body); font-variant-numeric: tabular-nums; }
+  .bal .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bal .track { height: 8px; background: var(--line-soft); border-radius: var(--pill); position: relative; }
+  .bal .track::after { content: ""; position: absolute; left: 50%; top: -4px; bottom: -4px; width: 1px; background: var(--line); }
+  .bal .track i { position: absolute; top: 0; bottom: 0; border-radius: var(--pill); }
+  .bal .track i.get { left: 50%; background: var(--accent); }
+  .bal .track i.owe { right: 50%; background: var(--danger); }
+  .bal .v { text-align: right; font-weight: 700; font-size: var(--t-small); white-space: nowrap; }
+  .bal .v.get { color: var(--accent); } .bal .v.owe { color: var(--danger); } .bal .v.even { color: var(--sub); font-weight: 400; }
+  #paneSettle .settle-toggle { background: none; border: 0; padding: 12px 0 0; min-height: 44px; margin: 0; }
+  #paneSettle .treat-line { margin-top: 8px; }
+
+  /* 맨 아래 고정 버튼 */
+  .dock {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    background: linear-gradient(to top, var(--bg) 72%, rgba(245,243,238,0));
+    padding: 14px 16px calc(16px + env(safe-area-inset-bottom));
+  }
+  .dock-in { max-width: 560px; margin: 0 auto; }
+  .dock-btn { height: 52px; margin-top: 0; padding: 0; }
+  .dock-row { display: flex; gap: 8px; margin-top: 8px; }
+  .dock-row .submit { margin-top: 0; min-height: 44px; padding: 0 8px; font-size: var(--t-small); }
+  .menu-sec .dock-row { margin-top: 0; }
+
+  /* 시트 */
+  .sheet-wrap { position: fixed; inset: 0; z-index: 150; display: none; }
+  .sheet-wrap.open { display: block; }
+  .sheet-dim { position: absolute; inset: 0; background: rgba(38,34,30,.45); }
+  .sheet-panel {
+    position: absolute; left: 50%; transform: translateX(-50%); bottom: 0; width: 100%; max-width: 560px;
+    max-height: calc(100% - 40px); background: var(--card); border-radius: 16px 16px 0 0;
+    display: flex; flex-direction: column; margin: 0;
+  }
+  .sheet-panel.small { max-height: 60%; }
+  .sheet-grab { width: 36px; height: 4px; border-radius: var(--pill); background: var(--line); margin: 8px auto 0; flex: 0 0 auto; }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 8px 0 16px; flex: 0 0 auto; }
+  .sheet-title { font-size: var(--t-amount); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sheet-body { flex: 1 1 auto; overflow-y: auto; padding: 6px 16px 16px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  .sheet-foot { flex: 0 0 auto; padding: 12px 16px calc(16px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line-soft); }
+  .sheet-foot .submit { margin-top: 0; height: 52px; padding: 0; }
+  .foot-row { display: flex; gap: 8px; margin-top: 8px; }
+  .foot-row .cancel-btn { margin-top: 0; min-height: 44px; }
+  .danger-text { color: var(--danger) !important; }
+  body.sheet-open { overflow: hidden; }
+
+  /* 기록 시트 안 */
+  .seg-radio { display: flex; background: var(--field); border-radius: var(--radius-sm); padding: 3px; gap: 2px; }
+  .seg-radio label {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 44px;
+    border-radius: 10px; font-size: var(--t-small); color: var(--sub); cursor: pointer;
+  }
+  .seg-radio input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg-radio label:has(input:checked) { background: var(--card); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(38,34,30,.12); }
+  .amount-box { display: flex; align-items: baseline; gap: 6px; padding: 14px 0 4px; border-bottom: 2px solid var(--accent); margin-top: 6px; }
+  .amount-box input {
+    flex: 1; min-width: 0; min-height: 48px; border: 0; outline: none; background: transparent; padding: 0;
+    font-size: var(--t-hero); font-weight: 700; letter-spacing: -0.04em; color: var(--ink); font-variant-numeric: tabular-nums;
+    -moz-appearance: textfield; appearance: textfield;
+  }
+  .amount-box input::-webkit-outer-spin-button, .amount-box input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .amount-box input::placeholder { color: var(--faint); font-weight: 400; }
+  .amount-unit { font-size: var(--t-amount); color: var(--sub); }
+  .ccy-row, .cat-row { flex-wrap: nowrap; overflow-x: auto; padding: 10px 0 2px; scrollbar-width: none; }
+  .ccy-row::-webkit-scrollbar, .cat-row::-webkit-scrollbar { display: none; }
+  .ccy-row > *, .cat-row > * { flex: 0 0 auto; white-space: nowrap; }
+  .summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 52px;
+    margin-top: 4px; padding: 8px 14px; border: 0; border-radius: var(--radius-sm); background: var(--field);
+    font-size: var(--t-body); color: var(--ink); cursor: pointer; text-align: left; font-family: inherit;
+  }
+  .summary b { font-weight: 600; }
+  .summary .warn { color: var(--danger); }
+  .summary .chev { color: var(--faint); transition: transform .15s; flex: 0 0 auto; font-size: var(--t-amount); }
+  .summary[aria-expanded="true"] .chev { transform: rotate(90deg); }
+  #sumDetail { padding-top: 12px; }
+  .meta-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .meta-chip {
+    display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px;
+    border: 1px solid var(--line); background: var(--field); border-radius: var(--pill);
+    font-size: var(--t-small); color: var(--sub); cursor: pointer; font-family: inherit;
+  }
+  .date-chip input[type="date"] {
+    border: 0; background: transparent; font: inherit; color: var(--ink); font-weight: 600; padding: 0;
+    min-height: 40px; -webkit-appearance: none; appearance: none;
+  }
+
+  /* 모임 메뉴 */
+  .menu-item {
+    display: block; width: 100%; min-height: 48px; text-align: left; border: 0; background: none;
+    font-size: var(--t-body); color: var(--ink); cursor: pointer; padding: 0 2px; font-family: inherit;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .menu-sec { padding: 14px 0; border-bottom: 1px solid var(--line-soft); }
+  .menu-sec h3 { font-size: var(--t-small); font-weight: 600; color: var(--sub); margin-bottom: 6px; }
+  .menu-sec .menu-item { border-bottom: 0; }
+  #menuDelete { border-bottom: 0; margin-top: 6px; }
+
+  /* 새 모임 시트 */
+  .q { font-size: var(--t-amount); font-weight: 700; margin-top: 8px; }
+  .qs { font-size: var(--t-small); color: var(--sub); margin-top: 2px; }
+  .people { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .people:empty { display: none; }
+  .person { display: inline-flex; align-items: center; gap: 4px; background: var(--accent-soft); color: var(--accent); border-radius: var(--pill); padding: 0 4px 0 14px; min-height: 44px; font-size: var(--t-body); font-weight: 600; }
+  .person button { width: 36px; height: 36px; border: 0; border-radius: 50%; background: transparent; color: var(--accent); font-size: var(--t-small); cursor: pointer; }
+  .person-input { display: flex; gap: 8px; margin-top: 10px; }
+  .person-input input { flex: 1; min-width: 0; height: 48px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--field); font-size: var(--t-input); color: var(--ink); }
+  .person-input .ccy-mini { min-width: 64px; }
+  .hr { height: 1px; background: var(--line-soft); margin: 20px 0 4px; }
+  #ngSugg { margin-top: 6px; }
+  #ngSugg .ccy-chip { cursor: pointer; }
+
+  /* 홈 카드 — 쓴 돈을 크게 */
+  .group-open { flex-direction: row; align-items: center; gap: 12px; min-height: 72px; }
+  .group-open .g-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .group-open .g-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .group-open .g-sum { font-size: var(--t-amount); font-weight: 700; letter-spacing: -0.03em; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .group-card .group-del { width: 44px; font-size: var(--t-amount); }
+  .onboard .ob-arrow { color: var(--faint); font-size: var(--t-caption); padding-left: 6px; line-height: 1; }
+
+  /* 터치 영역 44px — 작은 글자 버튼·칩도 손가락 기준으로 */
+  .members label, .ccy-chip { min-height: 44px; }
+  .home-import, .guide-link, .budget-mini, .budget-hint .bh-no, .budget-hint .bh-go, .budget-link, .rate-search, .ccy-mini, .pro-restore, .pro-later { min-height: 44px; }
+  .home-import, .budget-mini, .bh-no, .rate-search { display: inline-flex; align-items: center; justify-content: center; }
+  .home-import { display: flex; }
+  .feerow .fname-btn, .feerow .fdel { min-height: 44px; }
+  .feerow .fdel { width: 44px; }
+  .feerow .add-member-input { min-height: 44px; }
+  .field input[type="text"], .field input[type="number"], .list-tools input[type="search"] { min-height: 44px; }
 </style>
 </head>
 <body>
@@ -613,17 +823,16 @@
      둘 중 한 화면에만 두면 기존 사용자에게 영영 안 보인다. 그래서 두 화면 위에 하나로 둔다. -->
 <div id="newsBar" class="news-bar wrap" hidden></div>
 
+<!-- ── 디자인 개편 B (2026-10-04) — 정본 앱개발\모여셈.md 「디자인 개편」 ──
+     화면은 「보는 화면」(홈·모임)과 「하는 시트」(기록·새 모임·모임 메뉴)로 나뉜다.
+     ⚠️ 예전 화면의 id는 전부 살려 두었다 — 저장·계산·결제 코드가 id로 화면을 읽기 때문. 자리만 옮겼다 -->
 <div id="homeView" class="wrap" hidden>
   <div class="home-head">
     <h1>모여셈</h1>
     <p>세상에서 제일 간단한 여행 가계부</p>
   </div>
   <div id="groupList"></div>
-  <div class="new-group">
-    <input type="text" id="newGroupInput" placeholder="새 모임 이름 (예: 제주 여행)">
-    <button type="button" id="newGroupBtn">만들기</button>
-  </div>
-  <!-- 저장해 둔 파일(내보내기한 JSON)로 모임을 만드는 길 — 만들기 아래에 작게 (2026-09-11 다현님 요청).
+  <!-- 저장해 둔 파일(내보내기한 JSON)로 모임을 만드는 길 (2026-09-11 다현님 요청).
        모임 안의 「가져오기」는 지금 열린 모임에 병합하는 것이고, 여기는 파일로 새 모임을 만든다. -->
   <button type="button" class="home-import" id="homeImportBtn">저장해 둔 데이터 가져오기</button>
   <input type="file" id="homeImportFile" accept=".json,application/json" hidden>
@@ -632,18 +841,20 @@
 </div>
 
 <div id="groupView" class="wrap" hidden>
-  <button type="button" class="back-home" id="backHome">← 모임 목록</button>
-  <header>
+  <div class="gbar">
+    <button type="button" class="icon-btn" id="backHome" aria-label="모임 목록">←</button>
     <h1 id="appTitle" contenteditable="true" spellcheck="false"></h1>
-    <p class="title-hint">제목을 눌러 바꿀 수 있어요</p>
-  </header>
+    <button type="button" class="icon-btn" id="groupMenuBtn" aria-label="모임 메뉴">⋯</button>
+  </div>
 
   <div id="dbWarn" class="db-warn" hidden></div>
 
-  <div class="cards">
-    <div class="card"><div class="label" id="fundLabel">모인 돈</div><div class="value" id="fundTotal"></div><div class="sub calm" id="fundBreakdown" hidden></div></div>
-    <div class="card"><div class="label">쓴 돈</div><div class="value" id="spentTotal"></div></div>
-    <div class="card balance" id="balanceCard"><div class="label" id="balanceLabel">남은 돈</div><div class="value" id="balance"></div><div class="sub" id="balanceNote"></div></div>
+  <!-- 큰 숫자 하나 — 아래 줄은 그 숫자가 나온 뺄셈 그대로 (2026-10-04 다현님: 각자 결제한 돈은 여기서 뺀다) -->
+  <div class="hero" id="hero">
+    <div class="hero-lbl" id="heroLabel">남은 회비</div>
+    <div class="hero-big" id="heroValue"></div>
+    <div class="hero-line" id="heroLine"></div>
+    <div class="hero-warn" id="heroWarn" hidden></div>
   </div>
 
   <div class="budget-bar">
@@ -656,159 +867,266 @@
     <p class="budget-note" id="budgetExcludedNote" hidden></p>
   </div>
 
-  <section>
-    <h2>기록 추가</h2>
-    <form id="expenseForm">
-      <div class="field">
-        <label>구분</label>
-        <div class="members">
-          <label><input type="radio" name="etype" value="expense" checked>💸 지출</label>
-          <label id="etypeFee"><input type="radio" name="etype" value="fee">💰 회비 (걷은 돈)</label>
-          <label id="etypeIncome"><input type="radio" name="etype" value="income">💝 찬조 (받은 돈)</label>
-        </div>
-      </div>
-      <div class="field">
-        <label>날짜</label>
-        <input type="date" id="fDate" required>
-      </div>
-      <div class="field" id="catField">
-        <label>항목</label>
-        <div class="members" id="fCats"></div>
-        <input type="text" id="fCatCustom" placeholder="항목 이름을 입력하세요 (예: 마사지)"
-          style="display: none; margin-top: 8px;">
-      </div>
-      <div class="field">
-        <label>내용</label>
-        <input type="text" id="fDesc" placeholder="예: 저녁 갈비">
-      </div>
-      <div class="field">
-        <label>금액</label>
-        <div class="members" id="fCcy" style="margin-bottom: 6px;"></div>
-        <input type="number" id="fAmount" placeholder="예: 84000" min="0.01" step="any" required>
-        <div id="rateRow" style="display: none; margin-top: 6px; font-size: 13px; color: var(--sub);">
-          환율 1<span id="rateSym">$</span> =
-          <input type="number" id="fRate" step="any" min="0"
-            style="width: 90px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: var(--t-input);">
-          원 <span id="rateHint"></span>
-          <button type="button" class="rate-search" data-off-hide>환율 검색</button>
-        </div>
-        <div id="newCcyForm" class="ccy-form" style="display: none;">
-          <!-- 2026-10-02: 나라·통화 이름·코드로 찾으면 기호·이름이 자동으로 채워진다 (아래 칸은 그대로 고칠 수 있다) -->
-          <div class="ccy-form-row">
-            <input type="search" id="ncFind" maxlength="20" placeholder="🔎 나라·통화 찾기 (예: 대만, 달러, TWD)" autocomplete="off" enterkeyhint="search">
-          </div>
-          <div class="members" id="ncPresets"></div>
-          <div class="ccy-form-row">
-            <input type="text" id="ncSym" maxlength="4" placeholder="기호 ₫" autocomplete="off">
-            <input type="text" id="ncName" maxlength="12" placeholder="이름 (동)" autocomplete="off">
-          </div>
-          <div class="ccy-form-row">
-            <span class="ccy-form-label">1<span id="ncSymEcho">₫</span> =</span>
-            <input type="number" id="ncRate" step="any" min="0" placeholder="환율" autocomplete="off">
-            <span>원</span>
-            <button type="button" class="rate-search" data-off-hide>검색</button>
-          </div>
-          <div class="ccy-form-btns">
-            <button type="button" id="ncCancel" class="ccy-mini ghost">취소</button>
-            <button type="button" id="ncSave" class="ccy-mini">추가</button>
-          </div>
-        </div>
-        <p class="note" id="feeSplitHint" style="display: none; margin-top: 8px;"></p>
-      </div>
-      <div class="field" id="payerField">
-        <label id="payerLabel">누가 결제했나요?</label>
-        <div class="members" id="fPayers"></div>
-      </div>
-      <div class="field" id="participantField">
-        <label id="pLabel">참여자 (함께 나눠 낼 사람)</label>
-        <div class="members" id="fMembers"></div>
-        <!-- 🎁 제가 쏠게요 — 나눠 내지 않고 결제한 사람이 전부 낸다 (2026-09-16 다현님 요청).
-             참여자 칩과 같은 상자에 두면 participants 읽기에 섞이므로 따로 둔다. 지출에서만 보인다. -->
-        <div class="members treat-row" id="treatRow">
-          <label><input type="checkbox" id="fTreat">🎁 제가 쏠게요</label>
-        </div>
-        <p class="note" id="treatHint" hidden style="margin-top: 8px;"></p>
-      </div>
-      <p class="budget-note" id="incomeBudgetNote" hidden style="margin: 0 0 13px;">
-        💝 이 찬조는 <strong>예산에 더해져요.</strong> 카드에 「예산 얼마 + 찬조 얼마」로 따로 보이고,
-        정산(누가 누구에게 줄 돈)은 개인 카드로 낸 지출만 가지고 계산해요.
-      </p>
-      <div class="field">
-        <label>영수증 사진 (선택)</label>
-        <div class="photo-field">
-          <button type="button" class="photo-btn" id="photoBtn">사진 추가</button>
-          <input type="file" id="fPhoto" accept="image/*" hidden>
-          <img class="photo-preview" id="photoPreview" alt="">
-        </div>
-      </div>
-      <button type="submit" class="submit" id="submitBtn">지출 기록하기</button>
-      <button type="button" class="cancel-btn" id="cancelEdit" style="display: none;">수정 취소</button>
-    </form>
-  </section>
+  <div class="gtabs" role="tablist">
+    <button type="button" role="tab" id="tabSpend" class="on" aria-selected="true">지출</button>
+    <button type="button" role="tab" id="tabSettle" aria-selected="false">정산</button>
+  </div>
 
-  <section>
-    <h2>지출 내역</h2>
-    <!-- 찾기 + 보기 전환 (2026-09-16 다현님 요청 — 2박3일 넘어가면 목록이 길어진다). 기록이 없으면 숨긴다 -->
+  <!-- 지출 탭 -->
+  <div id="paneSpend">
+    <!-- 찾기 + 보기 전환 (2026-09-16 다현님 요청). 기록이 없으면 숨긴다 -->
     <div class="list-tools" id="listTools" hidden>
-      <input type="search" id="listSearch" placeholder="🔍 찾기 — 내용 · 항목 · 이름 · 금액" autocomplete="off">
-      <div class="view-tabs" id="viewTabs">
-        <button type="button" class="view-tab" data-view="time">시간순</button>
-        <button type="button" class="view-tab" data-view="cat">항목별</button>
-        <button type="button" class="view-tab" data-view="date">날짜별</button>
-        <button type="button" class="view-tab" data-view="payer">결제자별</button>
+      <div class="tools-row">
+        <button type="button" class="icon-btn" id="searchToggle" aria-label="찾기" aria-expanded="false">⌕</button>
+        <span class="tools-total" id="spendTotal"></span>
+        <label class="view-pick">보기
+          <select id="viewSelect" aria-label="보기 전환">
+            <option value="date">날짜별</option>
+            <option value="time">시간순</option>
+            <option value="cat">항목별</option>
+            <option value="payer">결제자별</option>
+          </select>
+        </label>
       </div>
+      <input type="search" id="listSearch" placeholder="찾기 — 내용 · 항목 · 이름 · 금액" autocomplete="off" hidden>
     </div>
     <div id="expenseList"></div>
     <p class="list-count" id="listCount" hidden></p>
-  </section>
+  </div>
 
-  <section>
-    <h2>항목별 합계</h2>
-    <div id="catSummary"></div>
-  </section>
-
-  <section>
-    <h2>정산</h2>
-    <button type="button" class="settle-toggle" id="settleToggle" hidden></button>
-    <table class="settle" id="settleTable">
-      <thead><tr><th>이름</th><th>낸 회비</th><th>따로 결제</th><th>부담액</th><th>돌려받을 돈</th></tr></thead>
-      <tbody id="settleBody"></tbody>
-    </table>
-    <p class="note treat-line" id="treatLine" hidden></p>
-    <button type="button" class="submit" id="resultBtn" style="margin-top: 14px;">정산 결과 보기</button>
-    <p class="note" style="text-align: center; margin-top: 8px;">
-      눌러서 정산 결과를 <strong>카톡 공유</strong>하거나 <strong>엑셀 파일로 저장</strong>할 수 있어요
-    </p>
-    <p class="note" id="settleNote">
-      · 부담액 = 각 지출을 참여자 수로 나눈 몫의 합<br>
-      · 찬조는 모인 돈에 더해지고, 혜택 나눈 사람들의 부담액을 줄여줘요<br>
-      · 따로 결제 = 공동 회비가 아니라 개인 돈으로 낸 금액 — 돌려받을 돈에 자동으로 더해져요<br>
-      · 🎁 쏜 것은 쓴 돈에는 들어가지만 정산에서는 빠져요 — 결제한 사람이 전부 내는 거예요<br>
-      · 지출을 추가할 때마다 자동으로 다시 계산됩니다
-    </p>
-  </section>
-
-  <section>
-    <h2>멤버</h2>
-    <div id="feeRows"></div>
-    <p class="note" id="memberNote">
-      · 이름을 누르면 수정, ✕로 삭제할 수 있어요<br>
-      · 회비를 걷는 모임이면 기록 추가에서 <strong>💰 회비</strong>로 각자 낸 금액을 넣으세요 (이름 옆에 표시돼요)
-    </p>
-  </section>
-
-  <section>
-    <h2>데이터 백업</h2>
-    <div style="display: flex; gap: 8px;">
-      <button type="button" class="submit soft" id="exportBtn" style="margin-top: 0;">내보내기</button>
-      <button type="button" class="submit soft" id="importBtn" style="margin-top: 0;">가져오기</button>
-      <input type="file" id="importFile" accept=".json,application/json" hidden>
+  <!-- 정산 탭 -->
+  <div id="paneSettle" hidden>
+    <div class="pcard">
+      <h3>주고받을 돈</h3>
+      <div id="xferList"></div>
     </div>
-    <p class="note">
-      내보내기 = 모든 기록(사진 포함)을 파일 하나로 저장해요.<br>
-      카톡 "나에게 보내기" 등으로 다른 기기에 옮긴 뒤 가져오기 하면 기록이 그대로 복원돼요.
-    </p>
-  </section>
+    <div class="pcard">
+      <h3>사람별</h3>
+      <div id="balList"></div>
+      <p class="note treat-line" id="treatLine" hidden></p>
+      <button type="button" class="settle-toggle" id="settleToggle" aria-expanded="false"></button>
+      <div id="settleDetail" hidden>
+        <table class="settle" id="settleTable">
+          <thead><tr><th>이름</th><th>낸 회비</th><th>따로 결제</th><th>부담액</th><th>돌려받을 돈</th></tr></thead>
+          <tbody id="settleBody"></tbody>
+        </table>
+        <p class="note" id="settleNote">
+          · 부담액 = 각 지출을 참여자 수로 나눈 몫의 합<br>
+          · 찬조는 모인 돈에 더해지고, 혜택 나눈 사람들의 부담액을 줄여줘요<br>
+          · 따로 결제 = 공동 회비가 아니라 개인 돈으로 낸 금액 — 돌려받을 돈에 자동으로 더해져요<br>
+          · 🎁 쏜 것은 쓴 돈에는 들어가지만 정산에서는 빠져요 — 결제한 사람이 전부 내는 거예요<br>
+          · 지출을 추가할 때마다 자동으로 다시 계산됩니다
+        </p>
+      </div>
+    </div>
+    <div class="pcard">
+      <h3 class="h3-row"><span>항목별</span><span class="h3-total" id="catTotal"></span></h3>
+      <div id="catSummary"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 맨 아래 고정 버튼 — 엄지 자리. 화면마다 내용이 바뀐다 -->
+<div class="dock" id="dock" hidden>
+  <div class="dock-in">
+    <div id="dockHome" hidden><button type="button" class="submit dock-btn" id="newGroupOpen">+ 새 모임</button></div>
+    <div id="dockSpend" hidden><button type="button" class="submit dock-btn" id="addOpen">+ 기록하기</button></div>
+    <div id="dockSettle" hidden>
+      <button type="button" class="submit dock-btn" id="settleShare">카톡으로 공유하기</button>
+      <div class="dock-row">
+        <button type="button" class="submit soft" id="settleCopy">텍스트 복사</button>
+        <button type="button" class="submit soft" id="settleCsv">엑셀(CSV) 저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 기록 시트 — 금액 → 내용 → 저장. 결제자·참여자·쏠게요는 요약 한 줄 안에 ── -->
+<div class="sheet-wrap" id="addSheet" aria-hidden="true">
+  <div class="sheet-dim" data-close="add"></div>
+  <form id="expenseForm" class="sheet-panel" role="dialog" aria-label="기록하기">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head">
+      <span class="sheet-title" id="addTitle">기록하기</span>
+      <button type="button" class="icon-btn" data-close="add" aria-label="닫기">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="seg-radio" id="etypeSeg">
+        <label><input type="radio" name="etype" value="expense" checked>💸 지출</label>
+        <label id="etypeFee"><input type="radio" name="etype" value="fee">💰 회비</label>
+        <label id="etypeIncome"><input type="radio" name="etype" value="income">💝 찬조</label>
+      </div>
+
+      <div class="amount-box">
+        <input type="number" id="fAmount" placeholder="금액" min="0.01" step="any" inputmode="decimal" required aria-label="금액">
+        <span class="amount-unit" id="amountUnit">원</span>
+      </div>
+      <div class="members ccy-row" id="fCcy"></div>
+      <div id="rateRow" style="display: none; margin-top: 6px; font-size: 13px; color: var(--sub);">
+        환율 1<span id="rateSym">$</span> =
+        <input type="number" id="fRate" step="any" min="0"
+          style="width: 90px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: var(--t-input);">
+        원 <span id="rateHint"></span>
+        <button type="button" class="rate-search" data-off-hide>환율 검색</button>
+      </div>
+      <div id="newCcyForm" class="ccy-form" style="display: none;">
+        <!-- 2026-10-02: 나라·통화 이름·코드로 찾으면 기호·이름이 자동으로 채워진다 (아래 칸은 그대로 고칠 수 있다) -->
+        <div class="ccy-form-row">
+          <input type="search" id="ncFind" maxlength="20" placeholder="나라·통화 찾기 (예: 대만, 달러, TWD)" autocomplete="off" enterkeyhint="search">
+        </div>
+        <div class="members" id="ncPresets"></div>
+        <div class="ccy-form-row">
+          <input type="text" id="ncSym" maxlength="4" placeholder="기호 ₫" autocomplete="off">
+          <input type="text" id="ncName" maxlength="12" placeholder="이름 (동)" autocomplete="off">
+        </div>
+        <div class="ccy-form-row">
+          <span class="ccy-form-label">1<span id="ncSymEcho">₫</span> =</span>
+          <input type="number" id="ncRate" step="any" min="0" placeholder="환율" autocomplete="off">
+          <span>원</span>
+          <button type="button" class="rate-search" data-off-hide>검색</button>
+        </div>
+        <div class="ccy-form-btns">
+          <button type="button" id="ncCancel" class="ccy-mini ghost">취소</button>
+          <button type="button" id="ncSave" class="ccy-mini">추가</button>
+        </div>
+      </div>
+      <p class="note" id="feeSplitHint" style="display: none; margin-top: 8px;"></p>
+
+      <div class="field" style="margin-top: 12px;">
+        <input type="text" id="fDesc" placeholder="예: 저녁 갈비" aria-label="내용">
+      </div>
+      <div class="field" id="catField">
+        <div class="members cat-row" id="fCats"></div>
+        <input type="text" id="fCatCustom" placeholder="항목 이름을 입력하세요 (예: 마사지)"
+          style="display: none; margin-top: 8px;">
+      </div>
+
+      <!-- 요약 한 줄 — 기본값(공동 회비 · 전원)이면 이 줄만 읽고 넘어가면 된다. 누르면 아래가 펼쳐진다 -->
+      <button type="button" class="summary" id="sumBtn" aria-expanded="false" aria-controls="sumDetail">
+        <span id="sumText"></span><span class="chev" aria-hidden="true">›</span>
+      </button>
+      <div id="sumDetail" hidden>
+        <div class="field" id="payerField">
+          <label id="payerLabel">누가 결제했나요?</label>
+          <div class="members" id="fPayers"></div>
+        </div>
+        <div class="field" id="participantField">
+          <label id="pLabel">참여자 (함께 나눠 낼 사람)</label>
+          <div class="members" id="fMembers"></div>
+          <!-- 🎁 제가 쏠게요 — 나눠 내지 않고 결제한 사람이 전부 낸다 (2026-09-16 다현님 요청).
+               참여자 칩과 같은 상자에 두면 participants 읽기에 섞이므로 따로 둔다. 지출에서만 보인다. -->
+          <div class="members treat-row" id="treatRow">
+            <label><input type="checkbox" id="fTreat">🎁 제가 쏠게요</label>
+          </div>
+          <p class="note" id="treatHint" hidden style="margin-top: 8px;"></p>
+        </div>
+      </div>
+      <p class="budget-note" id="incomeBudgetNote" hidden style="margin: 12px 0 0;">
+        💝 이 찬조는 <strong>예산에 더해져요.</strong> 위에 「예산 얼마 + 찬조 얼마」로 따로 보이고,
+        정산(누가 누구에게 줄 돈)은 개인 카드로 낸 지출만 가지고 계산해요.
+      </p>
+
+      <div class="meta-row">
+        <label class="meta-chip date-chip">날짜 <input type="date" id="fDate" required></label>
+        <button type="button" class="meta-chip" id="photoBtn">📷 영수증</button>
+        <input type="file" id="fPhoto" accept="image/*" hidden>
+        <img class="photo-preview" id="photoPreview" alt="">
+      </div>
+    </div>
+    <div class="sheet-foot">
+      <button type="submit" class="submit" id="submitBtn">지출 기록하기</button>
+      <div class="foot-row" id="editRow" hidden>
+        <button type="button" class="cancel-btn" id="cancelEdit">수정 취소</button>
+        <button type="button" class="cancel-btn danger-text" id="deleteRec">이 기록 삭제</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- ── 모임 메뉴(⋯) — 멤버 · 예산 · 백업 · 모임 삭제 ── -->
+<div class="sheet-wrap" id="groupMenu" aria-hidden="true">
+  <div class="sheet-dim" data-close="menu"></div>
+  <div class="sheet-panel" role="dialog" aria-label="모임 메뉴">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head">
+      <span class="sheet-title">모임 설정</span>
+      <button type="button" class="icon-btn" data-close="menu" aria-label="닫기">✕</button>
+    </div>
+    <div class="sheet-body">
+      <button type="button" class="menu-item" id="menuRename">제목 바꾸기</button>
+      <div class="menu-sec">
+        <h3>멤버</h3>
+        <div id="feeRows"></div>
+        <p class="note" id="memberNote">
+          · 이름을 누르면 수정, ✕로 삭제할 수 있어요<br>
+          · 회비를 걷는 모임이면 「+ 기록하기」에서 <strong>💰 회비</strong>로 각자 낸 금액을 넣으세요 (이름 옆에 표시돼요)
+        </p>
+      </div>
+      <div class="menu-sec">
+        <h3>예산</h3>
+        <button type="button" class="menu-item" id="menuBudget">예산 정하기</button>
+      </div>
+      <div class="menu-sec">
+        <h3>데이터 백업</h3>
+        <div class="dock-row">
+          <button type="button" class="submit soft" id="exportBtn">내보내기</button>
+          <button type="button" class="submit soft" id="importBtn">가져오기</button>
+          <input type="file" id="importFile" accept=".json,application/json" hidden>
+        </div>
+        <p class="note">
+          내보내기 = 모든 기록(사진 포함)을 파일 하나로 저장해요.<br>
+          카톡 "나에게 보내기" 등으로 다른 기기에 옮긴 뒤 가져오기 하면 기록이 그대로 복원돼요.
+        </p>
+      </div>
+      <button type="button" class="menu-item danger-text" id="menuDelete">이 모임 삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 새 모임 시트 — 사람 먼저, 이름은 그다음 (2026-10-04 다현님 결정) ── -->
+<div class="sheet-wrap" id="newGroupSheet" aria-hidden="true">
+  <div class="sheet-dim" data-close="newg"></div>
+  <div class="sheet-panel" role="dialog" aria-label="새 모임">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head">
+      <span class="sheet-title">새 모임</span>
+      <button type="button" class="icon-btn" data-close="newg" aria-label="닫기">✕</button>
+    </div>
+    <div class="sheet-body">
+      <p class="q">누구랑 가요?</p>
+      <p class="qs">이름만 넣으면 돼요. 나중에 더 넣을 수 있어요.</p>
+      <div class="people" id="ngPeople"></div>
+      <div class="person-input">
+        <input type="text" id="ngPerson" placeholder="이름 (예: 지은)" autocomplete="off" enterkeyhint="done" aria-label="사람 이름">
+        <button type="button" class="ccy-mini" id="ngPersonAdd">넣기</button>
+      </div>
+      <div class="hr"></div>
+      <p class="q">어떤 모임이에요?</p>
+      <div class="field" style="margin-top: 10px;">
+        <input type="text" id="ngName" placeholder="모임 이름 (예: 제주 여행)" autocomplete="off" aria-label="모임 이름">
+      </div>
+      <div class="members" id="ngSugg"></div>
+    </div>
+    <div class="sheet-foot">
+      <button type="button" class="submit" id="ngCreate">만들기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 홈 모임 카드의 ⋯ ── -->
+<div class="sheet-wrap" id="cardMenu" aria-hidden="true">
+  <div class="sheet-dim" data-close="card"></div>
+  <div class="sheet-panel small" role="dialog" aria-label="모임 메뉴">
+    <div class="sheet-grab"></div>
+    <div class="sheet-head">
+      <span class="sheet-title" id="cardMenuTitle"></span>
+      <button type="button" class="icon-btn" data-close="card" aria-label="닫기">✕</button>
+    </div>
+    <div class="sheet-body">
+      <button type="button" class="menu-item" id="cardOpen">열기</button>
+      <button type="button" class="menu-item danger-text" id="cardDelete">이 모임 삭제</button>
+    </div>
+  </div>
 </div>
 
 <div id="lightbox"><img id="lightboxImg" alt=""></div>
@@ -1208,30 +1526,87 @@ let pendingPhoto = null;
 let editingId = null;
 
 // ---------- 렌더링 ----------
+// 큰 숫자 하나 (2026-10-04 디자인 개편 B). 아래 줄은 그 숫자가 나온 뺄셈 그대로 쓴다 — 화면에서 산수가 바로 맞아야 한다.
+//   · 회비 모임: 남은 회비 = 모인 회비(+찬조) − 회비에서 쓴 돈. 각자 결제한 돈은 여기 안 넣는다(통에서 안 나갔다 — 정산 탭이 말한다)
+//     예전 카드 셋(모인 돈 · 쓴 돈 · 남은 돈)은 「쓴 돈」에 각자 결제분까지 섞여 있어 모인 돈 − 쓴 돈 ≠ 남은 돈이었다
+//   · 예산 모임: 남은 예산 = 예산(+찬조) − 쓴 돈 전부 — 원래부터 맞는 뺄셈이다
+//   · 회비도 예산도 없는 모임(각자 결제만): 남은 회비 0원은 아무 말도 안 하므로 「쓴 돈」을 크게 보여 준다
+// 숫자는 전부 computeSettlement()에서 온다 — 여기서 새로 계산하지 않는다
+function renderHero(s) {
+  const bp = budgetParts(s);
+  const lbl = document.getElementById("heroLabel"), big = document.getElementById("heroValue");
+  const line = document.getElementById("heroLine"), warn = document.getElementById("heroWarn");
+  const n = x => fmt(x).replace(/원$/, "");
+  big.classList.remove("neg", "plain");
+  if (s.budgetOn) {
+    lbl.textContent = bp.balanceLabel;   // 남은 예산
+    line.innerHTML = (bp.split ? "예산 <b>" + n(bp.budget) + "</b> + 찬조 <b>" + n(bp.donated) + "</b>" : "예산 <b>" + n(bp.budget) + "</b>") +
+      " − 쓴 돈 <b>" + n(s.spent) + "</b>";
+  } else if (s.fund > 0 || s.fundSpent > 0) {
+    lbl.textContent = "남은 회비";
+    line.innerHTML = (s.donated > 0 ? "모인 돈(회비+찬조) <b>" : "모인 회비 <b>") + n(s.fund) + "</b> − 회비에서 쓴 돈 <b>" + n(s.fundSpent) + "</b>";
+  } else {
+    lbl.textContent = "쓴 돈";
+    big.textContent = fmt(s.spent);
+    big.classList.add("plain");
+    line.textContent = expenses.length ? "회비 없이 각자 낸 모임 — 누가 누구에게 줄지는 정산 탭에" : "「+ 기록하기」로 첫 지출을 넣어 보세요";
+    warn.hidden = true;
+    return;
+  }
+  big.textContent = fmt(s.balance);
+  big.classList.toggle("neg", s.balance < 0);
+  warn.textContent = s.balance >= 0 ? "" : s.budgetOn ? "⚠️ 예산을 " + fmt(-s.balance) + " 넘었어요" : "⚠️ 총무가 대신 내는 중";
+  warn.hidden = s.balance >= 0;
+}
+
+// 정산 탭 — 「누가 누구에게 얼마」가 맨 위, 사람별 막대, 5열 표는 접어 둔다
+function renderSettleTab(s) {
+  const xl = document.getElementById("xferList");
+  const items = settleFlowItems(s.rows, s.flowBalance);
+  xl.innerHTML = "";
+  if (!MEMBERS.length) {
+    xl.innerHTML = '<p class="empty-msg">⋯ 메뉴에서 멤버를 먼저 넣어 주세요</p>';
+  } else if (!items.length) {
+    xl.innerHTML = '<p class="empty-msg">주고받을 돈이 없어요</p>';
+  } else {
+    items.forEach(it => {
+      const row = document.createElement("div");
+      row.className = "xfer";
+      const who = document.createElement("span"); who.className = "who";
+      const a = document.createElement(it.fromFund ? "span" : "b"); a.textContent = it.fromFund ? FUND_LABEL : it.from;
+      const ar = document.createElement("span"); ar.className = "ar"; ar.textContent = "→";
+      const b = document.createElement(it.toFund ? "span" : "b"); b.textContent = it.toFund ? FUND_LABEL : it.to;
+      who.append(a, ar, b);
+      const m = document.createElement("span"); m.className = "m"; m.textContent = fmt(it.amt);
+      row.append(who, m);
+      xl.appendChild(row);
+    });
+  }
+  const note = fundNote(s.flowBalance);
+  if (note && items.length) { const p = document.createElement("p"); p.className = "xfer-note"; p.textContent = note; xl.appendChild(p); }
+
+  const bl = document.getElementById("balList");
+  bl.innerHTML = "";
+  const maxAbs = Math.max(1, ...s.rows.map(r => Math.abs(r.settle)));
+  s.rows.forEach(r => {
+    const row = document.createElement("div");
+    row.className = "bal";
+    const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = r.m;
+    const tr = document.createElement("span"); tr.className = "track";
+    if (!near0(r.settle)) { const i = document.createElement("i"); i.className = r.settle > 0 ? "get" : "owe"; i.style.width = (Math.abs(r.settle) / maxAbs * 50) + "%"; tr.appendChild(i); }
+    const v = document.createElement("span"); v.className = "v " + (near0(r.settle) ? "even" : r.settle > 0 ? "get" : "owe"); v.textContent = settleLabel(r.settle);
+    row.append(nm, tr, v);
+    bl.appendChild(row);
+  });
+}
+
 function render() {
   const isExp = e => e.type !== "income" && e.type !== "fee"; // 실제 지출
   // 계산은 한 군데서만 한다 — 예전엔 여기와 computeSettlement()가 같은 식을 두 벌 갖고 있었다.
   // 예산 모드처럼 규칙이 갈리는 게 생기면 두 벌은 반드시 어긋난다.
   const s = computeSettlement();
   const spent = s.spent;
-  const bp = budgetParts(s);
-  // 라벨은 여기서 정한다 — 「예산」이냐 「예산 + 찬조」냐가 찬조 기록에 따라 매번 달라지므로
-  document.getElementById("fundLabel").textContent = bp.fundLabel;
-  document.getElementById("balanceLabel").textContent = bp.balanceLabel;
-  document.getElementById("fundTotal").textContent = fmt(s.fund);
-  // 「예산」과 「찬조」가 각각 얼마인지 카드가 스스로 말한다. 찬조가 0이면 이 줄 자체가 없다
-  const fb = document.getElementById("fundBreakdown");
-  fb.innerHTML = bp.split
-    ? "예산 <b>" + fmt(bp.budget) + "</b><br>+ 찬조 <b>" + fmt(bp.donated) + "</b>"
-    : "";
-  fb.hidden = !bp.split;
-  document.getElementById("spentTotal").textContent = fmt(spent);
-  document.getElementById("balance").textContent = fmt(s.balance);
-  document.getElementById("balanceCard").classList.toggle("negative", s.balance < 0);
-  document.getElementById("balanceNote").textContent =
-    s.balance >= 0 ? ""
-    : s.budgetOn ? "⚠️ 예산을 " + fmt(-s.balance) + " 넘었어요"
-    : "⚠️ 총무가 대신 내는 중";
+  renderHero(s);
 
   // 지출 목록 — 찾기·보기 전환은 renderList()가 맡는다 (검색 글자를 칠 때마다 전체를 다시 그리지 않으려고)
   renderList(s);
@@ -1244,6 +1619,7 @@ function render() {
   });
   const catBox = document.getElementById("catSummary");
   catBox.innerHTML = "";
+  document.getElementById("catTotal").textContent = spent > 0 ? "쓴 돈 " + fmt(spent) : "";
   const catEntries = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
   if (catEntries.length === 0) {
     catBox.innerHTML = '<p class="empty-msg">아직 지출이 없어요</p>';
@@ -1281,6 +1657,7 @@ function render() {
   tl.hidden = !s.treats.length;
 
   renderSettleFold(s.budgetOn);
+  renderSettleTab(s);
 
   // 회비 기록이 바뀌면 멤버·회비 섹션의 안내도 따라 갱신
   safeRebuildFeeRows();
@@ -1299,14 +1676,22 @@ function treatDetail(t) {
 // 참여자 이름은 일부러 안 건다 — 거의 모든 기록에 다 들어 있어서 이름을 치면 목록이 그대로 남는다.
 const LIST_VIEW_KEY = "moa-list-view";
 const LIST_VIEWS = ["time", "cat", "date", "payer"];
-let listView = (() => { try { const v = localStorage.getItem(LIST_VIEW_KEY); return LIST_VIEWS.includes(v) ? v : "time"; } catch (e) { return "time"; } })();
+let listView = (() => { try { const v = localStorage.getItem(LIST_VIEW_KEY); return LIST_VIEWS.includes(v) ? v : "date"; } catch (e) { return "date"; } })();
 function setListView(v) {
-  if (!LIST_VIEWS.includes(v)) v = "time";
+  if (!LIST_VIEWS.includes(v)) v = "date";
   listView = v;
   try { localStorage.setItem(LIST_VIEW_KEY, v); } catch (e) {}
   renderList();
 }
-document.querySelectorAll("#viewTabs .view-tab").forEach(b => { b.onclick = () => setListView(b.dataset.view); });
+document.getElementById("viewSelect").onchange = e => setListView(e.target.value);
+// 찾기는 평소엔 접어 둔다 — 돋보기를 누르면 칸이 열리고, 닫으면 검색어도 비운다
+document.getElementById("searchToggle").onclick = () => {
+  const inp = document.getElementById("listSearch");
+  const open = inp.hidden;
+  inp.hidden = !open;
+  document.getElementById("searchToggle").setAttribute("aria-expanded", open ? "true" : "false");
+  if (open) inp.focus(); else if (inp.value) { inp.value = ""; renderList(); }
+};
 document.getElementById("listSearch").oninput = () => renderList();
 
 function listQuery() { return (document.getElementById("listSearch").value || "").trim().toLowerCase(); }
@@ -1369,7 +1754,8 @@ function renderList(s) {
   const count = document.getElementById("listCount");
   list.innerHTML = "";
   tools.hidden = expenses.length === 0;
-  document.querySelectorAll("#viewTabs .view-tab").forEach(b => b.classList.toggle("on", b.dataset.view === listView));
+  document.getElementById("viewSelect").value = listView;
+  document.getElementById("spendTotal").innerHTML = expenses.length ? "쓴 돈 <b>" + fmt(s.spent) + "</b> · " + expenses.length + "건" : "";
   if (expenses.length === 0) {
     list.innerHTML = '<p class="empty-msg">아직 지출이 없어요</p>';
     count.hidden = true;
@@ -1387,7 +1773,9 @@ function renderList(s) {
     return;
   }
   if (listView === "time") {
-    shown.forEach(e => list.appendChild(buildExpenseRow(e, s)));
+    const box = document.createElement("div"); box.className = "egroup";
+    shown.forEach(e => box.appendChild(buildExpenseRow(e, s)));
+    list.appendChild(box);
   } else {
     buildGroups(shown, listView, s.budgetOn).forEach(g => {
       const head = document.createElement("div");
@@ -1396,7 +1784,9 @@ function renderList(s) {
       head.querySelector(".lg-name").textContent = g.name;
       head.querySelector(".lg-meta").innerHTML = groupMeta(g);
       list.appendChild(head);
-      g.items.forEach(e => list.appendChild(buildExpenseRow(e, s)));
+      const box = document.createElement("div"); box.className = "egroup";
+      g.items.forEach(e => box.appendChild(buildExpenseRow(e, s)));
+      list.appendChild(box);
     });
   }
   // 찾는 중일 때만 「몇 건 중 몇 건」을 말한다 — 평소엔 조용히
@@ -1416,51 +1806,47 @@ function buildExpenseRow(e, s) {
     thumb = document.createElement("img");
     thumb.className = "thumb";
     thumb.src = e.photo;
-    thumb.onclick = () => showLightbox(e.photo);
+    thumb.onclick = ev => { ev.stopPropagation(); showLightbox(e.photo); };
   } else {
     thumb = document.createElement("div");
     thumb.className = "thumb empty";
     thumb.textContent = isIncome ? "💝" : isFee ? "💰" : isTreat ? "🎁" : "🧾";
+    thumb.setAttribute("aria-hidden", "true");
   }
 
   const info = document.createElement("div");
   info.className = "info";
   const dateStr = e.date ? e.date.slice(5).replace("-", "/") : "";
   info.innerHTML =
-    '<div class="top"><span class="desc"></span><span class="amount"></span></div>' +
+    '<div class="top"><span class="desc"></span><span class="amount amt-col"></span></div>' +
     '<div class="meta"></div>';
   info.querySelector(".desc").textContent = e.desc;
-  info.querySelector(".amount").textContent = (isIncome || isFee ? "+" : "") + fmt(e.amount);
-  if (isIncome || isFee) info.querySelector(".amount").style.color = "var(--accent)";
+  if (isTreat) { const tag = document.createElement("span"); tag.className = "tag"; tag.textContent = e.payer + " 쏨"; info.querySelector(".desc").appendChild(tag); }
+  // 금액은 오른쪽 칸으로 — 외화는 그 밑에 작게
+  const amtCol = info.querySelector(".amount");
+  amtCol.textContent = (isIncome || isFee ? "+" : "") + fmt(e.amount);
+  if (isIncome || isFee) amtCol.style.color = "var(--accent)";
   const fxLabel = fxLabelOf(e);
+  if (fxLabel) { const fx = document.createElement("span"); fx.className = "fxsub"; fx.textContent = fxLabel; amtCol.appendChild(fx); }
+  // 참여자가 멤버 전원이면 이름을 다 늘어놓지 않고 「N명」 — 날짜별 보기에선 날짜가 묶음 머리에 있으니 줄에서 뺀다
+  const parts = e.participants || [];
+  const allIn = parts.length > 1 && parts.length === MEMBERS.length && MEMBERS.every(m => parts.includes(m));
   info.querySelector(".meta").textContent =
     (isIncome ? "찬조 · " : "") + (isFee ? "회비 · " : "") + (e.category ? e.category + " · " : "") +
-    (isFee && e.payer ? e.payer + "님 냄 · " : "") +
+    (isFee && e.payer ? e.payer + "님 냄" : "") +
     // 쏜 것은 「결제」가 아니라 「쏨」 — 그리고 참여자 대신 그 말이 끝에 온다
-    (isTreat ? "🎁 " + e.payer + "님이 쏨 · " : "") +
+    (isTreat ? "나눠 내지 않아요" : "") +
     (!isFee && !isTreat && e.payer && e.payer !== "회비" ? e.payer + " 결제 · " : "") +
     // 예산 모드에서는 「예산에서 낸 것」과 「개인 카드로 낸 것」이 정산에서 갈리므로 화면에서도 갈라 보여준다
-    (s.budgetOn && !isFee && !isIncome && (!e.payer || e.payer === "회비") ? "예산에서 · " : "") +
-    (fxLabel ? fxLabel + " · " : "") +
-    dateStr + (isTreat ? " · 나눠 내지 않아요" : " · " + (e.participants || []).join(", "));
-
-  const edit = document.createElement("button");
-  edit.className = "edit";
-  edit.textContent = "수정";
-  edit.onclick = () => startEdit(e);
-  info.appendChild(edit);
-
-  const del = document.createElement("button");
-  del.className = "del";
-  del.textContent = "삭제";
-  del.onclick = async () => {
-    if (!confirm('"' + e.desc + '" 지출을 삭제할까요?')) return;
-    await dbDelete(e.id);
-    expenses = expenses.filter(x => x.id !== e.id);
-    if (editingId === e.id) cancelEditMode();
-    render();
-  };
-  info.appendChild(del);
+    (!isFee && !isTreat && (!e.payer || e.payer === "회비") && !isIncome ? (s.budgetOn ? "예산에서 · " : "회비 · ") : "") +
+    (isFee || isTreat ? "" : (allIn ? parts.length + "명" : parts.join(", "))) +
+    (listView === "date" || !dateStr ? "" : " · " + dateStr);
+  // 행 전체가 편집 버튼 — 키보드로도 열리게
+  row.tabIndex = 0;
+  row.setAttribute("role", "button");
+  row.setAttribute("aria-label", (e.desc || "기록") + " " + fmt(e.amount) + " 고치기");
+  row.onclick = () => startEdit(e);
+  row.onkeydown = ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); startEdit(e); } };
 
   row.appendChild(thumb);
   row.appendChild(info);
@@ -1471,14 +1857,14 @@ function buildExpenseRow(e, s) {
 // 표를 없애지는 않는다 — "항공권은 내가, 렌트카는 남편이"라는 사실은 남겨두고, 볼 때만 편다.
 // 회비 모임의 동작은 손대지 않는다: 토글이 뜨지 않고 표는 늘 펼쳐져 있다.
 let settleOpen = false;
+// ~~회비 모임은 늘 펼침~~ → 2026-10-04 디자인 개편 B: 모든 모임에서 접어 둔다. 정산 탭 맨 위를 「주고받을 돈」이 맡아서다
 function renderSettleFold(budgetOn) {
-  const tbl = document.getElementById("settleTable");
+  const box = document.getElementById("settleDetail");
   const btn = document.getElementById("settleToggle");
-  if (!tbl || !btn) return;
-  btn.hidden = !budgetOn;
-  const open = !budgetOn || settleOpen;
-  tbl.hidden = !open;
-  btn.textContent = open ? "▾ 정산표 접기" : "▸ 정산표 보기 · 누가 얼마 냈는지";
+  if (!box || !btn) return;
+  const open = settleOpen;
+  box.hidden = !open;
+  btn.textContent = open ? "▾ 자세히 접기" : "▸ 자세히 보기 · 누가 얼마 냈는지";
   btn.setAttribute("aria-expanded", open ? "true" : "false");
 }
 document.getElementById("settleToggle").onclick = () => {
@@ -1535,6 +1921,9 @@ function buildParticipantChips() {
     membersBox.appendChild(label);
   });
   membersBox.dataset.built = "1";
+  // 아무도 안 골라진 채로 그려지면(빈 모임에 사람을 처음 넣었거나, 파일을 가져왔을 때) 기본값 「전원」으로 — 0명은 저장도 안 되는 상태다
+  if (MEMBERS.length && !membersBox.querySelector("input:checked")) membersBox.querySelectorAll("input").forEach(cb => { cb.checked = true; });
+  setTimeout(updateSummary, 0);   // 「＋ 사람」 칩이 붙은 뒤에
   membersBox.appendChild(makeAddChip(name => {
     const added = addMember(name);
     if (added) { const cb = [...membersBox.querySelectorAll("input")].find(x => x.value === added); if (cb) cb.checked = true; }
@@ -1575,6 +1964,7 @@ function applyTreatUI() {
   hint.hidden = !on;
   document.getElementById("submitBtn").textContent =
     editingId ? "수정 저장" : on ? "쏜 걸로 기록하기" : etype === "fee" ? "회비 기록하기" : etype === "income" ? "찬조 기록하기" : "지출 기록하기";
+  updateSummary();
 }
 document.getElementById("fTreat").onchange = () => {
   // 켜는 순간 「공동 회비」가 골라져 있으면 그 칩이 사라지므로 선택을 비운다 — 저장 때 "누가 쏘는지"를 묻는다
@@ -1627,6 +2017,7 @@ function buildPayerChips(opts) {
       boxes.forEach(b => { b.checked = turnOn; });
       updateSelectAllChip();
       updateFeeSplitHint();
+      updateSummary();
     };
     payersBox.appendChild(all);
   }
@@ -1645,6 +2036,7 @@ function buildPayerChips(opts) {
   updatePayerLabel();
   updateSelectAllChip();
   updateFeeSplitHint();
+  updateSummary();
 }
 function resetPayer() { buildPayerChips({ reset: true }); }
 
@@ -1689,7 +2081,8 @@ function updateFeeSplitHint() {
     : "선택한 " + names.length + "명이 각각 이 금액씩 내는 걸로 기록돼요 (회비 기록 " + names.length + "건)";
 }
 // 칩을 다시 그려도 살아 있도록 상자에 걸어둔다 (change 이벤트는 위로 올라온다)
-payersBox.addEventListener("change", () => { updateSelectAllChip(); updateFeeSplitHint(); if (isTreatMode()) applyTreatUI(); });
+payersBox.addEventListener("change", () => { updateSelectAllChip(); updateFeeSplitHint(); if (isTreatMode()) applyTreatUI(); updateSummary(); });
+membersBox.addEventListener("change", () => updateSummary());
 
 // 항목 선택 (프리셋 + 직접 입력)
 const CATEGORIES = ["식당", "카페", "마트", "교통", "관광", "기념품", "숙소", "기타"];
@@ -1746,7 +2139,8 @@ function selectCcy(c) {
   closeNewCcyForm();
   const foreign = c !== null;
   document.getElementById("rateRow").style.display = foreign ? "block" : "none";
-  document.getElementById("fAmount").placeholder = foreign ? "예: 25" : "예: 84000";
+  document.getElementById("fAmount").placeholder = foreign ? "예: 25" : "금액";
+  document.getElementById("amountUnit").textContent = foreign ? c.name || c.sym : "원";
   if (foreign) {
     document.getElementById("rateSym").textContent = c.sym;
     document.getElementById("fRate").value = c.rate || "";
@@ -1887,6 +2281,7 @@ document.querySelectorAll('input[name="etype"]').forEach(r => {
     buildPayerChips({ reset: true });
     applyIncomeFields();   // 예산 모임의 찬조는 참여자 칸을 묻지 않는다
     applyTreatUI();        // 참여자 라벨·버튼 글자·쏠게요 줄 표시는 여기서 한 번에 정한다
+    toggleSummary(isFee);
   };
 });
 
@@ -1899,7 +2294,7 @@ document.getElementById("fPhoto").onchange = async e => {
     const pv = document.getElementById("photoPreview");
     pv.src = pendingPhoto;
     pv.style.display = "block";
-    document.getElementById("photoBtn").textContent = "사진 변경";
+    document.getElementById("photoBtn").textContent = "📷 바꾸기";
   } catch (err) {
     alert(err.message);
   }
@@ -1956,16 +2351,19 @@ function startEdit(e) {
   const pv = document.getElementById("photoPreview");
   pv.style.display = pendingPhoto ? "block" : "none";
   if (pendingPhoto) pv.src = pendingPhoto;
-  document.getElementById("photoBtn").textContent = pendingPhoto ? "사진 변경" : "사진 추가";
+  document.getElementById("photoBtn").textContent = pendingPhoto ? "📷 바꾸기" : "📷 영수증";
 
   document.getElementById("submitBtn").textContent = "수정 저장";
-  document.getElementById("cancelEdit").style.display = "block";
-  document.getElementById("expenseForm").scrollIntoView({ behavior: "smooth" });
+  document.getElementById("editRow").hidden = false;
+  document.getElementById("addTitle").textContent = "기록 고치기";
+  updateSummary();
+  openAddSheet(true);
 }
 
 function cancelEditMode() {
   editingId = null;
-  document.getElementById("cancelEdit").style.display = "none";
+  document.getElementById("editRow").hidden = true;
+  document.getElementById("addTitle").textContent = "기록하기";
   // 쏠게요는 기록 한 건짜리 예외라 다음 기록으로 안 넘긴다
   document.getElementById("fTreat").checked = false;
   applyTreatUI();   // 버튼 글자(지출/회비/찬조 기록하기)와 참여자 칸 복귀까지
@@ -1978,10 +2376,21 @@ document.getElementById("cancelEdit").onclick = () => {
   pendingPhoto = null;
   document.getElementById("fPhoto").value = "";
   document.getElementById("photoPreview").style.display = "none";
-  document.getElementById("photoBtn").textContent = "사진 추가";
+  document.getElementById("photoBtn").textContent = "📷 영수증";
   membersBox.querySelectorAll("input").forEach(cb => { cb.checked = true; });
   cancelEditMode();   // editingId를 먼저 비워야 회비 칩이 다시 체크박스로 돌아온다
   resetPayer();
+  closeAddSheet();
+};
+// 편집 시트 안의 삭제 — 예전엔 목록 줄마다 「삭제」 글자가 있었다
+document.getElementById("deleteRec").onclick = async () => {
+  const e = expenses.find(x => x.id === editingId);
+  if (!e) return;
+  if (!confirm('"' + e.desc + '" 지출을 삭제할까요?')) return;
+  await dbDelete(e.id);
+  expenses = expenses.filter(x => x.id !== e.id);
+  document.getElementById("cancelEdit").click();   // 칸 비우기·편집 끝내기·시트 닫기
+  render();
 };
 
 document.getElementById("expenseForm").onsubmit = async e => {
@@ -2002,10 +2411,10 @@ document.getElementById("expenseForm").onsubmit = async e => {
   } else if (treat) {
     // 쏜 것: 참여자는 결제자 한 명. 옛 버전이 읽어도 "내고 부담" = 0으로 상쇄되는 값이다
     const p = (document.querySelector('input[name="payer"]:checked') || {}).value;
-    if (!p || p === "회비") { alert("누가 쏘는지 결제자를 골라 주세요"); return; }
+    if (!p || p === "회비") { toggleSummary(true); alert("누가 쏘는지 결제자를 골라 주세요"); return; }
     participants = [p];
   } else if (!isFee && participants.length === 0) {
-    alert("참여자를 한 명 이상 선택해 주세요"); return;
+    toggleSummary(true); alert("참여자를 한 명 이상 선택해 주세요"); return;
   }
 
   const descVal = document.getElementById("fDesc").value.trim();
@@ -2024,7 +2433,7 @@ document.getElementById("expenseForm").onsubmit = async e => {
   let feePayers = [];
   if (isFee) {
     feePayers = checkedPayers();
-    if (feePayers.length === 0) { alert("회비를 낸 사람을 선택해 주세요"); return; }
+    if (feePayers.length === 0) { toggleSummary(true); alert("회비를 낸 사람을 선택해 주세요"); return; }
     payer = feePayers[0];
     participants = [payer];
   } else if (etype !== "income") {
@@ -2081,10 +2490,11 @@ document.getElementById("expenseForm").onsubmit = async e => {
   pendingPhoto = null;
   document.getElementById("fPhoto").value = "";
   document.getElementById("photoPreview").style.display = "none";
-  document.getElementById("photoBtn").textContent = "사진 추가";
+  document.getElementById("photoBtn").textContent = "📷 영수증";
   cancelEditMode();   // editingId를 먼저 비워야 회비 칩이 다시 체크박스로 돌아온다
   resetPayer();
   render();
+  closeAddSheet();
 };
 
 // ---------- 회비 설정 ----------
@@ -2234,19 +2644,16 @@ function renderBudgetBar() {
         no.onclick = () => { BUDGET_HINT_OFF = true; saveGroup(); renderBudgetBar(); };
         box.appendChild(msg); box.appendChild(go); box.appendChild(no);
         view.appendChild(box);
-      } else {
-        const b = document.createElement("button");
-        b.type = "button"; b.className = "budget-link";
-        b.textContent = "예산 정하기";
-        b.title = "회비를 걷지 않고 정해둔 예산 안에서 쓰는 모임이면 눌러요";
-        b.onclick = openBudgetEdit;
-        view.appendChild(b);
       }
+      // (안내가 없을 때의 「예산 정하기」는 ⋯ 메뉴에 있다 — 2026-10-04)
     }
   }
   const msg = isBudgetMode() ? budgetExcludedText() : "";
   note.textContent = msg;
   note.hidden = !msg;
+  view.hidden = budgetEditing || !view.childNodes.length;
+  const mb = document.getElementById("menuBudget");
+  if (mb) mb.textContent = isBudgetMode() ? "예산 바꾸기 (지금 " + fmt(BUDGET) + ")" : "예산 정하기 — 회비 없이 정해둔 금액 안에서 쓰기";
 }
 
 function openBudgetEdit() {
@@ -2294,7 +2701,7 @@ function applyBudgetUI() {
     ? "· 이름을 누르면 수정, ✕로 삭제할 수 있어요<br>" +
       "· 예산 모임이라 회비는 걷지 않아요. 누가 보태준 돈은 <strong>💝 찬조</strong>로 넣으면 예산에 더해져요"
     : "· 이름을 누르면 수정, ✕로 삭제할 수 있어요<br>" +
-      "· 회비를 걷는 모임이면 기록 추가에서 <strong>💰 회비</strong>로 각자 낸 금액을 넣으세요 (이름 옆에 표시돼요)";
+      "· 회비를 걷는 모임이면 「+ 기록하기」에서 <strong>💰 회비</strong>로 각자 낸 금액을 넣으세요 (이름 옆에 표시돼요)";
   document.getElementById("settleNote").innerHTML = on
     ? "· 남은 예산 = (예산 + 찬조) − 쓴 돈 전부 (누가 결제했든 예산에서 빠져요)<br>" +
       "· 💝 찬조는 예산에 더해져요 — 카드에 「예산 얼마 + 찬조 얼마」로 나눠서 보여드려요<br>" +
@@ -2787,6 +3194,7 @@ function computeSettlement() {
     budgetOn, spent, donated, feeTotal, FUND, fund, balance,
     budget: budgetOn ? BUDGET : 0,         // 사용자가 직접 정해둔 금액 (찬조를 뺀 값)
     flowBalance: budgetOn ? 0 : balance,   // ③ 예산엔 통이 없으니 송금 상대로 넣지 않는다
+    fundSpent,                             // 회비(통)에서 나간 돈 — 히어로의 뺄셈 줄이 쓴다 (2026-10-04)
     treats, treatTotal,                    // 🎁 쏜 것 — 사람별 { m, amt, n, first }. 화면·공유·CSV가 이걸 쓴다
     rows
   };
@@ -2809,7 +3217,12 @@ function budgetParts(s) {
 
 // 최소 송금 매칭 (그리디) — 공동 회비도 하나의 상대로 넣어 모든 돈의 행선지를 보여준다
 const FUND_LABEL = "공동 회비";
+// 정산 탭은 화살표로 그리고 공유 글은 문장으로 쓰므로 짝 목록이 필요하다. 매칭을 두 벌 두면 어긋나니 하나만 둔다
 function settleFlow(rows, balance) {
+  return settleFlowItems(rows, balance).map(it =>
+    (it.fromFund ? FUND_LABEL + "에서" : it.from + "님이") + " " + (it.toFund ? FUND_LABEL + "로" : it.to + "님에게") + " " + fmt(it.amt));
+}
+function settleFlowItems(rows, balance) {
   const debt = rows.filter(r => r.settle < -0.5).map(r => ({ m: r.m, amt: -r.settle }));
   const credit = rows.filter(r => r.settle > 0.5).map(r => ({ m: r.m, amt: r.settle }));
   // 회비가 모자랐으면 그만큼 공동 회비로 채워야 하고, 남았으면 공동 회비에서 나눠준다
@@ -2820,11 +3233,7 @@ function settleFlow(rows, balance) {
   let i = 0, j = 0;
   while (i < debt.length && j < credit.length) {
     const pay = Math.min(debt[i].amt, credit[j].amt);
-    if (pay > 0.5) {
-      const from = debt[i].fund ? FUND_LABEL + "에서" : debt[i].m + "님이";
-      const to = credit[j].fund ? FUND_LABEL + "로" : credit[j].m + "님에게";
-      lines.push(from + " " + to + " " + fmt(pay));
-    }
+    if (pay > 0.5) lines.push({ from: debt[i].m, to: credit[j].m, fromFund: !!debt[i].fund, toFund: !!credit[j].fund, amt: pay });
     debt[i].amt -= pay; credit[j].amt -= pay;
     if (debt[i].amt < 1) i++;
     if (credit[j].amt < 1) j++;
@@ -2901,11 +3310,13 @@ function shareText() {
 }
 
 const resultOverlay = document.getElementById("resultOverlay");
-document.getElementById("resultBtn").onclick = () => {
+// 정산 탭 아래 버튼 — 예전 「정산 결과 보기」 시트의 공유·복사·CSV를 그대로 부른다(글·파일 내용이 한 글자도 안 달라진다)
+document.getElementById("settleShare").onclick = () => {
   if (MEMBERS.length === 0) { alert("먼저 멤버를 추가해 주세요"); return; }
-  renderResult();
-  resultOverlay.classList.add("on");
+  document.getElementById("resultShare").click();
 };
+document.getElementById("settleCopy").onclick = () => document.getElementById("resultCopy").click();
+document.getElementById("settleCsv").onclick = () => document.getElementById("resultCsv").click();
 document.getElementById("resultClose").onclick = () => resultOverlay.classList.remove("on");
 resultOverlay.onclick = e => { if (e.target === resultOverlay) resultOverlay.classList.remove("on"); };
 document.getElementById("resultShare").onclick = async () => {
@@ -3003,6 +3414,8 @@ function showHome() {
   document.getElementById("groupView").hidden = true;
   document.getElementById("homeView").hidden = false;
   document.title = "모여셈 · 세상에서 제일 간단한 여행 가계부";
+  closeAllSheets();
+  syncDock();
   renderHome();
 }
 async function openGroup(id) {
@@ -3014,17 +3427,24 @@ async function openGroup(id) {
   syncMembersFromData();
   ensureCcyFromExpenses();
   refreshMemberUI();
+  // 모임을 열면 「함께 나눠 낼 사람」은 전원에서 시작한다 (기본값의 정의 그대로).
+  // ⚠️ 예전엔 빈 앱에서 모임을 만들거나 가져오면 칩이 전부 꺼진 채로 떴다 — 칩 상자가 멤버 0명일 때 한 번 그려지고 나서
+  //    「이전 선택 유지」로만 다시 그려졌기 때문(2026-10-04 디자인 개편 B 검증 중 발견, 그 전부터 있던 버그)
+  membersBox.querySelectorAll("input").forEach(cb => { cb.checked = true; });
   renderCcyChips();
   selectCcy(null);
   budgetEditing = false;
   settleOpen = false;   // 예산 모임의 정산표는 모임을 열 때마다 접힌 상태로 시작한다
   document.getElementById("listSearch").value = "";   // 다른 모임의 검색어를 물고 들어오지 않게
+  document.getElementById("listSearch").hidden = true;
   document.getElementById("fTreat").checked = false;
   applyBudgetUI();
   applyTreatUI();
   render();
   document.getElementById("homeView").hidden = true;
   document.getElementById("groupView").hidden = false;
+  closeAllSheets();
+  setTab("spend");
   window.scrollTo(0, 0);
 }
 async function createGroup(name) {
@@ -3086,47 +3506,58 @@ async function renderHome() {
     box.innerHTML =
       '<div class="onboard">' +
       '<p class="ob-title">처음 오셨네요!</p>' +
-      '<div class="ob-step"><span class="ob-n">1</span><span>아래에서 <b>모임</b>을 만들어요 <span class="ob-eg">예: 제주 여행</span></span></div>' +
-      // 「회비」만 말하면 회비를 걷는 모임만 이 앱을 쓰는 것처럼 읽힌다.
-      // 첫 화면에서 두 가지 방식이 다 있다는 걸 말해 둔다 (동사형 — 화면에 「모드」라는 말은 안 쓴다)
-      '<div class="ob-step"><span class="ob-n">2</span><span><b>지출</b>을 그때그때 기록해요 ' +
-      '<span class="ob-eg">회비를 걷어도 되고, 예산만 정해둬도 돼요</span></span></div>' +
-      '<div class="ob-step"><span class="ob-n">3</span><span><b>정산 결과</b>를 보고 카톡으로 공유해요</span></div>' +
+      // 2026-10-04 디자인 개편 B: 「+ 새 모임 → 사람 넣기 → 쓸 때마다 한 줄」 (새 모임 시트가 사람을 먼저 묻는다)
+      '<div class="ob-step"><span class="ob-n">1</span><span><b>+ 새 모임</b> <span class="ob-eg">아래 버튼</span></span></div>' +
+      '<div class="ob-arrow">↓</div>' +
+      '<div class="ob-step"><span class="ob-n">2</span><span><b>사람 넣기</b> <span class="ob-eg">같이 가는 사람 이름만</span></span></div>' +
+      '<div class="ob-arrow">↓</div>' +
+      // 「회비」만 말하면 회비를 걷는 모임만 이 앱을 쓰는 것처럼 읽힌다 — 두 방식이 다 있다는 걸 여기서 말해 둔다
+      '<div class="ob-step"><span class="ob-n">3</span><span><b>쓸 때마다 한 줄</b> ' +
+      '<span class="ob-eg">회비를 걷어도 되고, 예산만 정해둬도 돼요 · 끝나면 정산이 나와 있어요</span></span></div>' +
       '</div>';
     return;
   }
   const raw = await dbAllRaw();
-  const countByGid = {};
-  raw.forEach(e => { countByGid[e.gid] = (countByGid[e.gid] || 0) + 1; });
+  const countByGid = {}, spentByGid = {}, datesByGid = {};
+  raw.forEach(e => {
+    countByGid[e.gid] = (countByGid[e.gid] || 0) + 1;
+    // 쓴 돈 = 회비·찬조를 뺀 지출 전부 (computeSettlement의 spent와 같은 기준 — 쏜 것도 쓴 돈이다)
+    if (e.type !== "fee" && e.type !== "income") spentByGid[e.gid] = (spentByGid[e.gid] || 0) + (Number(e.amount) || 0);
+    if (e.date && e.type !== "fee") (datesByGid[e.gid] = datesByGid[e.gid] || []).push(e.date);
+  });
+  const dateRange = ds => {
+    if (!ds || !ds.length) return "";
+    ds.sort();
+    const md = d => { const m = /^\d{4}-(\d{2})-(\d{2})$/.exec(d); return m ? Number(m[1]) + "월 " + Number(m[2]) + "일" : d; };
+    const a = md(ds[0]), b = md(ds[ds.length - 1]);
+    if (a === b) return a;
+    return ds[0].slice(5, 7) === ds[ds.length - 1].slice(5, 7) ? a + "–" + Number(ds[ds.length - 1].slice(8)) + "일" : a + "–" + b;
+  };
   list.forEach(g => {
     const card = document.createElement("div");
     card.className = "group-card";
     const main = document.createElement("button");
     main.type = "button"; main.className = "group-open";
-    main.innerHTML = '<span class="g-title"></span><span class="g-meta"></span>';
+    main.innerHTML = '<span class="g-main"><span class="g-title"></span><span class="g-meta"></span></span><span class="g-sum"></span>';
     // 예산으로 쓰는 모임은 제목 앞에 🎯 하나. 목록에서 두 방식이 눈으로 갈린다
-    let budgetOn = false;
-    try { budgetOn = (JSON.parse(localStorage.getItem(groupKey(g.id))) || {}).budget > 0; } catch (e) {}
+    let budgetOn = false, nPeople = 0;
+    try { const gs = JSON.parse(localStorage.getItem(groupKey(g.id))) || {}; budgetOn = gs.budget > 0; nPeople = Array.isArray(gs.members) ? gs.members.length : 0; } catch (e) {}
     main.querySelector(".g-title").textContent = (budgetOn ? "🎯 " : "") + (g.title || "이름 없는 모임");
     const n = countByGid[g.id] || 0;
-    main.querySelector(".g-meta").textContent = (n ? n + "건" : "비어 있음") + (g.updatedAt ? " · " + fmtWhen(g.updatedAt) : "");
+    const range = dateRange(datesByGid[g.id]);
+    main.querySelector(".g-meta").textContent = [nPeople ? nPeople + "명" : "", range || (g.updatedAt ? fmtWhen(g.updatedAt) : ""), n ? n + "건" : "비어 있음"].filter(Boolean).join(" · ");
+    main.querySelector(".g-sum").textContent = spentByGid[g.id] ? fmt(spentByGid[g.id]) : "";
     main.onclick = () => openGroup(g.id);
     const del = document.createElement("button");
-    del.type = "button"; del.className = "group-del"; del.textContent = "✕"; del.title = "모임 삭제";
-    del.onclick = () => removeGroup(g.id, g.title || "이름 없는 모임");
+    del.type = "button"; del.className = "group-del"; del.textContent = "⋯"; del.setAttribute("aria-label", (g.title || "모임") + " 메뉴");
+    del.onclick = () => openCardMenu(g);
     card.appendChild(main); card.appendChild(del);
     box.appendChild(card);
   });
 }
 
 document.getElementById("backHome").onclick = showHome;
-document.getElementById("newGroupBtn").onclick = () => {
-  const input = document.getElementById("newGroupInput");
-  createGroup(input.value); input.value = "";
-};
-document.getElementById("newGroupInput").onkeydown = ev => {
-  if (ev.key === "Enter") { ev.preventDefault(); document.getElementById("newGroupBtn").click(); }
-};
+// (새 모임·시트·탭·메뉴는 아래 「디자인 개편 B」 블록)
 
 // 예전 단일 모임 데이터를 첫 모임으로 옮긴다 (한 번만)
 async function migrateLegacy() {
@@ -3169,7 +3600,7 @@ function initNews() {
   const bar = document.getElementById("newsBar");
   if (!bar) return;
   bar.innerHTML = '<span class="nb-txt">🎯 <b>새로 생겼어요</b> — 회비를 안 걷는 모임은 ' +
-    '<b>예산만 정해두고</b> 쓸 수 있어요. 요약 카드 아래 「예산 정하기」를 눌러보세요.</span>' +
+    '<b>예산만 정해두고</b> 쓸 수 있어요. 모임 화면 오른쪽 위 ⋯ 의 「예산 정하기」를 눌러보세요.</span>' +
     '<button type="button" class="nb-x" aria-label="닫기">✕</button>';
   bar.querySelector(".nb-x").onclick = closeNews;
   bar.hidden = false;
@@ -3179,6 +3610,218 @@ function closeNews() {
   const bar = document.getElementById("newsBar");
   if (bar) bar.hidden = true;
 }
+
+// ════════ 디자인 개편 B (2026-10-04) — 시트 · 탭 · 아래 고정 버튼 · 모임 메뉴 · 새 모임 ════════
+// 저장·계산은 하나도 새로 만들지 않는다. 예전 버튼들이 하던 일을 새 자리에서 그대로 부른다.
+
+// ---- 시트 공통
+const SHEETS = { add: "addSheet", menu: "groupMenu", newg: "newGroupSheet", card: "cardMenu" };
+function openSheet(key) {
+  const el = document.getElementById(SHEETS[key]);
+  el.classList.add("open"); el.setAttribute("aria-hidden", "false");
+  document.body.classList.add("sheet-open");
+}
+function closeSheet(key) {
+  const el = document.getElementById(SHEETS[key]);
+  el.classList.remove("open"); el.setAttribute("aria-hidden", "true");
+  if (!document.querySelector(".sheet-wrap.open")) document.body.classList.remove("sheet-open");
+}
+function closeAllSheets() { Object.keys(SHEETS).forEach(closeSheet); }
+document.querySelectorAll("[data-close]").forEach(el => {
+  el.addEventListener("click", () => {
+    const key = el.dataset.close;
+    // 기록 시트를 그냥 닫으면: 고치던 중이면 「수정 취소」와 같다(칸을 비우고 편집을 끝낸다). 새 기록이면 쓰던 칸은 남겨 둔다
+    if (key === "add" && editingId) { document.getElementById("cancelEdit").click(); return; }
+    closeSheet(key);
+  });
+});
+document.addEventListener("keydown", ev => {
+  if (ev.key !== "Escape") return;
+  const open = document.querySelector(".sheet-wrap.open");
+  if (!open) return;
+  const key = Object.keys(SHEETS).find(k => SHEETS[k] === open.id);
+  if (key === "add" && editingId) document.getElementById("cancelEdit").click(); else closeSheet(key);
+});
+
+// ---- 기록 시트
+function openAddSheet(fromEdit) {
+  if (!fromEdit && !editingId) {
+    toggleSummary(isFeeMode());   // 회비는 「누가 냈나」를 꼭 골라야 해서 펼친 채로
+    updateSummary();
+  }
+  openSheet("add");
+  const body = document.querySelector("#addSheet .sheet-body");
+  if (body) body.scrollTop = 0;
+  // 새 기록이면 금액 칸에 바로 — 휴대폰은 숫자 자판이 뜬다
+  if (!fromEdit) setTimeout(() => { try { document.getElementById("fAmount").focus({ preventScroll: true }); } catch (e) {} }, 60);
+}
+function closeAddSheet() { closeSheet("add"); }
+document.getElementById("addOpen").onclick = () => {
+  if (MEMBERS.length === 0) {
+    // 사람이 없으면 결제자·참여자를 고를 수 없다 — 메뉴의 멤버 칸으로 안내
+    alert("먼저 같이 가는 사람을 넣어 주세요 (⋯ 메뉴 → 멤버)");
+    openGroupMenu();
+    return;
+  }
+  openAddSheet(false);
+};
+
+// 요약 한 줄 — 「공동 회비로 결제 · 4명 모두 나눠요」. 펼치면 결제자·참여자·쏠게요
+function toggleSummary(open) {
+  const btn = document.getElementById("sumBtn"), box = document.getElementById("sumDetail");
+  if (open == null) open = box.hidden;
+  box.hidden = !open;
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+}
+document.getElementById("sumBtn").onclick = () => toggleSummary();
+function updateSummary() {
+  const el = document.getElementById("sumText");
+  if (!el) return;
+  const etype = (document.querySelector('input[name="etype"]:checked') || {}).value || "expense";
+  const esc = escapeHtml;
+  const names = list => list.length <= 3 ? list.map(esc).join(", ") : list.slice(0, 2).map(esc).join(", ") + " 외 " + (list.length - 2) + "명";
+  const parts = [...membersBox.querySelectorAll("input:checked")].map(c => c.value);
+  const partTxt = !parts.length ? '<span class="warn">나눠 낼 사람을 골라 주세요</span>'
+    : parts.length === MEMBERS.length && parts.length > 1 ? "<b>" + parts.length + "명 모두</b> 나눠요"
+    : "<b>" + names(parts) + "</b>" + (parts.length === 1 ? "만 내요" : "이 나눠요");
+  let html;
+  if (etype === "fee") {
+    const ps = checkedPayers();
+    html = ps.length ? "회비 낸 사람 <b>" + names(ps) + "</b>" + (ps.length > 1 ? " · 각자 이 금액" : "") : '<span class="warn">누가 낸 회비인지 골라 주세요</span>';
+  } else if (etype === "income") {
+    html = isBudgetMode() ? "<b>예산에 더해져요</b>" : "혜택 · " + partTxt;
+  } else if (isTreatMode()) {
+    const p = (document.querySelector('input[name="payer"]:checked') || {}).value;
+    html = p && p !== "회비" ? "🎁 <b>" + esc(p) + "</b>이(가) 쏴요 · 나눠 내지 않아요" : '🎁 <span class="warn">누가 쏘는지 골라 주세요</span>';
+  } else {
+    const p = (document.querySelector('input[name="payer"]:checked') || {}).value;
+    const payTxt = !p ? '<span class="warn">결제한 사람을 골라 주세요</span>'
+      : p === "회비" ? "<b>" + (isBudgetMode() ? "예산에서" : "공동 회비로") + "</b> 결제"
+      : "<b>" + esc(p) + "</b> 결제";
+    html = payTxt + " · " + partTxt;
+  }
+  el.innerHTML = html;
+}
+
+// ---- 지출 | 정산 탭
+let currentTab = "spend";
+function setTab(t) {
+  currentTab = t === "settle" ? "settle" : "spend";
+  const spend = currentTab === "spend";
+  document.getElementById("paneSpend").hidden = !spend;
+  document.getElementById("paneSettle").hidden = spend;
+  document.getElementById("tabSpend").classList.toggle("on", spend);
+  document.getElementById("tabSettle").classList.toggle("on", !spend);
+  document.getElementById("tabSpend").setAttribute("aria-selected", spend ? "true" : "false");
+  document.getElementById("tabSettle").setAttribute("aria-selected", spend ? "false" : "true");
+  syncDock();
+}
+document.getElementById("tabSpend").onclick = () => setTab("spend");
+document.getElementById("tabSettle").onclick = () => setTab("settle");
+
+// ---- 아래 고정 버튼 — 홈: 새 모임 / 지출 탭: 기록하기 / 정산 탭: 공유
+function syncDock() {
+  const inGroup = !document.getElementById("groupView").hidden && !!CURRENT_GID;
+  const atHome = !document.getElementById("homeView").hidden;
+  document.getElementById("dockHome").hidden = !atHome;
+  document.getElementById("dockSpend").hidden = !(inGroup && currentTab === "spend");
+  document.getElementById("dockSettle").hidden = !(inGroup && currentTab === "settle");
+  document.getElementById("dock").hidden = !(atHome || inGroup);
+}
+
+// ---- 모임 메뉴(⋯) — 멤버 · 예산 · 백업 · 모임 삭제
+function openGroupMenu() { buildFeeRows(); renderBudgetBar(); openSheet("menu"); }
+function closeGroupMenu() { closeSheet("menu"); }
+document.getElementById("groupMenuBtn").onclick = openGroupMenu;
+document.getElementById("menuRename").onclick = () => {
+  closeGroupMenu();
+  titleEl.focus();
+  try { const r = document.createRange(); r.selectNodeContents(titleEl); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } catch (e) {}
+};
+document.getElementById("menuBudget").onclick = () => { closeGroupMenu(); setTab("spend"); window.scrollTo(0, 0); openBudgetEdit(); };
+document.getElementById("menuDelete").onclick = async () => {
+  const id = CURRENT_GID, title = getTitle();
+  closeGroupMenu();
+  await removeGroup(id, title);
+  // 지웠으면 홈으로 — ⚠️ showHome()은 열린 모임을 저장하므로, 먼저 CURRENT_GID를 비워야 지운 모임이 되살아나지 않는다
+  if (!loadGroupList().some(g => g.id === id)) {
+    CURRENT_GID = null;
+    localStorage.removeItem("moa-current");
+    showHome();
+  }
+};
+
+// ---- 홈 카드의 ⋯
+let cardMenuGroup = null;
+function openCardMenu(g) {
+  cardMenuGroup = g;
+  document.getElementById("cardMenuTitle").textContent = g.title || "이름 없는 모임";
+  openSheet("card");
+}
+document.getElementById("cardOpen").onclick = () => { const g = cardMenuGroup; closeSheet("card"); if (g) openGroup(g.id); };
+document.getElementById("cardDelete").onclick = () => { const g = cardMenuGroup; closeSheet("card"); if (g) removeGroup(g.id, g.title || "이름 없는 모임"); };
+
+// ---- 새 모임 시트 — 사람 먼저, 이름은 그다음
+let ngPeople = [];
+function renderNgPeople() {
+  const box = document.getElementById("ngPeople");
+  box.innerHTML = "";
+  ngPeople.forEach((p, i) => {
+    const chip = document.createElement("span"); chip.className = "person";
+    chip.appendChild(document.createTextNode(p));
+    const x = document.createElement("button"); x.type = "button"; x.textContent = "✕"; x.setAttribute("aria-label", p + " 빼기");
+    x.onclick = () => { ngPeople.splice(i, 1); renderNgPeople(); };
+    chip.appendChild(x);
+    box.appendChild(chip);
+  });
+  const btn = document.getElementById("ngCreate");
+  btn.textContent = ngPeople.length ? ngPeople.length + "명으로 만들기" : "만들기";
+}
+function ngAddPerson() {
+  const inp = document.getElementById("ngPerson");
+  const v = inp.value.trim();
+  if (!v) return false;
+  if (!ngPeople.includes(v)) ngPeople.push(v);
+  inp.value = "";
+  renderNgPeople();
+  inp.focus();
+  return true;
+}
+function openNewGroupSheet() {
+  // ★ 결제창이 뜨는 주된 자리 — 무료 모임을 다 쓴 사람이 새 모임을 만들 때. 시트를 열기 전에 막는다(이름까지 다 쓰고 막히면 허탈하다)
+  if (!isPro() && loadGroupList().length >= FREE_GROUP_LIMIT) { openPro(FREE_LIMIT_WHY, "new_group"); return; }
+  ngPeople = [];
+  document.getElementById("ngPerson").value = "";
+  document.getElementById("ngName").value = "";
+  const sugg = document.getElementById("ngSugg");
+  sugg.innerHTML = "";
+  const now = new Date();
+  [(now.getMonth() + 1) + "월 여행", "주말 모임", "동기 모임"].forEach(t => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "ccy-chip"; b.textContent = t;
+    b.onclick = () => { document.getElementById("ngName").value = t; };
+    sugg.appendChild(b);
+  });
+  renderNgPeople();
+  openSheet("newg");
+  setTimeout(() => { try { document.getElementById("ngPerson").focus({ preventScroll: true }); } catch (e) {} }, 60);
+}
+document.getElementById("newGroupOpen").onclick = openNewGroupSheet;
+document.getElementById("ngPersonAdd").onclick = ngAddPerson;
+document.getElementById("ngPerson").onkeydown = ev => { if (ev.key === "Enter") { ev.preventDefault(); ngAddPerson(); } };
+document.getElementById("ngName").onkeydown = ev => { if (ev.key === "Enter") { ev.preventDefault(); document.getElementById("ngCreate").click(); } };
+document.getElementById("ngCreate").onclick = async () => {
+  ngAddPerson();   // 칸에 써 놓고 「넣기」를 안 누른 이름도 넣는다
+  if (!ngPeople.length) { alert("같이 가는 사람을 한 명 이상 넣어 주세요 (나 포함)"); document.getElementById("ngPerson").focus(); return; }
+  const name = document.getElementById("ngName").value.trim() || "새 모임";
+  const people = ngPeople.slice();
+  closeSheet("newg");
+  await createGroup(name);   // 무료 개수 판정은 createGroup도 한 번 더 한다
+  if (!CURRENT_GID) return;
+  people.forEach(p => addMember(p));
+  // 새로 넣은 사람은 처음부터 「함께 나눠 낼 사람」에 다 들어가 있어야 한다
+  membersBox.querySelectorAll("input").forEach(cb => { cb.checked = true; });
+  updateSummary();
+};
 
 // ---------- 시작 ----------
 (async function init() {
@@ -3238,6 +3881,8 @@ function moaHandleBack() {
   if (proOverlay.classList.contains("on")) { closePro(); return true; }
   if (resultOverlay.classList.contains("on")) { resultOverlay.classList.remove("on"); return true; }
   if (editingId) { document.getElementById("cancelEdit").click(); return true; }
+  const openSheet = document.querySelector(".sheet-wrap.open");
+  if (openSheet) { closeAllSheets(); return true; }
   if (CURRENT_GID) { showHome(); return true; }
   return false;   // 홈 화면 — 더 갈 곳이 없으니 여기서만 앱을 닫는다
 }
