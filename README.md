@@ -9,4 +9,4 @@
 - 회비·지출·찬조 기록
 - 정산 결과 보기·공유
 
-웹앱: https://dahyeonjang.github.io/moa/
+웹앱: https://soldamlab.com/moa/ (2026-10-05 이사 · 옛 주소 https://dahyeonjang.github.io/moa/ 도 그대로 열린다 — 위에 이사 안내가 뜬다)
