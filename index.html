@@ -482,7 +482,7 @@
   }
   .pro-code-input { text-align: center; letter-spacing: 1px; text-transform: uppercase; }
   .pro-msg { font-size: var(--t-caption); color: var(--danger); margin-bottom: 8px; }
-  .pro-fine { font-size: var(--t-micro); color: var(--sub); margin-top: 8px; line-height: 1.5; }
+  .pro-fine { font-size: var(--t-micro); color: var(--sub); margin-top: 8px; line-height: 1.5; word-break: keep-all; }
   .pro-fine a { color: inherit; }
   .pro-code {
     font-size: var(--t-amount); font-weight: 700; letter-spacing: 1px; padding: 14px 8px; margin-bottom: 4px;
@@ -1160,13 +1160,14 @@
         <div class="pro-feat"><span>💾</span><span><b>백업 · 기기 이동</b><span class="pf-sub">기록을 파일로 보관하고 다른 기기로 옮겨요</span></span></div>
       </div>
       <p class="pro-free">기록 · 정산 · 결과 공유는 무료 그대로예요</p>
-      <p class="pro-price" id="proPrice"><s class="pro-list-price" hidden>2,900원</s> <b id="proAmount">2,900원</b> <span class="pro-badge" id="proBadge" hidden>오픈가</span></p>
+      <p class="pro-price" id="proPrice"><s class="pro-list-price" hidden>2,900원</s> <b id="proAmount">2,900원</b> <span class="pro-badge" id="proBadge" hidden>오픈가</span> · 부가세 포함</p>
       <p class="pro-copy">커피 한 잔 값으로, 다음 여행부터 계속</p>
       <p class="pro-split" id="proSplit">넷이 1/N 하면 한 사람 725원</p>
       <input type="email" class="pro-input" id="proEmail" placeholder="구매코드를 받을 이메일" autocomplete="email" inputmode="email">
       <p class="pro-msg" id="proMsg" hidden></p>
       <button type="button" class="pro-buy" id="proBuy">결제하기</button>
-      <p class="pro-fine" id="proFine">한 번 결제 · 구독 아님 · 결제일부터 7일 안에는 이유 없이 전액 환불 · <a href="https://soldamlab.com/refund.html" target="_blank" rel="noopener">환불정책</a></p>
+      <!-- 결제 직전 고지 (2026-10-06 · 카드사 심사는 화면만 본다 — 이용 기간·제공 시점·청약철회 제한·판매자·약관을 여기서 다 읽히게. 이용약관 제5조 2항) -->
+      <p class="pro-fine" id="proFine">한 번 결제 · 구독 아님 · 기간 제한 없음<br>결제가 끝나면 바로 화면에 구매코드가 나오고 메일로도 보내요<br>결제일부터 7일 안에는 이유 없이 전액 환불해요<br>7일이 지나면 단순 변심 환불은 제한돼요(디지털콘텐츠)<br>결제하면 <a href="https://soldamlab.com/terms" target="_blank" rel="noopener">이용약관</a> · <a href="https://soldamlab.com/refund" target="_blank" rel="noopener">환불정책</a>에 동의하는 것으로 봅니다 · <a href="https://soldamlab.com/privacy" target="_blank" rel="noopener">개인정보처리방침</a><br>판매 에이치티 리서치 · 문의 <a href="mailto:eomhk32@gmail.com">eomhk32@gmail.com</a> · <a href="https://soldamlab.com/" target="_blank" rel="noopener">사업자 정보</a></p>
       <button type="button" class="pro-later" id="proLater">나중에</button>
       <button type="button" class="pro-restore" id="proHaveCode">구매코드가 있어요</button>
       <button type="button" class="pro-restore" id="proRestore" hidden>이미 구매했어요 (구매 복원)</button>

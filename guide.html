@@ -19,7 +19,7 @@
       else if (/[?&]app=1/.test(location.search)) isApp = true;
       else isApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
     } catch (e) {}
-    document.documentElement.className = (isApp && PRO_ENABLED) ? "app" : "web";
+    document.documentElement.className = ((isApp && PRO_ENABLED) ? "app" : "web") + (PRO_ENABLED ? " pro" : "");   // pro = 무료·프로 비교표를 웹에서도 보인다(2026-10-06 다현님 — 판매허브와 같은 말을 하게)
   })();
 </script>
 <style>
@@ -94,6 +94,9 @@
   html.app span.app-only { display: inline; }
   html.app span.pro-badge.app-only { display: inline-block; }
   html.app .web-only { display: none; }
+  /* 무료·프로 안내 — 앱·웹 모두(PRO_ENABLED일 때). 웹 결제가 열리기 전엔 「결제 준비 중」 한 줄이 붙는다 (2026-10-06) */
+  .pro-info { display: none; }
+  html.pro section.pro-info { display: block; }
 
   /* 무료·프로 비교표 */
   .plan { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--card); }
@@ -182,7 +185,7 @@
       </div>
     </section>
 
-    <section class="app-only">
+    <section class="pro-info">
       <h2>무료와 프로</h2>
       <p class="lead">정산에 필요한 기능은 <strong>전부 무료</strong>예요. 프로는 기록을 파일로 오래 남기고 싶을 때만 필요해요.</p>
       <div class="plan">
@@ -196,7 +199,7 @@
         <div class="plan-row"><span>엑셀(CSV) 저장</span><span class="no">–</span><span class="yes">○</span></div>
         <div class="plan-row"><span>백업 · 가져오기</span><span class="no">–</span><span class="yes">○</span></div>
       </div>
-      <p class="plan-price"><b>프로 2,900원</b> · 한 번만 결제하면 계속 쓸 수 있어요 (구독 아니에요)</p>
+      <p class="plan-price"><b>프로 2,900원</b>(부가세 포함) · 한 번만 결제하면 계속 쓸 수 있어요 (구독 아니에요)<span class="web-only"><br>웹 결제는 지금 준비 중이에요. 열리기 전까지는 모든 기능을 그대로 쓸 수 있어요</span></p>
     </section>
 
     <section>
@@ -213,7 +216,7 @@
       <details><summary>잘못 넣은 기록은 어떻게 고치거나 지우나요?</summary><p>목록에서 <strong>그 줄을 누르면</strong> 고치는 칸이 열려요. 고치고 <strong>수정 저장</strong>, 지우려면 그 아래 <strong>이 기록 삭제</strong>를 누르면 돼요.</p></details>
       <details><summary>모임을 지우면 기록이 완전히 사라지나요?</summary><p>네, 지운 모임은 되살릴 수 없어요(홈 카드의 <strong>⋯</strong>나 모임 화면 <strong>⋯ → 이 모임 삭제</strong>). 그래서 삭제를 누르면 <strong>"지우기 전에 파일로 저장해 둘까요?"</strong>를 먼저 물어봐요.<span class="app-only"> 이때의 저장은 <strong>무료로도 쓸 수 있게</strong> 열어뒀어요. 기록을 못 챙기고 지우는 일은 없게 하고 싶었거든요.</span></p></details>
 
-      <details class="web-only"><summary>돈은 얼마예요?</summary><p>웹에서는 <strong>전부 무료</strong>예요. 설치도 가입도 없이 링크만 있으면 바로 씁니다.</p></details>
+      <details class="web-only"><summary>돈은 얼마예요?</summary><p>기본은 <strong>무료</strong>예요. 설치도 가입도 없이 링크만 있으면 바로 쓰고, 지출 기록·정산·카톡 공유까지 돈이 들지 않아요.<br><br>지난 모임을 지우지 않고 여러 개 보관하거나, 엑셀로 저장하거나, 백업·기기 이동을 하려면 <strong>프로 2,900원</strong>(한 번 결제, 구독 아님)이에요. 프로 결제는 지금 <strong>준비 중</strong>이라, 열리기 전까지는 웹에서 모든 기능을 그대로 쓸 수 있어요. 자세한 상품 안내는 <a href="https://soldamlab.com/#moa">soldamlab.com</a>에 있어요.</p></details>
 
       <details class="app-only"><summary>돈은 얼마예요?</summary><p>기본은 <strong>무료</strong>예요. 지출을 기록하고 정산해서 카톡으로 나누는 것까지 돈 한 푼 안 들어요.<br><br>더 필요할 때만 <strong>프로 2,900원</strong>을 한 번 결제하면 돼요. 지난 모임을 지우지 않고 새 모임을 만들거나, 엑셀로 저장하거나, 백업을 하고 싶을 때요.</p></details>
       <details class="app-only"><summary>무료로도 충분한가요?</summary><p>여행 한두 번 정산하는 정도라면 <strong>무료로 충분해요</strong>. 지출 기록, 회비, 찬조, 영수증 사진, 여러 나라 돈, 정산 결과 공유까지 전부 무료거든요.<br><br>프로가 필요해지는 건 <strong>모임을 자주 여는 총무</strong>일 때예요. 모임이 계속 쌓이고, 정산 기록을 엑셀이나 파일로 남겨두고 싶어질 때요.</p></details>
